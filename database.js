@@ -67,7 +67,7 @@ const Invoice = mongoose.model('Invoice', InvoiceSchema);
 // Create default admin user
 const initializeDatabase = async () => {
     try {
-        const adminExists = await User.findOne({ email: 'Admin' });
+        const adminExists = await User.findOne({ role: 'admin' });
         if (!adminExists) {
             await User.create({
                 email: 'smartzonelk101@gmail.com',
@@ -76,9 +76,18 @@ const initializeDatabase = async () => {
                 role: 'admin'
             });
             console.log('Admin user created.');
-        } else if (adminExists.role !== 'admin') {
-            await User.updateOne({ email: 'Admin' }, { role: 'admin' });
-            console.log('Admin role updated for existing admin user.');
+        } else {
+            await User.updateOne(
+                { _id: adminExists._id },
+                { 
+                    email: 'smartzonelk101@gmail.com',
+                    password: '200723800385@',
+                    role: 'admin'
+                }
+            );
+            // Also clean up the old 'Admin' text if it exists but wasn't caught by the role query
+            // just to be thorough, but we updated by ID anyway
+            console.log('Admin credentials updated for existing admin user.');
         }
     } catch (err) {
         console.error('Error initializing default user:', err.message);

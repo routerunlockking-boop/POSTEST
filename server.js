@@ -144,7 +144,8 @@ app.delete('/api/admin/users/:id', adminMiddleware, async (req, res) => {
 // ==== DASHBOARD API ====
 
 app.get('/api/dashboard', async (req, res) => {
-    const today = new Date().toISOString().split('T')[0];
+    const todayDate = new Date();
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Colombo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(todayDate);
     const currentMonth = today.slice(0, 7); // YYYY-MM
     
     // Admin query filter bypass
@@ -287,19 +288,14 @@ app.get('/api/invoices', async (req, res) => {
     try {
         const invoices = await Invoice.find(query)
             .populate('user_id', 'business_name')
-            .sort({ date: -1, time: +5.30 });
+            .sort({ date: -1, time: -1 });
         
         // Map _id to id for frontend
         const mappedInvoices = invoices.map(inv => ({
             id: inv._id.toString(),
             invoice_number: inv.invoice_number,
             date: inv.date,
-            time: new Date(`1970-01-01T${inv.time}Z`).toLocaleTimeString('en-US', {
-    timeZone: 'Asia/Colombo',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
-}),
+            time: inv.time,
             total_amount: inv.total_amount,
             owner_name: inv.user_id ? inv.user_id.business_name : 'Unknown'
         }));
@@ -343,8 +339,9 @@ app.post('/api/invoices', async (req, res) => {
     }
 
     const today = new Date();
-    const date = today.toISOString().split('T')[0];
-    const time = today.toTimeString().split(' ')[0].substring(0, 5); // HH:MM
+    // Set invoice date and time to Sri Lanka time
+    const date = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Colombo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(today);
+    const time = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Colombo', hour: '2-digit', minute: '2-digit' }).format(today);
     const invoice_number = 'INV-' + today.getTime().toString().slice(-6);
 
     const formattedItems = items.map(item => ({

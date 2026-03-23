@@ -215,6 +215,7 @@ app.get('/api/products', async (req, res) => {
             name: p.name,
             quantity: p.quantity,
             price: p.price,
+            Myprice: p.price,
             image: p.image,
             owner_name: p.user_id ? p.user_id.business_name : 'Unknown'
         }));

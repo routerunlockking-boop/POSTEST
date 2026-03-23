@@ -293,12 +293,14 @@ app.get('/api/invoices', async (req, res) => {
         
         // Map _id to id for frontend
         const mappedInvoices = invoices.map(inv => ({
-            id: inv._id.toString(),
-            invoice_number: inv.invoice_number,
-            date: inv.date,
-            time: inv.time,
-            total_amount: inv.total_amount,
-            owner_name: inv.user_id ? inv.user_id.business_name : 'Unknown'
+    id: inv._id.toString(),
+    invoice_number: inv.invoice_number,
+    date: inv.date,
+    // මෙන්න මේ පේළිය වෙනස් කරන්න
+    time: new Date(`1970-01-01T${inv.time}Z`).toLocaleTimeString('en-US', { timeZone: 'Asia/Colombo', hour: '2-digit', minute: '2-digit', hour12: true }),
+    total_amount: inv.total_amount,
+    owner_name: inv.user_id ? inv.user_id.business_name : 'Unknown'
+}));
         }));
         
         res.json(mappedInvoices);

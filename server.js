@@ -238,9 +238,10 @@ app.post('/api/products', async (req, res) => {
             name,
             quantity,
             price,
+            myprie,
             image
         });
-        res.status(201).json({ id: product._id.toString(), name, quantity, price, image });
+        res.status(201).json({ id: product._id.toString(), name, quantity, price, Myprice, image });
     } catch (err) {
         return res.status(500).json({ error: err.message });
     }

@@ -287,7 +287,7 @@ app.get('/api/invoices', async (req, res) => {
     try {
         const invoices = await Invoice.find(query)
             .populate('user_id', 'business_name')
-            .sort({ date: -1, time: -1 });
+            .sort({ date: -1, time: +5.30 });
         
         // Map _id to id for frontend
         const mappedInvoices = invoices.map(inv => ({

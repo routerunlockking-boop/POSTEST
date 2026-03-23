@@ -401,6 +401,10 @@
                             <label>Price</label>
                             <input type="number" step="0.01" id="product-price" class="form-control" required>
                         </div>
+                        <div class="form-group">
+                            <label>My-Price</label>
+                            <input type="number" step="0.01" id="My-price" class="form-control" required>
+                        </div>
                         <button type="submit" class="btn btn-primary btn-block">Save Product</button>
                     </form>
                 </div>
@@ -453,7 +457,7 @@
                         <div class="receipt-meta">
                             <p>Invoice: <span id="receipt-no"></span></p>
                             <p>Date: <span id="receipt-date"></span></p>
-                            <p>Time: <span id="receipt-time"></span></p>
+                            <p>Time: <span id="print-time"></span></p>
                         </div>
                         <p>----------------------------</p>
                         <table class="receipt-table" id="receipt-items">

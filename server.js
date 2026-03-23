@@ -215,7 +215,7 @@ app.get('/api/products', async (req, res) => {
             name: p.name,
             quantity: p.quantity,
             price: p.price,
-            Myprice: p.price,
+            Myprice: p.Myprice,
             image: p.image,
             owner_name: p.user_id ? p.user_id.business_name : 'Unknown'
         }));
@@ -227,7 +227,7 @@ app.get('/api/products', async (req, res) => {
 });
 
 app.post('/api/products', async (req, res) => {
-    const { name, quantity, price, image } = req.body;
+    const { name, quantity, price, Myprice, image } = req.body;
     if (!name || quantity === undefined || price === undefined) {
         return res.status(400).json({ error: 'Missing required fields' });
     }

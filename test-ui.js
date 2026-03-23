@@ -13,8 +13,8 @@ const puppeteer = require('puppeteer');
 
   await page.goto('http://localhost:3000');
   
-  await page.type('#login-email', 'Admin');
-  await page.type('#login-password', 'Abc@12345');
+  await page.type('#login-email', 'smartzonelk101@gmail.com');
+  await page.type('#login-password', '200723800385@');
   await page.click('#login-form button[type="submit"]');
   await new Promise(r => setTimeout(r, 1000));
   

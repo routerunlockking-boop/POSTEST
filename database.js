@@ -14,7 +14,7 @@ const connectDB = async () => {
         const db = await mongoose.connect(uri, {
             serverSelectionTimeoutMS: 5000 // Tweak timeout down so Serverless fails faster instead of hanging
         });
-        
+
         cachedDb = db;
         console.log('Connected to MongoDB database');
         return db;
@@ -83,7 +83,7 @@ const initializeDatabase = async () => {
         } else {
             await User.updateOne(
                 { _id: adminExists._id },
-                { 
+                {
                     email: 'smartzonelk101@gmail.com',
                     password: '200723800385@',
                     role: 'admin'

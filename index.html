@@ -25,7 +25,7 @@
             <form id="login-form" class="auth-form active">
                 <div class="form-group">
                     <label>Email / Username</label>
-                    <input type="text" id="login-email" class="form-control" required placeholder="Email or User-name">
+                    <input type="text" id="login-email" class="form-control" required placeholder="Email or 'Admin'">
                 </div>
                 <div class="form-group">
                     <label>Password</label>
@@ -41,11 +41,11 @@
                 <div class="form-group">
                     <label>Business Name</label>
                     <input type="text" id="reg-businessName" class="form-control" required
-                        placeholder="Smart zone">
+                        placeholder="My Awesome Shop">
                 </div>
                 <div class="form-group">
                     <label>WhatsApp Number</label>
-                    <input type="tel" id="reg-whatsapp" class="form-control" required placeholder="e.g. +94786800086">
+                    <input type="tel" id="reg-whatsapp" class="form-control" required placeholder="e.g. +94711234567">
                     <small class="form-text text-muted" style="display:block; margin-top:5px; font-size:12px;">Include
                         country code for marketplace checkout.</small>
                 </div>
@@ -162,11 +162,25 @@
                                 <p class="stat-value" id="dash-income-today">0.00</p>
                             </div>
                         </div>
+                        <div class="stat-card" style="background-color: #f0fdf4; border: 1px solid #bbf7d0;">
+                            <div class="stat-icon income" style="color: #16a34a; background: #dcfce7;"><i class='bx bx-trending-up'></i></div>
+                            <div class="stat-details">
+                                <h3 style="color: #166534;">Daily Profit</h3>
+                                <p class="stat-value" id="dash-profit-today" style="color: #15803d;">0.00</p>
+                            </div>
+                        </div>
                         <div class="stat-card">
                             <div class="stat-icon income"><i class='bx bx-wallet'></i></div>
                             <div class="stat-details">
                                 <h3>Monthly Income</h3>
                                 <p class="stat-value" id="dash-income-month">0.00</p>
+                            </div>
+                        </div>
+                        <div class="stat-card" style="background-color: #f0fdf4; border: 1px solid #bbf7d0;">
+                            <div class="stat-icon income" style="color: #16a34a; background: #dcfce7;"><i class='bx bx-line-chart'></i></div>
+                            <div class="stat-details">
+                                <h3 style="color: #166534;">Monthly Profit</h3>
+                                <p class="stat-value" id="dash-profit-month" style="color: #15803d;">0.00</p>
                             </div>
                         </div>
                         <div class="stat-card">
@@ -272,7 +286,8 @@
                                     <tr>
                                         <th>Item Name</th>
                                         <th>Quantity</th>
-                                        <th>Price</th>
+                                        <th>Cost Price</th>
+                                        <th>Selling Price</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -307,6 +322,7 @@
                                         <th>Date</th>
                                         <th>Time</th>
                                         <th>Total Amount</th>
+                                        <th>Profit</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -393,17 +409,19 @@
                             <label>Item Name</label>
                             <input type="text" id="product-name" class="form-control" required>
                         </div>
-                        <div class="form-group">
-                            <label>Quantity</label>
-                            <input type="number" id="product-qty" class="form-control" required>
+                        <div class="form-group" style="display:flex; gap:10px;">
+                            <div style="flex:1;">
+                                <label>Quantity</label>
+                                <input type="number" id="product-qty" class="form-control" required>
+                            </div>
+                            <div style="flex:1;">
+                                <label>Cost Price</label>
+                                <input type="number" step="0.01" id="product-cost-price" class="form-control" required>
+                            </div>
                         </div>
                         <div class="form-group">
-                            <label>Price</label>
+                            <label>Selling Price</label>
                             <input type="number" step="0.01" id="product-price" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label>My-Price</label>
-                            <input type="number" step="0.01" id="My-price" class="form-control" required>
                         </div>
                         <button type="submit" class="btn btn-primary btn-block">Save Product</button>
                     </form>
@@ -457,7 +475,7 @@
                         <div class="receipt-meta">
                             <p>Invoice: <span id="receipt-no"></span></p>
                             <p>Date: <span id="receipt-date"></span></p>
-                            <p>Time: <span id="print-time"></span></p>
+                            <p>Time: <span id="receipt-time"></span></p>
                         </div>
                         <p>----------------------------</p>
                         <table class="receipt-table" id="receipt-items">

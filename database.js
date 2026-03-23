@@ -39,6 +39,7 @@ const ProductSchema = new mongoose.Schema({
     user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     name: { type: String, required: true },
     quantity: { type: Number, default: 0 },
+    cost_price: { type: Number, default: 0.0 },
     price: { type: Number, default: 0.0 },
     image: { type: String }
 });
@@ -46,8 +47,10 @@ const ProductSchema = new mongoose.Schema({
 const InvoiceItemSchema = new mongoose.Schema({
     product_name: { type: String, required: true },
     quantity: { type: Number, required: true },
+    cost_price: { type: Number, default: 0.0 },
     price: { type: Number, required: true },
-    subtotal: { type: Number, required: true }
+    subtotal: { type: Number, required: true },
+    profit: { type: Number, default: 0.0 }
 });
 
 const InvoiceSchema = new mongoose.Schema({
@@ -56,6 +59,7 @@ const InvoiceSchema = new mongoose.Schema({
     date: { type: String, required: true }, // Format: YYYY-MM-DD
     time: { type: String, required: true }, // Format: HH:MM
     total_amount: { type: Number, default: 0.0 },
+    total_profit: { type: Number, default: 0.0 },
     items: [InvoiceItemSchema]
 });
 

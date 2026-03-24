@@ -18,7 +18,7 @@
 }
 
 body.dark-mode {
-    --secondary: #1e293b;
+    --secondary: #334155;
     --bg-body: #0f172a;
     --bg-card: #1e293b;
     --text-main: #f8fafc;
@@ -218,7 +218,7 @@ body {
     align-items: center;
     justify-content: center;
     font-size: 28px;
-    background-color: #eef2ff;
+    background-color: var(--secondary);
     color: var(--primary);
 }
 
@@ -292,7 +292,7 @@ body {
 }
 
 .data-table th {
-    background-color: #f8fafc;
+    background-color: var(--secondary);
     font-size: 13px;
     font-weight: 600;
     color: var(--text-muted);
@@ -310,7 +310,7 @@ body {
 }
 
 .data-table tbody tr:hover {
-    background-color: #f8fafc;
+    background-color: var(--secondary);
 }
 
 /* UI Elements */
@@ -426,7 +426,7 @@ body {
 
 .pos-product-card:hover {
     border-color: var(--primary);
-    background-color: #eef2ff;
+    background-color: var(--secondary);
 }
 
 .pos-product-card h4 {

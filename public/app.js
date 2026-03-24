@@ -134,6 +134,7 @@ const adminUserModal = document.getElementById('admin-user-modal');
 
 // ==== INITIALIZATION ====
 document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
     checkAuth();
     updateClock();
     setInterval(updateClock, 1000);
@@ -143,6 +144,28 @@ document.addEventListener('DOMContentLoaded', () => {
     setupPOSTabs();
     setupBarcodeScanner();
 });
+
+function initTheme() {
+    const savedTheme = localStorage.getItem('pos_theme') || 'light';
+    const btnThemeToggle = document.getElementById('btn-theme-toggle');
+    const toggleIcon = btnThemeToggle.querySelector('i');
+
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+        toggleIcon.classList.replace('bx-moon', 'bx-sun');
+    }
+
+    btnThemeToggle.addEventListener('click', () => {
+        const isDark = document.body.classList.toggle('dark-mode');
+        if (isDark) {
+            localStorage.setItem('pos_theme', 'dark');
+            toggleIcon.classList.replace('bx-moon', 'bx-sun');
+        } else {
+            localStorage.setItem('pos_theme', 'light');
+            toggleIcon.classList.replace('bx-sun', 'bx-moon');
+        }
+    });
+}
 
 function setupBarcodeScanner() {
     const barcodeInput = document.getElementById('pos-barcode-input');

@@ -549,14 +549,25 @@
             </div>
 
             <!-- Scanner Modal -->
-            <div class="modal" id="scanner-modal">
-                <div class="modal-header">
-                    <h3>Scan Barcode</h3>
-                    <button class="close-btn" id="btn-close-scanner-modal"><i class='bx bx-x'></i></button>
+            <div class="modal" id="scanner-modal" style="max-width: 500px; overflow: hidden; background: #0f172a; border-radius: 20px;">
+                <div class="modal-header" style="border-bottom: 1px solid #334155; padding: 16px 24px;">
+                    <h3 style="color: white; font-size: 18px; display: flex; align-items: center; gap: 8px;"><i class='bx bx-barcode-reader'></i> Scan Barcode</h3>
+                    <button class="close-btn" id="btn-close-scanner-modal" style="color: #cbd5e1;"><i class='bx bx-x'></i></button>
                 </div>
-                <div class="modal-body" style="text-align: center;">
-                    <div id="reader" style="width: 100%; max-width: 400px; margin: 0 auto; overflow: hidden; border-radius: 12px; border: 2px dashed var(--border);"></div>
-                    <p style="margin-top: 15px; color: var(--text-muted); font-size: 14px;">Point your camera at a barcode</p>
+                <div class="modal-body" style="padding: 0; position: relative;">
+                    <div id="reader" style="width: 100%; min-height: 400px; display: flex; align-items: center; justify-content: center; background: #000;">
+                        <span style="color: #64748b;">Initializing Camera...</span>
+                    </div>
+                    
+                    <!-- Scanner Overlay Controls -->
+                    <div style="position: absolute; bottom: 20px; left: 0; width: 100%; display: flex; justify-content: center; gap: 20px; z-index: 10;">
+                        <button class="btn btn-primary" id="btn-toggle-torch" style="border-radius: 50%; width: 56px; height: 56px; padding: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); background: rgba(79, 70, 229, 0.9);">
+                            <i class='bx bx-bolt-circle' style="font-size: 28px;"></i>
+                        </button>
+                        <button class="btn btn-primary" id="btn-restart-scan" style="border-radius: 50%; width: 56px; height: 56px; padding: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);">
+                            <i class='bx bx-refresh' style="font-size: 28px; color: white;"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

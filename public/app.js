@@ -119,7 +119,8 @@ let currentBill = [];
 let currentTab = 'dashboard-view';
 let chartInstance = null;
 let currentProductImageBase64 = null;
-let html5QrcodeScanner = null;
+let html5QrCode = null;
+let isScanTorchOn = false;
 
 // ==== DOM ELEMENTS ====
 const clockEl = document.getElementById('clock');
@@ -169,26 +170,89 @@ function setupBarcodeScanner() {
     if (btnCamera && scannerModal) {
         btnCamera.addEventListener('click', () => {
             showModal(scannerModal);
-            
-            if (!html5QrcodeScanner) {
-                html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false);
-            }
-            
-            html5QrcodeScanner.render((decodedText, decodedResult) => {
-                // Success
-                const product = products.find(p => p.barcode === decodedText);
-                if (product) {
-                    addToBill(product);
-                    hideModal();
-                    // Optional: could add sound here
-                } else {
-                    alert(`Scanned barcode ${decodedText} not found in inventory.`);
+            startScanner();
+        });
+
+        document.getElementById('btn-toggle-torch').addEventListener('click', async () => {
+            if (html5QrCode && html5QrCode.getState() === 2) { // 2 = SCANNING
+                try {
+                    isScanTorchOn = !isScanTorchOn;
+                    await html5QrCode.applyVideoConstraints({ advanced: [{ torch: isScanTorchOn }] });
+                    const icon = document.querySelector('#btn-toggle-torch i');
+                    if(isScanTorchOn) {
+                        icon.classList.remove('bx-bolt-circle');
+                        icon.classList.add('bxs-bolt-circle');
+                        icon.style.color = '#fbbf24'; // Yellow lighting
+                    } else {
+                        icon.classList.remove('bxs-bolt-circle');
+                        icon.classList.add('bx-bolt-circle');
+                        icon.style.color = '';
+                    }
+                } catch (err) {
+                    alert('Torch/Flashlight is not supported on this device or camera.');
+                    isScanTorchOn = !isScanTorchOn; // revert state
                 }
-            }, (errorMessage) => {
-                // Ignore parse errors
-            });
+            }
+        });
+
+        document.getElementById('btn-restart-scan').addEventListener('click', () => {
+            if (html5QrCode) {
+                try {
+                    if (html5QrCode.getState() === 2) {
+                        html5QrCode.stop().then(() => {
+                            isScanTorchOn = false;
+                            document.querySelector('#btn-toggle-torch i').classList.replace('bxs-bolt-circle', 'bx-bolt-circle');
+                            document.querySelector('#btn-toggle-torch i').style.color = '';
+                            startScanner();
+                        });
+                    } else {
+                        startScanner();
+                    }
+                } catch(e) { console.error(e); }
+            }
         });
     }
+}
+
+function startScanner() {
+    if (!html5QrCode) {
+        // Need to clear reader div just in case it retains weird states
+        document.getElementById('reader').innerHTML = '';
+        html5QrCode = new Html5Qrcode("reader");
+    }
+    
+    if (html5QrCode.getState() === 2) return; // already scanning
+
+    html5QrCode.start(
+        { facingMode: "environment" }, 
+        { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 },
+        (decodedText, decodedResult) => {
+            // Success handler
+            const product = products.find(p => p.barcode === decodedText);
+            if (product) {
+                // Flash success color briefly
+                document.getElementById('reader').style.boxShadow = "inset 0 0 0 10px #10b981";
+                setTimeout(() => { document.getElementById('reader').style.boxShadow = "none"; }, 500);
+                
+                addToBill(product);
+                
+                // Allow continuous scanning by just informing they added it
+                // We'll optionally close the modal or keep it running.
+                // Given the user wants to "refresh it and start over", keeping the scanner active
+                // until explicit close is usually considered very professional for POS flow.
+            } else {
+                document.getElementById('reader').style.boxShadow = "inset 0 0 0 10px #ef4444";
+                setTimeout(() => { document.getElementById('reader').style.boxShadow = "none"; }, 500);
+                // alert(`Scanned barcode ${decodedText} not found in inventory.`);
+            }
+        },
+        (errorMessage) => {
+            // Ignore parse errors as it scans frames without barcodes
+        }
+    ).catch(err => {
+        console.error("Camera access failed", err);
+        alert("Unable to access camera. Please ensure permissions are granted.");
+    });
 }
 
 function setupPOSTabs() {
@@ -396,12 +460,15 @@ function hideModal() {
     modalOverlay.classList.remove('active');
     document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
     
-    if (html5QrcodeScanner) {
-        try {
-            html5QrcodeScanner.clear();
-        } catch(err) {
-            console.error(err);
-        }
+    // Stop the custom barcode camera stream
+    if (html5QrCode && html5QrCode.getState() === 2) {
+        html5QrCode.stop().then(() => {
+            isScanTorchOn = false;
+            try {
+                document.querySelector('#btn-toggle-torch i').classList.replace('bxs-bolt-circle', 'bx-bolt-circle');
+                document.querySelector('#btn-toggle-torch i').style.color = '';
+            } catch(e){}
+        }).catch(err => console.error(err));
     }
 }
 

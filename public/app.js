@@ -119,6 +119,7 @@ let currentBill = [];
 let currentTab = 'dashboard-view';
 let chartInstance = null;
 let currentProductImageBase64 = null;
+let html5QrcodeScanner = null;
 
 // ==== DOM ELEMENTS ====
 const clockEl = document.getElementById('clock');
@@ -139,7 +140,56 @@ document.addEventListener('DOMContentLoaded', () => {
     setupNavigation();
     setupModals();
     setupPOSTabs();
+    setupBarcodeScanner();
 });
+
+function setupBarcodeScanner() {
+    const barcodeInput = document.getElementById('pos-barcode-input');
+    if (barcodeInput) {
+        barcodeInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const barcode = e.target.value.trim();
+                if (barcode) {
+                    const product = products.find(p => p.barcode === barcode);
+                    if (product) {
+                        addToBill(product);
+                        e.target.value = '';
+                    } else {
+                        alert('Product not found with this barcode.');
+                    }
+                }
+            }
+        });
+    }
+
+    const btnCamera = document.getElementById('btn-camera-scan');
+    const scannerModal = document.getElementById('scanner-modal');
+    
+    if (btnCamera && scannerModal) {
+        btnCamera.addEventListener('click', () => {
+            showModal(scannerModal);
+            
+            if (!html5QrcodeScanner) {
+                html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false);
+            }
+            
+            html5QrcodeScanner.render((decodedText, decodedResult) => {
+                // Success
+                const product = products.find(p => p.barcode === decodedText);
+                if (product) {
+                    addToBill(product);
+                    hideModal();
+                    // Optional: could add sound here
+                } else {
+                    alert(`Scanned barcode ${decodedText} not found in inventory.`);
+                }
+            }, (errorMessage) => {
+                // Ignore parse errors
+            });
+        });
+    }
+}
 
 function setupPOSTabs() {
     const tabItems = document.getElementById('tab-btn-items');
@@ -224,6 +274,7 @@ function setupModals() {
     document.getElementById('btn-add-product').addEventListener('click', () => {
         document.getElementById('product-form').reset();
         document.getElementById('product-id').value = '';
+        document.getElementById('product-barcode').value = '';
         currentProductImageBase64 = null;
         document.getElementById('product-image-preview').innerHTML = '<span style="color:var(--text-muted);font-size:12px;">+ Add Image</span>';
         document.getElementById('product-modal-title').textContent = 'Add Product';
@@ -276,12 +327,14 @@ function setupModals() {
         e.preventDefault();
         const id = document.getElementById('product-id').value;
         const name = document.getElementById('product-name').value;
+        const barcode = document.getElementById('product-barcode').value;
         const qty = document.getElementById('product-qty').value;
         const cost_price = document.getElementById('product-cost-price').value;
         const price = document.getElementById('product-price').value;
         
         const payload = { 
-            name, 
+            name,
+            barcode,
             quantity: parseInt(qty), 
             cost_price: parseFloat(cost_price) || 0,
             price: parseFloat(price),
@@ -342,6 +395,14 @@ function showModal(modal) {
 function hideModal() {
     modalOverlay.classList.remove('active');
     document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+    
+    if (html5QrcodeScanner) {
+        try {
+            html5QrcodeScanner.clear();
+        } catch(err) {
+            console.error(err);
+        }
+    }
 }
 
 // ==== UTILS ====
@@ -494,6 +555,7 @@ function editProduct(id) {
     if(p) {
         document.getElementById('product-id').value = p.id;
         document.getElementById('product-name').value = p.name;
+        document.getElementById('product-barcode').value = p.barcode || '';
         document.getElementById('product-qty').value = p.quantity;
         document.getElementById('product-cost-price').value = p.cost_price || 0;
         document.getElementById('product-price').value = p.price;

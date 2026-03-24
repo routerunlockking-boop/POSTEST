@@ -39,6 +39,7 @@ const ProductSchema = new mongoose.Schema({
     user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     name: { type: String, required: true },
     quantity: { type: Number, default: 0 },
+    barcode: { type: String, default: '' },
     cost_price: { type: Number, default: 0.0 },
     price: { type: Number, default: 0.0 },
     image: { type: String }

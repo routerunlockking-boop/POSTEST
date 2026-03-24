@@ -218,6 +218,7 @@ app.get('/api/products', async (req, res) => {
         const mappedProducts = products.map(p => ({
             id: p._id.toString(),
             name: p.name,
+            barcode: p.barcode || '',
             quantity: p.quantity,
             cost_price: p.cost_price,
             price: p.price,
@@ -232,7 +233,7 @@ app.get('/api/products', async (req, res) => {
 });
 
 app.post('/api/products', async (req, res) => {
-    const { name, quantity, cost_price, price, image } = req.body;
+    const { name, barcode, quantity, cost_price, price, image } = req.body;
     if (!name || quantity === undefined || price === undefined) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
@@ -241,24 +242,25 @@ app.post('/api/products', async (req, res) => {
         const product = await Product.create({
             user_id: req.user._id,
             name,
+            barcode: barcode || '',
             quantity,
             cost_price: cost_price || 0,
             price,
             image
         });
-        res.status(201).json({ id: product._id.toString(), name, quantity, cost_price: product.cost_price, price, image });
+        res.status(201).json({ id: product._id.toString(), name, barcode: product.barcode, quantity, cost_price: product.cost_price, price, image });
     } catch (err) {
         return res.status(500).json({ error: err.message });
     }
 });
 
 app.put('/api/products/:id', async (req, res) => {
-    const { name, quantity, cost_price, price, image } = req.body;
+    const { name, barcode, quantity, cost_price, price, image } = req.body;
     try {
         const queryFilter = req.user.role === 'admin' ? { _id: req.params.id } : { _id: req.params.id, user_id: req.user._id };
         const product = await Product.findOneAndUpdate(
             queryFilter,
-            { name, quantity, cost_price: cost_price || 0, price, image },
+            { name, barcode: barcode || '', quantity, cost_price: cost_price || 0, price, image },
             { new: true }
         );
         if (!product) return res.status(404).json({ error: 'Product not found' });

@@ -228,10 +228,19 @@
                         <!-- Left: Products -->
                         <div class="pos-products-area">
                             <h2>Select Product</h2>
+                            <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                                <div style="flex: 1; position: relative;">
+                                    <i class='bx bx-barcode' style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 20px;"></i>
+                                    <input type="text" id="pos-barcode-input" class="form-control" style="padding-left: 44px; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);" placeholder="Scan or type barcode via scanner... (Press Enter)">
+                                </div>
+                                <button id="btn-camera-scan" class="btn btn-primary" title="Scan with Mobile Camera">
+                                    <i class='bx bx-camera' style="font-size: 20px;"></i>
+                                </button>
+                            </div>
                             <!-- Search and Categories -->
                             <div class="pos-search">
                                 <i class='bx bx-search'></i>
-                                <input type="text" id="pos-search-input" placeholder="Search products...">
+                                <input type="text" id="pos-search-input" placeholder="Search products by name...">
                             </div>
                             <!-- Products Grid -->
                             <div class="pos-products-grid" id="pos-products-grid">
@@ -427,9 +436,15 @@
                                 <span style="color:var(--text-muted);font-size:12px;">+ Add Image</span>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label>Item Name</label>
-                            <input type="text" id="product-name" class="form-control" required>
+                        <div class="form-group" style="display:flex; gap:10px;">
+                            <div style="flex:1;">
+                                <label>Item Name</label>
+                                <input type="text" id="product-name" class="form-control" required>
+                            </div>
+                            <div style="flex:1;">
+                                <label>Barcode / SKU (Optional)</label>
+                                <input type="text" id="product-barcode" class="form-control" placeholder="Scan or type...">
+                            </div>
                         </div>
                         <div class="form-group" style="display:flex; gap:10px;">
                             <div style="flex:1;">
@@ -532,9 +547,22 @@
                     <button class="btn btn-primary btn-block" id="btn-print-receipt">Print Receipt</button>
                 </div>
             </div>
+
+            <!-- Scanner Modal -->
+            <div class="modal" id="scanner-modal">
+                <div class="modal-header">
+                    <h3>Scan Barcode</h3>
+                    <button class="close-btn" id="btn-close-scanner-modal"><i class='bx bx-x'></i></button>
+                </div>
+                <div class="modal-body" style="text-align: center;">
+                    <div id="reader" style="width: 100%; max-width: 400px; margin: 0 auto; overflow: hidden; border-radius: 12px; border: 2px dashed var(--border);"></div>
+                    <p style="margin-top: 15px; color: var(--text-muted); font-size: 14px;">Point your camera at a barcode</p>
+                </div>
+            </div>
         </div>
     </div> <!-- End of app-wrapper -->
 
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script src="/app.js"></script>
 </body>
 

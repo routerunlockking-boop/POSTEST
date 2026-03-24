@@ -58,6 +58,8 @@ const InvoiceSchema = new mongoose.Schema({
     invoice_number: { type: String, required: true },
     date: { type: String, required: true }, // Format: YYYY-MM-DD
     time: { type: String, required: true }, // Format: HH:MM
+    customer_name: { type: String, default: '' },
+    customer_phone: { type: String, default: '' },
     total_amount: { type: Number, default: 0.0 },
     total_profit: { type: Number, default: 0.0 },
     items: [InvoiceItemSchema]

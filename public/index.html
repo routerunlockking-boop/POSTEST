@@ -244,8 +244,22 @@
                                 <h2>Current Bill</h2>
                                 <p id="pos-bill-no">Auto Generate</p>
                             </div>
+                            <div class="pos-tabs" style="display: flex; gap: 16px; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+                                <button class="pos-tab-btn active" id="tab-btn-items" style="background:none; border:none; font-weight:600; color:var(--primary); cursor:pointer; font-size: 14px; position:relative;">Bill Items</button>
+                                <button class="pos-tab-btn" id="tab-btn-customer" style="background:none; border:none; font-weight:500; color:var(--text-muted); cursor:pointer; font-size: 14px; position:relative;">Customer Details</button>
+                            </div>
                             <div class="bill-items" id="pos-bill-items">
                                 <!-- Populated via JS -->
+                            </div>
+                            <div class="customer-details" id="pos-customer-details" style="display: none; flex: 1; padding: 8px 0;">
+                                <div class="form-group">
+                                    <label>Customer Name (Optional)</label>
+                                    <input type="text" id="pos-customer-name" class="form-control" placeholder="Enter name">
+                                </div>
+                                <div class="form-group">
+                                    <label>WhatsApp / Phone (Optional)</label>
+                                    <input type="tel" id="pos-customer-phone" class="form-control" placeholder="Enter phone number">
+                                </div>
                             </div>
                             <div class="bill-summary">
                                 <div class="summary-row total">
@@ -476,6 +490,8 @@
                             <p>Invoice: <span id="receipt-no"></span></p>
                             <p>Date: <span id="receipt-date"></span></p>
                             <p>Time: <span id="receipt-time"></span></p>
+                            <p id="receipt-customer-row" style="display:none;">Customer: <span id="receipt-customer-name"></span></p>
+                            <p id="receipt-phone-row" style="display:none;">Contact: <span id="receipt-customer-phone"></span></p>
                         </div>
                         <p>----------------------------</p>
                         <table class="receipt-table" id="receipt-items">

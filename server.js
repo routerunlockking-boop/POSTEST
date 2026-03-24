@@ -300,6 +300,8 @@ app.get('/api/invoices', async (req, res) => {
         const mappedInvoices = invoices.map(inv => ({
             id: inv._id.toString(),
             invoice_number: inv.invoice_number,
+            customer_name: inv.customer_name || '',
+            customer_phone: inv.customer_phone || '',
             date: inv.date,
             time: inv.time,
             total_amount: inv.total_amount,
@@ -322,6 +324,8 @@ app.get('/api/invoices/:id', async (req, res) => {
         const response = {
             id: invoice._id.toString(),
             invoice_number: invoice.invoice_number,
+            customer_name: invoice.customer_name || '',
+            customer_phone: invoice.customer_phone || '',
             date: invoice.date,
             time: invoice.time,
             total_amount: invoice.total_amount,
@@ -340,7 +344,7 @@ app.get('/api/invoices/:id', async (req, res) => {
 });
 
 app.post('/api/invoices', async (req, res) => {
-    const { items, total_amount } = req.body;
+    const { items, total_amount, customer_name, customer_phone } = req.body;
     if (!items || items.length === 0 || !total_amount) {
         return res.status(400).json({ error: 'Invalid invoice data' });
     }
@@ -374,6 +378,8 @@ app.post('/api/invoices', async (req, res) => {
         const invoice = await Invoice.create({
             user_id: req.user._id,
             invoice_number,
+            customer_name,
+            customer_phone,
             date,
             time,
             total_amount,
@@ -394,6 +400,8 @@ app.post('/api/invoices', async (req, res) => {
             invoice: {
                 id: invoice._id.toString(),
                 invoice_number,
+                customer_name,
+                customer_phone,
                 date,
                 time,
                 total_amount,

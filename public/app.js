@@ -138,7 +138,31 @@ document.addEventListener('DOMContentLoaded', () => {
     
     setupNavigation();
     setupModals();
+    setupPOSTabs();
 });
+
+function setupPOSTabs() {
+    const tabItems = document.getElementById('tab-btn-items');
+    const tabCustomer = document.getElementById('tab-btn-customer');
+    const panelItems = document.getElementById('pos-bill-items');
+    const panelCustomer = document.getElementById('pos-customer-details');
+    
+    if (tabItems && tabCustomer) {
+        tabItems.addEventListener('click', () => {
+            tabItems.classList.add('active');
+            tabCustomer.classList.remove('active');
+            panelItems.style.display = 'block';
+            panelCustomer.style.display = 'none';
+        });
+
+        tabCustomer.addEventListener('click', () => {
+            tabCustomer.classList.add('active');
+            tabItems.classList.remove('active');
+            panelItems.style.display = 'none';
+            panelCustomer.style.display = 'block';
+        });
+    }
+}
 
 function updateClock() {
     const now = new Date();
@@ -581,6 +605,14 @@ function updateBillQuantity(id, change) {
     }
 }
 
+function updateBillPrice(id, newPrice) {
+    const item = currentBill.find(i => i.id === id);
+    if (item) {
+        item.price = parseFloat(newPrice) || 0;
+        updateBillUI();
+    }
+}
+
 function updateBillUI() {
     const itemsContainer = document.getElementById('pos-bill-items');
     itemsContainer.innerHTML = '';
@@ -595,7 +627,12 @@ function updateBillUI() {
         div.innerHTML = `
             <div class="bill-item-details">
                 <h4>${item.name}</h4>
-                <p>${formatCurrency(item.price)} x ${item.quantity}</p>
+                <div style="display:flex; align-items:center; gap:8px; margin-top:4px;">
+                    <input type="number" step="0.01" value="${item.price}" 
+                           onchange="updateBillPrice('${item.id}', this.value)" 
+                           style="width:80px; padding:4px; font-size:13px; border:1px solid var(--border); border-radius:4px;"> 
+                    <span style="font-size:13px; color:var(--text-muted)">x ${item.quantity}</span>
+                </div>
             </div>
             <div class="bill-item-actions">
                 <div class="qty-control">
@@ -620,9 +657,14 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
     
     let total = currentBill.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     
+    const customer_name = document.getElementById('pos-customer-name').value;
+    const customer_phone = document.getElementById('pos-customer-phone').value;
+    
     const payload = {
         items: currentBill,
-        total_amount: total
+        total_amount: total,
+        customer_name,
+        customer_phone
     };
     
     try {
@@ -641,6 +683,8 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
         
         // Clear bill
         currentBill = [];
+        document.getElementById('pos-customer-name').value = '';
+        document.getElementById('pos-customer-phone').value = '';
         updateBillUI();
         
         // Reload products cache
@@ -656,6 +700,24 @@ function showInvoicePrintout(invoice) {
     document.getElementById('receipt-no').textContent = invoice.invoice_number;
     document.getElementById('receipt-date').textContent = invoice.date;
     document.getElementById('receipt-time').textContent = invoice.time;
+    
+    if (invoice.customer_name || invoice.customer_phone) {
+        if (invoice.customer_name) {
+            document.getElementById('receipt-customer-row').style.display = 'block';
+            document.getElementById('receipt-customer-name').textContent = invoice.customer_name;
+        } else {
+            document.getElementById('receipt-customer-row').style.display = 'none';
+        }
+        if (invoice.customer_phone) {
+            document.getElementById('receipt-phone-row').style.display = 'block';
+            document.getElementById('receipt-customer-phone').textContent = invoice.customer_phone;
+        } else {
+            document.getElementById('receipt-phone-row').style.display = 'none';
+        }
+    } else {
+        document.getElementById('receipt-customer-row').style.display = 'none';
+        document.getElementById('receipt-phone-row').style.display = 'none';
+    }
     
     const tbody = document.querySelector('#receipt-items tbody');
     tbody.innerHTML = '';

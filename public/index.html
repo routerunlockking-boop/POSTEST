@@ -262,6 +262,14 @@
                                 </div>
                             </div>
                             <div class="bill-summary">
+                                <div class="form-group" style="margin-bottom: 16px;">
+                                    <label style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">Payment Method</label>
+                                    <select id="pos-payment-method" class="form-control" style="padding: 10px; cursor: pointer;">
+                                        <option value="Cash">Cash</option>
+                                        <option value="Bank payment">Bank payment</option>
+                                        <option value="COD">COD</option>
+                                    </select>
+                                </div>
                                 <div class="summary-row total">
                                     <span>TOTAL</span>
                                     <span id="pos-total-amount">0.00</span>
@@ -492,6 +500,7 @@
                             <p>Time: <span id="receipt-time"></span></p>
                             <p id="receipt-customer-row" style="display:none;">Customer: <span id="receipt-customer-name"></span></p>
                             <p id="receipt-phone-row" style="display:none;">Contact: <span id="receipt-customer-phone"></span></p>
+                            <p>Payment: <span id="receipt-payment-method"></span></p>
                         </div>
                         <p>----------------------------</p>
                         <table class="receipt-table" id="receipt-items">

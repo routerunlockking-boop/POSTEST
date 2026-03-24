@@ -659,12 +659,14 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
     
     const customer_name = document.getElementById('pos-customer-name').value;
     const customer_phone = document.getElementById('pos-customer-phone').value;
+    const payment_method = document.getElementById('pos-payment-method').value;
     
     const payload = {
         items: currentBill,
         total_amount: total,
         customer_name,
-        customer_phone
+        customer_phone,
+        payment_method
     };
     
     try {
@@ -685,6 +687,7 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
         currentBill = [];
         document.getElementById('pos-customer-name').value = '';
         document.getElementById('pos-customer-phone').value = '';
+        document.getElementById('pos-payment-method').value = 'Cash';
         updateBillUI();
         
         // Reload products cache
@@ -700,6 +703,7 @@ function showInvoicePrintout(invoice) {
     document.getElementById('receipt-no').textContent = invoice.invoice_number;
     document.getElementById('receipt-date').textContent = invoice.date;
     document.getElementById('receipt-time').textContent = invoice.time;
+    document.getElementById('receipt-payment-method').textContent = invoice.payment_method || 'Cash';
     
     if (invoice.customer_name || invoice.customer_phone) {
         if (invoice.customer_name) {

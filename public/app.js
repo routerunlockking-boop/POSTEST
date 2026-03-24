@@ -253,11 +253,13 @@ function setupModals() {
         const id = document.getElementById('product-id').value;
         const name = document.getElementById('product-name').value;
         const qty = document.getElementById('product-qty').value;
+        const cost_price = document.getElementById('product-cost-price').value;
         const price = document.getElementById('product-price').value;
         
         const payload = { 
             name, 
             quantity: parseInt(qty), 
+            cost_price: parseFloat(cost_price) || 0,
             price: parseFloat(price),
             image: currentProductImageBase64
         };
@@ -365,7 +367,9 @@ async function loadDashboard() {
         document.getElementById('dash-bills-today').textContent = stats.totalBillsToday;
         document.getElementById('dash-bills-month').textContent = stats.totalBillsMonth;
         document.getElementById('dash-income-today').textContent = formatCurrency(stats.dailyIncome);
+        document.getElementById('dash-profit-today').textContent = formatCurrency(stats.dailyProfit || 0);
         document.getElementById('dash-income-month').textContent = formatCurrency(stats.monthlyIncome);
+        document.getElementById('dash-profit-month').textContent = formatCurrency(stats.monthlyProfit || 0);
         document.getElementById('dash-total-products').textContent = stats.totalProducts;
         document.getElementById('dash-low-stock').textContent = stats.lowStockProducts;
 
@@ -427,6 +431,7 @@ async function loadInventory() {
             tr.innerHTML = `
                 <td style="display:flex;align-items:center;gap:12px;">${imgHtml} ${nameDisplay}</td>
                 <td class="${p.quantity <= 10 ? 'text-danger' : ''}">${p.quantity}</td>
+                <td>${formatCurrency(p.cost_price || 0)}</td>
                 <td>${formatCurrency(p.price)}</td>
                 <td>
                     <button class="btn btn-outline btn-icon-only edit-btn" data-id="${p.id}"><i class='bx bx-edit'></i></button>
@@ -466,6 +471,7 @@ function editProduct(id) {
         document.getElementById('product-id').value = p.id;
         document.getElementById('product-name').value = p.name;
         document.getElementById('product-qty').value = p.quantity;
+        document.getElementById('product-cost-price').value = p.cost_price || 0;
         document.getElementById('product-price').value = p.price;
         
         currentProductImageBase64 = p.image || null;
@@ -708,6 +714,7 @@ async function loadInvoices() {
                 <td>${inv.date}</td>
                 <td>${inv.time}</td>
                 <td style="font-weight:bold">${formatCurrency(inv.total_amount)}</td>
+                <td style="color: #15803d; font-weight:bold">${formatCurrency(inv.total_profit || 0)}</td>
                 <td>
                     <button class="btn btn-outline btn-icon-only view-invoice-btn" data-id="${inv.id}"><i class='bx bx-show'></i></button>
                     <button class="btn btn-primary btn-icon-only print-invoice-btn" data-id="${inv.id}"><i class='bx bx-printer'></i></button>
@@ -784,21 +791,21 @@ async function loadReports() {
     
     try {
         if (currentReportMode === 'sales') {
-            thead.innerHTML = `<tr><th>Date</th><th>Total Sales</th></tr>`;
+            thead.innerHTML = `<tr><th>Date</th><th>Total Sales</th><th>Profit</th></tr>`;
             const res = await fetchAuth(`${API_BASE}/reports/sales`);
             const data = await res.json();
             data.forEach(row => {
                const tr = document.createElement('tr');
-               tr.innerHTML = `<td>${row.date}</td><td>${formatCurrency(row.total_sales)}</td>`;
+               tr.innerHTML = `<td>${row.date}</td><td>${formatCurrency(row.total_sales)}</td><td style="color: #15803d; font-weight:bold">${formatCurrency(row.total_profit || 0)}</td>`;
                tbody.appendChild(tr);
             });
         } else {
-            thead.innerHTML = `<tr><th>Product Name</th><th>Quantity Sold</th><th>Revenue</th></tr>`;
+            thead.innerHTML = `<tr><th>Product Name</th><th>Quantity Sold</th><th>Revenue</th><th>Profit</th></tr>`;
             const res = await fetchAuth(`${API_BASE}/reports/product-sales`);
             const data = await res.json();
             data.forEach(row => {
                const tr = document.createElement('tr');
-               tr.innerHTML = `<td>${row.product_name}</td><td>${row.quantity_sold}</td><td>${formatCurrency(row.revenue)}</td>`;
+               tr.innerHTML = `<td>${row.product_name}</td><td>${row.quantity_sold}</td><td>${formatCurrency(row.revenue)}</td><td style="color: #15803d; font-weight:bold">${formatCurrency(row.profit || 0)}</td>`;
                tbody.appendChild(tr);
             });
         }

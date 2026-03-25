@@ -365,6 +365,7 @@ app.get('/api/invoices/:id', async (req, res) => {
             date: invoice.date,
             time: invoice.time,
             total_amount: invoice.total_amount,
+            owner_name: invoice.user_id ? invoice.user_id.business_name : 'Unknown',
             items: invoice.items.map(item => ({
                 id: item._id ? item._id.toString() : null,
                 product_name: item.product_name,
@@ -443,6 +444,7 @@ app.post('/api/invoices', async (req, res) => {
                 date,
                 time,
                 total_amount,
+                owner_name: req.user.business_name,
                 items: formattedItems
             }
         });

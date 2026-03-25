@@ -33,7 +33,8 @@ const UserSchema = new mongoose.Schema({
     whatsapp_number: { type: String },
     marketplace_enabled: { type: Boolean, default: false },
     role: { type: String, default: 'user' },
-    is_active: { type: Boolean, default: false }
+    is_active: { type: Boolean, default: false },
+    delete_request: { type: Boolean, default: false }
 });
 
 const ProductSchema = new mongoose.Schema({

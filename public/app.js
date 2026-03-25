@@ -86,8 +86,10 @@ function checkAuth() {
         
         if (currentRole === 'admin') {
             document.getElementById('nav-item-admin').style.display = 'block';
+            document.getElementById('btn-request-disconnect').style.display = 'none';
         } else {
             document.getElementById('nav-item-admin').style.display = 'none';
+            document.getElementById('btn-request-disconnect').style.display = 'inline-block';
         }
         
         // Re-initialize data
@@ -378,6 +380,29 @@ function setupNavigation() {
             } catch (err) {
                 console.error(err);
                 alert('Error enabling marketplace. Did you restart the server?');
+            }
+        });
+    }
+
+    // ==== DISCONNECT ACCOUNT ====
+    const btnDisconnect = document.getElementById('btn-request-disconnect');
+    if (btnDisconnect) {
+        btnDisconnect.addEventListener('click', async () => {
+            if (confirm('Are you sure you want to request your account to be disconnected/deleted?')) {
+                try {
+                    const res = await fetchAuth(`${API_BASE}/user/request-disconnect`, { method: 'POST' });
+                    const data = await res.json();
+                    if(res.ok) {
+                        alert(data.message);
+                        btnDisconnect.disabled = true;
+                        btnDisconnect.textContent = 'Disconnect Requested';
+                    } else {
+                        alert(data.error || 'Failed to request disconnection');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('Error requesting disconnection.');
+                }
             }
         });
     }
@@ -1076,8 +1101,9 @@ async function loadAdminUsers() {
         
         adminUsersList.forEach(user => {
             const tr = document.createElement('tr');
+            const disconnectBadge = user.delete_request ? '<br><span class="text-danger" style="font-size:11px;font-weight:bold;color:#ef4444;">[Disconnect Requested]</span>' : '';
             tr.innerHTML = `
-                <td>${user.business_name}</td>
+                <td>${user.business_name} ${disconnectBadge}</td>
                 <td>${user.email}</td>
                 <td>${user.marketplace_enabled ? '<span class="text-success" style="color:var(--success);font-weight:600;">Enabled</span>' : '<span class="text-muted">Disabled</span>'}</td>
                 <td>

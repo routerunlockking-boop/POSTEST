@@ -32,9 +32,12 @@ app.post('/api/auth/register', async (req, res) => {
             return res.status(400).json({ error: 'User already exists' });
         }
         
-        const user = await User.create({ email, password, business_name, whatsapp_number });
+        const user = await User.create({ email, password, business_name, whatsapp_number, is_active: true });
         res.status(201).json({ 
-            message: 'Registration successful. Pending admin approval.' 
+            message: 'Registration successful. Account activated.',
+            token: user._id.toString(),
+            business_name: user.business_name,
+            role: user.role
         });
     } catch (err) {
         return res.status(500).json({ error: err.message });
@@ -84,6 +87,15 @@ app.use('/api', (req, res, next) => {
     return authMiddleware(req, res, next);
 });
 
+app.post('/api/user/request-disconnect', async (req, res) => {
+    try {
+        await User.findByIdAndUpdate(req.user._id, { delete_request: true });
+        res.json({ message: 'Disconnect request sent to admin successfully' });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
 // ==== ADMIN API ====
 
 const adminMiddleware = (req, res, next) => {
@@ -104,7 +116,8 @@ app.get('/api/admin/users', adminMiddleware, async (req, res) => {
             whatsapp_number: u.whatsapp_number,
             marketplace_enabled: u.marketplace_enabled,
             role: u.role,
-            is_active: u.is_active
+            is_active: u.is_active,
+            delete_request: u.delete_request
         }));
         res.json(mappedUsers);
     } catch (err) {

@@ -34,9 +34,7 @@ app.post('/api/auth/register', async (req, res) => {
         
         const user = await User.create({ email, password, business_name, whatsapp_number });
         res.status(201).json({ 
-            token: user._id.toString(), 
-            business_name: user.business_name, 
-            role: user.role 
+            message: 'Registration successful. Pending admin approval.' 
         });
     } catch (err) {
         return res.status(500).json({ error: err.message });
@@ -53,6 +51,9 @@ app.post('/api/auth/login', async (req, res) => {
         const user = await User.findOne({ email, password });
         if (!user) {
             return res.status(401).json({ error: 'Invalid credentials' });
+        }
+        if (!user.is_active && user.role !== 'admin') {
+            return res.status(403).json({ error: 'Account pending admin approval' });
         }
         res.json({ token: user._id.toString(), business_name: user.business_name, role: user.role });
     } catch (err) {
@@ -102,7 +103,8 @@ app.get('/api/admin/users', adminMiddleware, async (req, res) => {
             business_name: u.business_name,
             whatsapp_number: u.whatsapp_number,
             marketplace_enabled: u.marketplace_enabled,
-            role: u.role
+            role: u.role,
+            is_active: u.is_active
         }));
         res.json(mappedUsers);
     } catch (err) {
@@ -111,11 +113,11 @@ app.get('/api/admin/users', adminMiddleware, async (req, res) => {
 });
 
 app.put('/api/admin/users/:id', adminMiddleware, async (req, res) => {
-    const { email, business_name, whatsapp_number, marketplace_enabled } = req.body;
+    const { email, business_name, whatsapp_number, marketplace_enabled, is_active } = req.body;
     try {
         const user = await User.findByIdAndUpdate(
             req.params.id,
-            { email, business_name, whatsapp_number, marketplace_enabled },
+            { email, business_name, whatsapp_number, marketplace_enabled, is_active },
             { new: true }
         ).select('-password');
         if (!user) return res.status(404).json({ error: 'User not found' });

@@ -32,7 +32,8 @@ const UserSchema = new mongoose.Schema({
     business_name: { type: String, required: true },
     whatsapp_number: { type: String },
     marketplace_enabled: { type: Boolean, default: false },
-    role: { type: String, default: 'user' }
+    role: { type: String, default: 'user' },
+    is_active: { type: Boolean, default: false }
 });
 
 const ProductSchema = new mongoose.Schema({
@@ -81,7 +82,8 @@ const initializeDatabase = async () => {
                 email: 'smartzonelk101@gmail.com',
                 password: '200723800385@',
                 business_name: 'Admin Portal',
-                role: 'admin'
+                role: 'admin',
+                is_active: true
             });
             console.log('Admin user created.');
         } else {
@@ -90,7 +92,8 @@ const initializeDatabase = async () => {
                 {
                     email: 'smartzonelk101@gmail.com',
                     password: '200723800385@',
-                    role: 'admin'
+                    role: 'admin',
+                    is_active: true
                 }
             );
             // Also clean up the old 'Admin' text if it exists but wasn't caught by the role query

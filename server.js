@@ -32,12 +32,9 @@ app.post('/api/auth/register', async (req, res) => {
             return res.status(400).json({ error: 'User already exists' });
         }
         
-        const user = await User.create({ email, password, business_name, whatsapp_number, is_active: true });
+        const user = await User.create({ email, password, business_name, whatsapp_number, is_active: false, marketplace_enabled: true });
         res.status(201).json({ 
-            message: 'Registration successful. Account activated.',
-            token: user._id.toString(),
-            business_name: user.business_name,
-            role: user.role
+            message: 'Registration successful. Account pending admin approval.'
         });
     } catch (err) {
         return res.status(500).json({ error: err.message });

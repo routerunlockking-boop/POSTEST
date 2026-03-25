@@ -55,7 +55,8 @@ registerForm.addEventListener('submit', async (e) => {
         const data = await res.json();
         if(!res.ok) throw new Error(data.error || 'Registration failed');
         
-        loginSuccess(data.token, data.business_name, data.role);
+        alert(data.message);
+        document.getElementById('switch-to-login').click();
     } catch(err) { alert(err.message); }
 });
 

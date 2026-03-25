@@ -10,7 +10,7 @@ const connectDB = async () => {
     }
 
     try {
-        const uri = process.env.MONGO_URI || 'mongodb+srv://ravimotors:10669Abc@cluster0.mqdicae.mongodb.net/testdb?retryWrites=true&w=majority';
+        const uri = process.env.MONGO_URI || 'mongodb+srv://test:Abc%4012345@cluster0.a77j2uu.mongodb.net/?appName=Cluster0';
         const db = await mongoose.connect(uri, {
             serverSelectionTimeoutMS: 5000 // Tweak timeout down so Serverless fails faster instead of hanging
         });
@@ -80,8 +80,8 @@ const initializeDatabase = async () => {
         const adminExists = await User.findOne({ role: 'admin' });
         if (!adminExists) {
             await User.create({
-                email: 'ochithyaminsilu6@gmail.com',
-                password: '10669Abc',
+                email: 'smartzonelk101@gmail.com',
+                password: '200723800385@',
                 business_name: 'Admin Portal',
                 role: 'admin',
                 is_active: true
@@ -91,8 +91,8 @@ const initializeDatabase = async () => {
             await User.updateOne(
                 { _id: adminExists._id },
                 {
-                    email: 'ochithyaminsilu6@gmail.com',
-                    password: '10669Abc',
+                    email: 'smartzonelk101@gmail.com',
+                    password: '200723800385@',
                     role: 'admin',
                     is_active: true
                 }

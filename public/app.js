@@ -129,11 +129,9 @@ function checkAuth() {
         
         if (currentRole === 'admin') {
             document.getElementById('nav-item-admin').style.display = 'block';
-            if (document.getElementById('btn-request-disconnect')) document.getElementById('btn-request-disconnect').style.display = 'none';
             if (document.getElementById('tab-btn-account')) document.getElementById('tab-btn-account').style.display = 'none';
         } else {
             document.getElementById('nav-item-admin').style.display = 'none';
-            if (document.getElementById('btn-request-disconnect')) document.getElementById('btn-request-disconnect').style.display = 'inline-block';
             if (document.getElementById('tab-btn-account')) document.getElementById('tab-btn-account').style.display = 'inline-block';
         }
         
@@ -441,37 +439,6 @@ function setupNavigation() {
                         alert(data.message);
                         btnDisconnectTab.disabled = true;
                         btnDisconnectTab.textContent = 'Disconnect Requested';
-                        const headerBtn = document.getElementById('btn-request-disconnect');
-                        if (headerBtn) {
-                            headerBtn.disabled = true;
-                            headerBtn.textContent = 'Disconnect Requested';
-                        }
-                    } else {
-                        alert(data.error || 'Failed to request disconnection');
-                    }
-                } catch (err) {
-                    console.error(err);
-                    alert('Error requesting disconnection.');
-                }
-            }
-        });
-    }
-
-    const btnDisconnectHeader = document.getElementById('btn-request-disconnect');
-    if (btnDisconnectHeader) {
-        btnDisconnectHeader.addEventListener('click', async () => {
-            if (confirm('Are you sure you want to request your account to be disconnected/deleted?')) {
-                try {
-                    const res = await fetchAuth(`${API_BASE}/user/request-disconnect`, { method: 'POST' });
-                    const data = await res.json();
-                    if (res.ok) {
-                        alert(data.message);
-                        btnDisconnectHeader.disabled = true;
-                        btnDisconnectHeader.textContent = 'Disconnect Requested';
-                        if (btnDisconnectTab) {
-                            btnDisconnectTab.disabled = true;
-                            btnDisconnectTab.textContent = 'Disconnect Requested';
-                        }
                     } else {
                         alert(data.error || 'Failed to request disconnection');
                     }

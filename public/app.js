@@ -514,12 +514,13 @@ function setupModals() {
         const email = document.getElementById('admin-email').value;
         const whatsapp_number = document.getElementById('admin-whatsapp').value;
         const marketplace_enabled = document.getElementById('admin-marketplace-enabled').checked;
+        const is_active = document.getElementById('admin-is-active').checked;
         
         try {
             await fetchAuth(`${API_BASE}/admin/users/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ business_name, email, whatsapp_number, marketplace_enabled })
+                body: JSON.stringify({ business_name, email, whatsapp_number, marketplace_enabled, is_active })
             });
             hideModal();
             loadAdminUsers();
@@ -1106,7 +1107,10 @@ async function loadAdminUsers() {
             tr.innerHTML = `
                 <td>${user.business_name} ${disconnectBadge}</td>
                 <td>${user.email}</td>
-                <td>${user.marketplace_enabled ? '<span class="text-success" style="color:var(--success);font-weight:600;">Enabled</span>' : '<span class="text-muted">Disabled</span>'}</td>
+                <td>
+                    <div style="font-size:12px; margin-bottom:4px;">Marketplace: ${user.marketplace_enabled ? '<span class="text-success" style="color:var(--success);font-weight:600;">Enabled</span>' : '<span class="text-muted">Disabled</span>'}</div>
+                    <div style="font-size:12px;">Account: ${user.is_active ? '<span class="text-success" style="color:var(--success);font-weight:600;">Active</span>' : '<span class="text-danger" style="color:var(--danger);font-weight:600;">Pending approval</span>'}</div>
+                </td>
                 <td>
                     <button class="btn btn-outline btn-icon-only view-user-inventory-btn" data-id="${user.id}" title="View Inventory"><i class='bx bx-box'></i></button>
                     <button class="btn btn-outline btn-icon-only admin-edit-btn" data-id="${user.id}" title="Edit User"><i class='bx bx-edit'></i></button>
@@ -1153,6 +1157,7 @@ document.querySelector('#admin-users-table tbody').addEventListener('click', asy
             document.getElementById('admin-email').value = user.email;
             document.getElementById('admin-whatsapp').value = user.whatsapp_number || '';
             document.getElementById('admin-marketplace-enabled').checked = user.marketplace_enabled;
+            document.getElementById('admin-is-active').checked = user.is_active;
             showModal(adminUserModal);
         }
         return;

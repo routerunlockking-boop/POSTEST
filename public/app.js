@@ -9,6 +9,22 @@ const authOverlay = document.getElementById('auth-overlay');
 const loginForm = document.getElementById('login-form');
 const registerForm = document.getElementById('register-form');
 
+function showAuthAlert(message, type = 'error') {
+    const alertBox = document.getElementById('auth-alert');
+    if (!alertBox) return;
+    alertBox.textContent = message;
+    alertBox.style.display = 'block';
+    if (type === 'success') {
+        alertBox.style.backgroundColor = '#dcfce7';
+        alertBox.style.color = '#166534';
+        alertBox.style.border = '1px solid #bbf7d0';
+    } else {
+        alertBox.style.backgroundColor = '#fee2e2';
+        alertBox.style.color = '#b91c1c';
+        alertBox.style.border = '1px solid #fecaca';
+    }
+}
+
 document.getElementById('switch-to-register').addEventListener('click', () => {
     loginForm.classList.remove('active');
     registerForm.classList.add('active');
@@ -36,7 +52,7 @@ loginForm.addEventListener('submit', async (e) => {
         if(!res.ok) throw new Error(data.error || 'Login failed');
         
         loginSuccess(data.token, data.business_name, data.role);
-    } catch(err) { alert(err.message); }
+    } catch(err) { showAuthAlert(err.message, 'error'); }
 });
 
 registerForm.addEventListener('submit', async (e) => {
@@ -55,9 +71,9 @@ registerForm.addEventListener('submit', async (e) => {
         const data = await res.json();
         if(!res.ok) throw new Error(data.error || 'Registration failed');
         
-        alert(data.message);
+        showAuthAlert(data.message, 'success');
         document.getElementById('switch-to-login').click();
-    } catch(err) { alert(err.message); }
+    } catch(err) { showAuthAlert(err.message, 'error'); }
 });
 
 function loginSuccess(token, businessName, role = 'user') {
@@ -87,10 +103,10 @@ function checkAuth() {
         
         if (currentRole === 'admin') {
             document.getElementById('nav-item-admin').style.display = 'block';
-            document.getElementById('btn-request-disconnect').style.display = 'none';
+            if (document.getElementById('tab-btn-account')) document.getElementById('tab-btn-account').style.display = 'none';
         } else {
             document.getElementById('nav-item-admin').style.display = 'none';
-            document.getElementById('btn-request-disconnect').style.display = 'inline-block';
+            if (document.getElementById('tab-btn-account')) document.getElementById('tab-btn-account').style.display = 'inline-block';
         }
         
         // Re-initialize data
@@ -386,7 +402,7 @@ function setupNavigation() {
     }
 
     // ==== DISCONNECT ACCOUNT ====
-    const btnDisconnect = document.getElementById('btn-request-disconnect');
+    const btnDisconnect = document.getElementById('btn-request-disconnect-tab');
     if (btnDisconnect) {
         btnDisconnect.addEventListener('click', async () => {
             if (confirm('Are you sure you want to request your account to be disconnected/deleted?')) {
@@ -1056,12 +1072,25 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         document.querySelectorAll('.tab-btn').forEach(td => td.classList.remove('active'));
         e.target.classList.add('active');
         currentReportMode = e.target.getAttribute('data-report');
-        loadReports();
+        
+        const tableContainer = document.getElementById('reports-table-container');
+        const accContainer = document.getElementById('reports-account-container');
+        
+        if (currentReportMode === 'account') {
+            if (tableContainer) tableContainer.style.display = 'none';
+            if (accContainer) accContainer.style.display = 'block';
+        } else {
+            if (tableContainer) tableContainer.style.display = 'block';
+            if (accContainer) accContainer.style.display = 'none';
+            loadReports();
+        }
     });
 });
 
 async function loadReports() {
-    const thead = document.querySelector('#reports-table document, #reports-table thead');
+    if (currentReportMode === 'account') return; // Don't fetch data for account tab
+    
+    const thead = document.querySelector('#reports-table thead');
     const tbody = document.querySelector('#reports-table tbody');
     tbody.innerHTML = '';
     

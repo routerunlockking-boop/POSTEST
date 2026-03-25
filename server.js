@@ -34,7 +34,7 @@ app.post('/api/auth/register', async (req, res) => {
         
         const user = await User.create({ email, password, business_name, whatsapp_number, is_active: false, marketplace_enabled: true });
         res.status(201).json({ 
-            message: 'Registration successful. Account pending admin approval.'
+            message: 'Account creation successful. Pending admin approval.'
         });
     } catch (err) {
         return res.status(500).json({ error: err.message });

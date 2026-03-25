@@ -13,6 +13,8 @@
 </head>
 
 <body>
+    <!-- Toast Notification Container -->
+    <div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;"></div>
 
     <!-- Authentication Overlay -->
     <div id="auth-overlay" class="auth-overlay active">
@@ -20,7 +22,6 @@
             <div class="auth-header">
                 <h2>Welcome To SmartZone POS</h2>
                 <p id="auth-subtitle">Login to your account or register a new business</p>
-                <div id="auth-alert" style="display:none; padding:12px; border-radius:8px; margin-top:15px; font-size:14px; font-weight:500; text-align:center;"></div>
             </div>
 
             <form id="login-form" class="auth-form active">
@@ -46,7 +47,7 @@
                 </div>
                 <div class="form-group">
                     <label>WhatsApp Number</label>
-                    <input type="tel" id="reg-whatsapp" class="form-control" required placeholder="e.g. +94711234567">
+                    <input type="tel" id="reg-whatsapp" class="form-control" required value="+94786800086" placeholder="e.g. +94711234567">
                     <small class="form-text text-muted" style="display:block; margin-top:5px; font-size:12px;">Include
                         country code for marketplace checkout.</small>
                 </div>

@@ -9,20 +9,46 @@ const authOverlay = document.getElementById('auth-overlay');
 const loginForm = document.getElementById('login-form');
 const registerForm = document.getElementById('register-form');
 
-function showAuthAlert(message, type = 'error') {
-    const alertBox = document.getElementById('auth-alert');
-    if (!alertBox) return;
-    alertBox.textContent = message;
-    alertBox.style.display = 'block';
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.style.padding = '14px 20px';
+    toast.style.borderRadius = '8px';
+    toast.style.color = '#fff';
+    toast.style.fontWeight = '500';
+    toast.style.fontSize = '14px';
+    toast.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.1)';
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(-20px)';
+    toast.style.transition = 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+    toast.style.display = 'flex';
+    toast.style.alignItems = 'center';
+    toast.style.gap = '10px';
+
     if (type === 'success') {
-        alertBox.style.backgroundColor = '#dcfce7';
-        alertBox.style.color = '#166534';
-        alertBox.style.border = '1px solid #bbf7d0';
+        toast.style.backgroundColor = '#10b981';
+        toast.innerHTML = `<i class='bx bx-check-circle' style='font-size: 20px;'></i> <span>${message}</span>`;
     } else {
-        alertBox.style.backgroundColor = '#fee2e2';
-        alertBox.style.color = '#b91c1c';
-        alertBox.style.border = '1px solid #fecaca';
+        toast.style.backgroundColor = '#ef4444';
+        toast.innerHTML = `<i class='bx bx-error-circle' style='font-size: 20px;'></i> <span>${message}</span>`;
     }
+
+    container.appendChild(toast);
+
+    requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
+    });
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-20px)';
+        setTimeout(() => {
+            if (toast.parentElement) toast.parentElement.removeChild(toast);
+        }, 400);
+    }, 4500);
 }
 
 document.getElementById('switch-to-register').addEventListener('click', () => {
@@ -52,7 +78,7 @@ loginForm.addEventListener('submit', async (e) => {
         if(!res.ok) throw new Error(data.error || 'Login failed');
         
         loginSuccess(data.token, data.business_name, data.role);
-    } catch(err) { showAuthAlert(err.message, 'error'); }
+    } catch(err) { showToast(err.message, 'error'); }
 });
 
 registerForm.addEventListener('submit', async (e) => {
@@ -71,9 +97,9 @@ registerForm.addEventListener('submit', async (e) => {
         const data = await res.json();
         if(!res.ok) throw new Error(data.error || 'Registration failed');
         
-        showAuthAlert(data.message, 'success');
+        showToast(data.message, 'success');
         document.getElementById('switch-to-login').click();
-    } catch(err) { showAuthAlert(err.message, 'error'); }
+    } catch(err) { showToast(err.message, 'error'); }
 });
 
 function loginSuccess(token, businessName, role = 'user') {

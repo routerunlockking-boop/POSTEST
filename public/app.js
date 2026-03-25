@@ -8,6 +8,7 @@ let currentRole = localStorage.getItem('pos_role') || 'user';
 const authOverlay = document.getElementById('auth-overlay');
 const loginForm = document.getElementById('login-form');
 const registerForm = document.getElementById('register-form');
+const forgotPasswordForm = document.getElementById('forgot-password-form');
 
 function showToast(message, type = 'success') {
     const container = document.getElementById('toast-container');
@@ -59,6 +60,21 @@ document.getElementById('switch-to-register').addEventListener('click', () => {
 
 document.getElementById('switch-to-login').addEventListener('click', () => {
     registerForm.classList.remove('active');
+    if (forgotPasswordForm) forgotPasswordForm.classList.remove('active');
+    loginForm.classList.add('active');
+    document.getElementById('auth-subtitle').textContent = "Login to your account";
+});
+
+document.getElementById('switch-to-forgot').addEventListener('click', (e) => {
+    e.preventDefault();
+    loginForm.classList.remove('active');
+    registerForm.classList.remove('active');
+    forgotPasswordForm.classList.add('active');
+    document.getElementById('auth-subtitle').textContent = "Reset your password";
+});
+
+document.getElementById('switch-to-login-from-reset').addEventListener('click', () => {
+    forgotPasswordForm.classList.remove('active');
     loginForm.classList.add('active');
     document.getElementById('auth-subtitle').textContent = "Login to your account";
 });
@@ -101,6 +117,29 @@ registerForm.addEventListener('submit', async (e) => {
         document.getElementById('switch-to-login').click();
     } catch(err) { showToast(err.message, 'error'); }
 });
+
+if (forgotPasswordForm) {
+    forgotPasswordForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('reset-email').value;
+        const business_name = document.getElementById('reset-business').value;
+        const new_password = document.getElementById('reset-password').value;
+        
+        try {
+            const res = await fetch(`${API_BASE}/auth/reset-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, business_name, new_password })
+            });
+            const data = await res.json();
+            if(!res.ok) throw new Error(data.error || 'Password reset failed');
+            
+            showToast(data.message, 'success');
+            document.getElementById('switch-to-login-from-reset').click();
+            forgotPasswordForm.reset();
+        } catch(err) { showToast(err.message, 'error'); }
+    });
+}
 
 function loginSuccess(token, businessName, role = 'user') {
     authToken = token;
@@ -952,6 +991,7 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
 });
 
 function showInvoicePrintout(invoice) {
+    document.getElementById('receipt-business-name').textContent = invoice.owner_name || currentBusiness || 'Smart Zone';
     document.getElementById('receipt-no').textContent = invoice.invoice_number;
     document.getElementById('receipt-date').textContent = invoice.date;
     document.getElementById('receipt-time').textContent = invoice.time;

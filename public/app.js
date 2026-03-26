@@ -276,24 +276,36 @@ function setupBarcodeScanner() {
     let barcodeBuffer = '';
     let barcodeTimer = null;
     document.addEventListener('keypress', (e) => {
-        if (currentTab !== 'pos-view') return;
+        const isProductModalActive = productModal && productModal.classList.contains('active');
+        if (currentTab !== 'pos-view' && !isProductModalActive) return;
         
         // Ignore if the user is typing in another input/textarea (except our barcode input)
         const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA';
-        if (isInput && e.target.id !== 'pos-barcode-input') return;
+        if (isInput && e.target.id !== 'pos-barcode-input' && e.target.id !== 'product-barcode') {
+            if (!isProductModalActive) return;
+        }
 
         if (e.key === 'Enter') {
             if (barcodeBuffer) {
-                // If they typed in the barcode input, it's handled by its own event, but we can clear buffer
-                if (e.target.id !== 'pos-barcode-input') {
-                    const product = products.find(p => p.barcode === barcodeBuffer);
-                    if (product) {
-                        addToBill(product);
-                    } else {
-                        // Optional: alert('Product not found with this barcode.');
+                if (isProductModalActive) {
+                    // If the product modal is active, paste the barcode into the barcode field
+                    const pBarcodeInput = document.getElementById('product-barcode');
+                    if (pBarcodeInput) {
+                        pBarcodeInput.value = barcodeBuffer;
+                        // Trigger change/input event just in case
+                        pBarcodeInput.dispatchEvent(new Event('input'));
                     }
+                    barcodeBuffer = '';
+                } else if (currentTab === 'pos-view') {
+                    // If they typed in the barcode input, it's handled by its own event, but we can clear buffer
+                    if (e.target.id !== 'pos-barcode-input') {
+                        const product = products.find(p => p.barcode === barcodeBuffer);
+                        if (product) {
+                            addToBill(product);
+                        }
+                    }
+                    barcodeBuffer = '';
                 }
-                barcodeBuffer = '';
             }
         } else {
             barcodeBuffer += e.key;
@@ -534,6 +546,7 @@ function setupModals() {
         document.getElementById('product-image-preview').innerHTML = '<span style="color:var(--text-muted);font-size:12px;">+ Add Image</span>';
         document.getElementById('product-modal-title').textContent = 'Add Product';
         showModal(productModal);
+        setTimeout(() => document.getElementById('product-barcode').focus(), 100);
     });
 
     // Handle Image Selection
@@ -828,6 +841,7 @@ function editProduct(id) {
         
         document.getElementById('product-modal-title').textContent = 'Edit Product';
         showModal(productModal);
+        setTimeout(() => document.getElementById('product-barcode').focus(), 100);
     }
 }
 

@@ -939,6 +939,28 @@ function updateBillPrice(id, newPrice) {
     }
 }
 
+function updateBillName(id, newName) {
+    const item = currentBill.find(i => i.id === id);
+    if (item) {
+        item.name = newName;
+        updateBillUI();
+    }
+}
+
+function setBillQuantity(id, newQty) {
+    const item = currentBill.find(i => i.id === id);
+    if (item) {
+        let val = parseInt(newQty);
+        if (isNaN(val) || val <= 0) val = 1;
+        if (val > item.maxQty) {
+            alert('Cannot exceed available stock!');
+            val = item.maxQty;
+        }
+        item.quantity = val;
+        updateBillUI();
+    }
+}
+
 function updateBillUI() {
     const itemsContainer = document.getElementById('pos-bill-items');
     itemsContainer.innerHTML = '';
@@ -959,12 +981,12 @@ function updateBillUI() {
                 ${imgHtml}
             </div>
             <div class="pos-cart-info">
-                <div class="pos-cart-name">${item.name}</div>
-                <div class="pos-cart-price">${formatCurrency(item.price)}</div>
+                <input type="text" value="${item.name}" onchange="updateBillName('${item.id}', this.value)" class="pos-cart-name" style="width: 100%; border: 1px dashed transparent; background: transparent; padding: 0; outline: none; transition: 0.2s;" onfocus="this.style.borderBottom='1px dashed var(--border)'" onblur="this.style.borderBottom='1px dashed transparent'">
+                <input type="number" step="0.01" value="${item.price}" onchange="updateBillPrice('${item.id}', this.value)" class="pos-cart-price" style="width: 100%; border: 1px dashed transparent; background: transparent; padding: 0; outline: none; transition: 0.2s;" onfocus="this.style.borderBottom='1px dashed var(--border)'" onblur="this.style.borderBottom='1px dashed transparent'">
             </div>
             <div class="pos-cart-qty">
                 <button class="pos-qty-btn" onclick="updateBillQuantity('${item.id}', -1)">-</button>
-                <span class="pos-qty-val">${item.quantity}</span>
+                <input type="number" value="${item.quantity}" onchange="setBillQuantity('${item.id}', this.value)" style="width: 32px; text-align: center; border: 1px dashed transparent; background: transparent; font-size: 13px; font-weight: 600; outline: none; transition: 0.2s; -moz-appearance: textfield;" onfocus="this.style.borderBottom='1px dashed var(--border)'" onblur="this.style.borderBottom='1px dashed transparent'">
                 <button class="pos-qty-btn" onclick="updateBillQuantity('${item.id}', 1)">+</button>
             </div>
             <div class="pos-cart-total">${formatCurrency(amount)}</div>
@@ -992,15 +1014,17 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
     let subtotal = currentBill.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     let total = subtotal + (subtotal * 0.15); // +15% VAT
     
-    const customer_name = document.getElementById('pos-customer-name').value;
-    const customer_phone = document.getElementById('pos-customer-phone').value;
-    const payment_method = document.getElementById('pos-payment-method').value;
+    const customer_name = document.getElementById('pos-customer-name')?.value || '';
+    const customer_phone = document.getElementById('pos-customer-phone')?.value || '';
+    const payment_method = document.getElementById('pos-payment-method')?.value || 'Cash';
+    const operator_name = document.getElementById('pos-operator-name')?.value || 'Admin';
     
     const payload = {
         items: currentBill,
         total_amount: total,
         customer_name,
         customer_phone,
+        operator_name,
         payment_method
     };
     
@@ -1040,6 +1064,14 @@ function showInvoicePrintout(invoice) {
     document.getElementById('receipt-date').textContent = invoice.date;
     document.getElementById('receipt-time').textContent = invoice.time;
     document.getElementById('receipt-payment-method').textContent = invoice.payment_method || 'Cash';
+    
+    const opRow = document.getElementById('receipt-operator-row');
+    if (opRow && invoice.operator_name) {
+        opRow.style.display = 'block';
+        document.getElementById('receipt-operator-name').textContent = invoice.operator_name;
+    } else if (opRow) {
+        opRow.style.display = 'none';
+    }
     
     if (invoice.customer_name || invoice.customer_phone) {
         if (invoice.customer_name) {

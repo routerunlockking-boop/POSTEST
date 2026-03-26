@@ -275,45 +275,63 @@ function setupBarcodeScanner() {
     // Global listener for physical barcode scanner
     let barcodeBuffer = '';
     let barcodeTimer = null;
-    document.addEventListener('keypress', (e) => {
-        const isProductModalActive = productModal && productModal.classList.contains('active');
-        if (currentTab !== 'pos-view' && !isProductModalActive) return;
-        
-        // Ignore if the user is typing in another input/textarea (except our barcode input)
-        const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA';
-        if (isInput && e.target.id !== 'pos-barcode-input' && e.target.id !== 'product-barcode') {
-            if (!isProductModalActive) return;
-        }
+    let lastKeyTime = 0;
 
-        if (e.key === 'Enter') {
+    document.addEventListener('keydown', (e) => {
+        const isProductModalActive = productModal && productModal.classList.contains('active');
+        const isPosView = currentTab === 'pos-view';
+        
+        if (!isPosView && !isProductModalActive) return;
+
+        const now = Date.now();
+        const interval = now - lastKeyTime;
+        lastKeyTime = now;
+
+        const activeEl = document.activeElement;
+        const isBarcodeField = activeEl.id === 'pos-barcode-input' || activeEl.id === 'product-barcode';
+        const isOtherInput = (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA') && !isBarcodeField;
+
+        // If it's a single character, collect it
+        if (e.key.length === 1) {
+            // If it's coming fast (< 50ms), it's almost certainly a scanner
+            // We prevent default to stop it from typing into the wrong field
+            if (interval < 50 && isOtherInput && isProductModalActive) {
+                e.preventDefault();
+            }
+
+            barcodeBuffer += e.key;
+            clearTimeout(barcodeTimer);
+            barcodeTimer = setTimeout(() => {
+                barcodeBuffer = '';
+            }, 300); // Increased to 300ms for slower scanners
+        } 
+        
+        if (e.key === 'Enter' || e.key === 'Tab') {
             if (barcodeBuffer) {
                 if (isProductModalActive) {
-                    // If the product modal is active, paste the barcode into the barcode field
                     const pBarcodeInput = document.getElementById('product-barcode');
                     if (pBarcodeInput) {
+                        // If we redirected from another input, the first char might have slipped through
+                        // But usually, scanners are so fast that even the first char interval is tiny 
+                        // because of how they emulate keydown events in sequence.
                         pBarcodeInput.value = barcodeBuffer;
-                        // Trigger change/input event just in case
                         pBarcodeInput.dispatchEvent(new Event('input'));
+                        pBarcodeInput.dispatchEvent(new Event('change'));
+                        
+                        // Visual feedback
+                        pBarcodeInput.style.backgroundColor = 'rgba(16, 185, 129, 0.2)';
+                        setTimeout(() => pBarcodeInput.style.backgroundColor = '', 500);
                     }
                     barcodeBuffer = '';
-                } else if (currentTab === 'pos-view') {
-                    // If they typed in the barcode input, it's handled by its own event, but we can clear buffer
-                    if (e.target.id !== 'pos-barcode-input') {
+                    e.preventDefault();
+                } else if (isPosView) {
+                    if (activeEl.id !== 'pos-barcode-input') {
                         const product = products.find(p => p.barcode === barcodeBuffer);
-                        if (product) {
-                            addToBill(product);
-                        }
+                        if (product) addToBill(product);
                     }
                     barcodeBuffer = '';
                 }
             }
-        } else {
-            barcodeBuffer += e.key;
-            clearTimeout(barcodeTimer);
-            // Barcode scanners type very quickly, within a few milliseconds.
-            barcodeTimer = setTimeout(() => {
-                barcodeBuffer = '';
-            }, 100); 
         }
     });
 

@@ -281,8 +281,9 @@ function setupBarcodeScanner() {
     document.addEventListener('keydown', (e) => {
         const isProductModalActive = productModal && productModal.classList.contains('active');
         const isPosView = currentTab === 'pos-view';
+        const isInventoryView = currentTab === 'inventory-view';
         
-        if (!isPosView && !isProductModalActive) return;
+        if (!isPosView && !isInventoryView && !isProductModalActive) return;
 
         const now = Date.now();
         const interval = now - lastKeyTime;
@@ -296,7 +297,7 @@ function setupBarcodeScanner() {
         if (e.key.length === 1) {
             // If it's coming fast (< 50ms), it's almost certainly a scanner
             // We prevent default to stop it from typing into the wrong field
-            if (interval < 50 && isOtherInput && isProductModalActive) {
+            if (interval < 50 && isOtherInput && (isProductModalActive || isInventoryView)) {
                 e.preventDefault();
             }
 
@@ -312,14 +313,10 @@ function setupBarcodeScanner() {
                 if (isProductModalActive) {
                     const pBarcodeInput = document.getElementById('product-barcode');
                     if (pBarcodeInput) {
-                        // If we redirected from another input, the first char might have slipped through
-                        // But usually, scanners are so fast that even the first char interval is tiny 
-                        // because of how they emulate keydown events in sequence.
                         pBarcodeInput.value = barcodeBuffer;
                         pBarcodeInput.dispatchEvent(new Event('input'));
                         pBarcodeInput.dispatchEvent(new Event('change'));
                         
-                        // Visual feedback
                         pBarcodeInput.style.backgroundColor = 'rgba(16, 185, 129, 0.2)';
                         setTimeout(() => pBarcodeInput.style.backgroundColor = '', 500);
                     }
@@ -331,11 +328,19 @@ function setupBarcodeScanner() {
                         if (product) {
                             addToBill(product);
                         } else {
-                            // Scanned barcode not found in inventory, redirect to add product
                             openAddProductModal(barcodeBuffer);
                         }
                     }
                     barcodeBuffer = '';
+                } else if (isInventoryView) {
+                    const product = products.find(p => p.barcode === barcodeBuffer);
+                    if (product) {
+                        editProduct(product.id);
+                    } else {
+                        openAddProductModal(barcodeBuffer);
+                    }
+                    barcodeBuffer = '';
+                    e.preventDefault();
                 }
             }
         }

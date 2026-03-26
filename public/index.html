@@ -339,7 +339,11 @@
                                         class='bx bx-x'></i></button>
                             </div>
                         </div>
-                        <div style="display: flex; gap: 10px;">
+                        <div style="display: flex; gap: 10px; flex: 1; min-width: 300px;">
+                            <div style="position: relative; flex: 1;">
+                                <i class='bx bx-search' style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+                                <input type="text" id="inventory-search-input" class="form-control" style="padding-left: 38px;" placeholder="Search inventory by name or barcode...">
+                            </div>
                             <button class="btn btn-outline" id="btn-export-inventory"><i class='bx bx-download'></i>
                                 Export CSV</button>
                             <button class="btn btn-primary" id="btn-add-product"><i class='bx bx-plus'></i> Add

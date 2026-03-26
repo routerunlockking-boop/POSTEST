@@ -228,6 +228,18 @@ document.addEventListener('DOMContentLoaded', () => {
     setupModals();
     setupPOSTabs();
     setupBarcodeScanner();
+    
+    const inventorySearch = document.getElementById('inventory-search-input');
+    if (inventorySearch) {
+        inventorySearch.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = products.filter(p => 
+                p.name.toLowerCase().includes(term) || 
+                (p.barcode && p.barcode.toLowerCase().includes(term))
+            );
+            renderInventory(filtered);
+        });
+    }
 });
 
 function initTheme() {
@@ -276,15 +288,15 @@ function setupBarcodeScanner() {
     // Global listener for physical barcode scanner
     let barcodeBuffer = '';
     let barcodeTimer = null;
-    let lastKeyTime = 0;
+    let lastKeyTime = Date.now();
 
     document.addEventListener('keydown', (e) => {
         const isProductModalActive = productModal && productModal.classList.contains('active');
         const isPosView = currentTab === 'pos-view';
         const isInventoryView = currentTab === 'inventory-view';
         
-        if (!isPosView && !isInventoryView && !isProductModalActive) return;
-
+        // If not on a relevant view and not in a modal, we still want to handle scans 
+        // by switching to the inventory view.
         const now = Date.now();
         const interval = now - lastKeyTime;
         lastKeyTime = now;
@@ -293,36 +305,39 @@ function setupBarcodeScanner() {
         const isBarcodeField = activeEl.id === 'pos-barcode-input' || activeEl.id === 'product-barcode';
         const isOtherInput = (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA') && !isBarcodeField;
 
-        // If it's a single character, collect it
+        // Collect characters
         if (e.key.length === 1) {
-            // If it's coming fast (< 50ms), it's almost certainly a scanner
-            // We prevent default to stop it from typing into the wrong field
-            if (interval < 50 && isOtherInput && (isProductModalActive || isInventoryView)) {
+            // If it's a fast sequence, it's a scanner. 
+            // We'll collect it regardless of the current tab.
+            barcodeBuffer += e.key;
+            
+            // If it's fast and we are in an input that isn't the barcode field, prevent it
+            if (interval < 50 && isOtherInput) {
                 e.preventDefault();
             }
 
-            barcodeBuffer += e.key;
             clearTimeout(barcodeTimer);
             barcodeTimer = setTimeout(() => {
                 barcodeBuffer = '';
-            }, 300); // Increased to 300ms for slower scanners
+            }, 300);
         } 
         
         if (e.key === 'Enter' || e.key === 'Tab') {
             if (barcodeBuffer) {
+                // Determine what to do based on context
                 if (isProductModalActive) {
                     const pBarcodeInput = document.getElementById('product-barcode');
                     if (pBarcodeInput) {
                         pBarcodeInput.value = barcodeBuffer;
                         pBarcodeInput.dispatchEvent(new Event('input'));
                         pBarcodeInput.dispatchEvent(new Event('change'));
-                        
                         pBarcodeInput.style.backgroundColor = 'rgba(16, 185, 129, 0.2)';
                         setTimeout(() => pBarcodeInput.style.backgroundColor = '', 500);
                     }
                     barcodeBuffer = '';
                     e.preventDefault();
                 } else if (isPosView) {
+                    // In POS view, if not in the main barcode input, handle the scan
                     if (activeEl.id !== 'pos-barcode-input') {
                         const product = products.find(p => p.barcode === barcodeBuffer);
                         if (product) {
@@ -330,9 +345,25 @@ function setupBarcodeScanner() {
                         } else {
                             openAddProductModal(barcodeBuffer);
                         }
+                        barcodeBuffer = '';
+                        e.preventDefault();
                     }
-                    barcodeBuffer = '';
-                } else if (isInventoryView) {
+                } else {
+                    // For all other views (Dashboard, Inventory, etc.), 
+                    // switch to inventory and handle the scan
+                    if (!isInventoryView) {
+                        // Switch to inventory view
+                        navLinks.forEach(l => l.classList.remove('active'));
+                        const invLink = document.querySelector('[data-target="inventory-view"]');
+                        if (invLink) invLink.classList.add('active');
+                        
+                        views.forEach(v => v.classList.remove('active'));
+                        document.getElementById('inventory-view').classList.add('active');
+                        pageTitle.textContent = "Inventory";
+                        currentTab = 'inventory-view';
+                        loadInventory();
+                    }
+
                     const product = products.find(p => p.barcode === barcodeBuffer);
                     if (product) {
                         editProduct(product.id);
@@ -796,45 +827,47 @@ async function loadInventory() {
     try {
         const res = await fetchAuth(`${API_BASE}/products`);
         products = await res.json();
-        const tbody = document.querySelector('#inventory-table tbody');
-        tbody.innerHTML = '';
-        
-        // Handle admin inventory filtering
-        let productsToRender = products;
-        const filterBadge = document.getElementById('inventory-filter-badge');
-        if (currentRole === 'admin' && adminInventoryFilter) {
-            productsToRender = products.filter(p => p.owner_name === adminInventoryFilter);
-            document.getElementById('inventory-filter-name').textContent = adminInventoryFilter;
-            filterBadge.style.display = 'flex';
-        } else {
-            filterBadge.style.display = 'none';
-        }
-        
-        productsToRender.forEach(p => {
-            const imgHtml = p.image ? `<img src="${p.image}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;">` : `<div style="width:40px;height:40px;border-radius:8px;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-size:10px;color:#64748b;">No Img</div>`;
-            const tr = document.createElement('tr');
-            
-            let nameDisplay = `<span>${p.name}</span>`;
-            if (currentRole === 'admin') {
-                nameDisplay = `<div><span>${p.name}</span><div style="font-size:11px;color:var(--primary);margin-top:2px;">[${p.owner_name}]</div></div>`;
-            }
-            
-            tr.innerHTML = `
-                <td style="display:flex;align-items:center;gap:12px;">${imgHtml} ${nameDisplay}</td>
-                <td class="${p.quantity <= 10 ? 'text-danger' : ''}">${p.quantity}</td>
-                <td>${formatCurrency(p.cost_price || 0)}</td>
-                <td>${formatCurrency(p.price)}</td>
-                <td>
-                    <button class="btn btn-outline btn-icon-only edit-btn" data-id="${p.id}"><i class='bx bx-edit'></i></button>
-                    <button class="btn btn-danger btn-icon-only del-btn" data-id="${p.id}"><i class='bx bx-trash'></i></button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-        
+        renderInventory(products);
     } catch (err) {
         console.error(err);
     }
+}
+
+function renderInventory(productsToRender) {
+    const tbody = document.querySelector('#inventory-table tbody');
+    tbody.innerHTML = '';
+    
+    // Handle admin inventory filtering
+    const filterBadge = document.getElementById('inventory-filter-badge');
+    if (currentRole === 'admin' && adminInventoryFilter) {
+        productsToRender = productsToRender.filter(p => p.owner_name === adminInventoryFilter);
+        document.getElementById('inventory-filter-name').textContent = adminInventoryFilter;
+        filterBadge.style.display = 'flex';
+    } else {
+        filterBadge.style.display = 'none';
+    }
+    
+    productsToRender.forEach(p => {
+        const imgHtml = p.image ? `<img src="${p.image}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;">` : `<div style="width:40px;height:40px;border-radius:8px;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-size:10px;color:#64748b;">No Img</div>`;
+        const tr = document.createElement('tr');
+        
+        let nameDisplay = `<span>${p.name}</span>`;
+        if (currentRole === 'admin') {
+            nameDisplay = `<div><span>${p.name}</span><div style="font-size:11px;color:var(--primary);margin-top:2px;">[${p.owner_name}]</div></div>`;
+        }
+        
+        tr.innerHTML = `
+            <td style="display:flex;align-items:center;gap:12px;">${imgHtml} ${nameDisplay}</td>
+            <td class="${p.quantity <= 10 ? 'text-danger' : ''}">${p.quantity}</td>
+            <td>${formatCurrency(p.cost_price || 0)}</td>
+            <td>${formatCurrency(p.price)}</td>
+            <td>
+                <button class="btn btn-outline btn-icon-only edit-btn" data-id="${p.id}"><i class='bx bx-edit'></i></button>
+                <button class="btn btn-danger btn-icon-only del-btn" data-id="${p.id}"><i class='bx bx-trash'></i></button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
 }
 
 document.getElementById('btn-clear-inventory-filter').addEventListener('click', () => {

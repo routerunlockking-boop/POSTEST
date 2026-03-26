@@ -205,6 +205,7 @@ let chartInstance = null;
 let currentProductImageBase64 = null;
 let html5QrCode = null;
 let isScanTorchOn = false;
+let currentScanContext = 'bill'; // 'bill' or 'product'
 
 // ==== DOM ELEMENTS ====
 const clockEl = document.getElementById('clock');
@@ -305,13 +306,23 @@ function setupBarcodeScanner() {
     });
 
     const btnCamera = document.getElementById('btn-camera-scan');
+    const btnCameraProduct = document.getElementById('btn-camera-scan-product');
     const scannerModal = document.getElementById('scanner-modal');
     
     if (btnCamera && scannerModal) {
         btnCamera.addEventListener('click', () => {
+            currentScanContext = 'bill';
             showModal(scannerModal);
             startScanner();
         });
+
+        if (btnCameraProduct) {
+            btnCameraProduct.addEventListener('click', () => {
+                currentScanContext = 'product';
+                showModal(scannerModal);
+                startScanner();
+            });
+        }
 
         document.getElementById('btn-toggle-torch').addEventListener('click', async () => {
             if (html5QrCode && html5QrCode.getState() === 2) { // 2 = SCANNING
@@ -367,21 +378,31 @@ function startScanner() {
         { facingMode: "environment" }, 
         { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 },
         (decodedText, decodedResult) => {
-            // Success handler
-            const product = products.find(p => p.barcode === decodedText);
-            if (product) {
+            if (currentScanContext === 'product') {
                 // Flash success color briefly
                 document.getElementById('reader').style.boxShadow = "inset 0 0 0 10px #10b981";
                 setTimeout(() => { document.getElementById('reader').style.boxShadow = "none"; }, 500);
                 
-                addToBill(product);
-                
-                // Close the modal after successful scan
+                document.getElementById('product-barcode').value = decodedText;
                 hideModal();
+                showModal(document.getElementById('product-modal'));
             } else {
-                document.getElementById('reader').style.boxShadow = "inset 0 0 0 10px #ef4444";
-                setTimeout(() => { document.getElementById('reader').style.boxShadow = "none"; }, 500);
-                // alert(`Scanned barcode ${decodedText} not found in inventory.`);
+                // Success handler
+                const product = products.find(p => p.barcode === decodedText);
+                if (product) {
+                    // Flash success color briefly
+                    document.getElementById('reader').style.boxShadow = "inset 0 0 0 10px #10b981";
+                    setTimeout(() => { document.getElementById('reader').style.boxShadow = "none"; }, 500);
+                    
+                    addToBill(product);
+                    
+                    // Close the modal after successful scan
+                    hideModal();
+                } else {
+                    document.getElementById('reader').style.boxShadow = "inset 0 0 0 10px #ef4444";
+                    setTimeout(() => { document.getElementById('reader').style.boxShadow = "none"; }, 500);
+                    // alert(`Scanned barcode ${decodedText} not found in inventory.`);
+                }
             }
         },
         (errorMessage) => {
@@ -494,6 +515,13 @@ function setupModals() {
     document.getElementById('btn-close-modal').addEventListener('click', hideModal);
     document.getElementById('btn-close-invoice-modal').addEventListener('click', hideModal);
     document.getElementById('btn-close-admin-modal').addEventListener('click', hideModal);
+    
+    document.getElementById('btn-close-scanner-modal').addEventListener('click', () => {
+        hideModal();
+        if (currentScanContext === 'product') {
+            showModal(document.getElementById('product-modal'));
+        }
+    });
     
     // Add product
     document.getElementById('btn-add-product').addEventListener('click', () => {

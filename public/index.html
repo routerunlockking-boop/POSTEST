@@ -487,7 +487,12 @@
                             </div>
                             <div style="flex:1;">
                                 <label>Barcode / SKU (Optional)</label>
-                                <input type="text" id="product-barcode" class="form-control" placeholder="Scan or type...">
+                                <div style="display: flex; gap: 8px;">
+                                    <input type="text" id="product-barcode" class="form-control" placeholder="Scan or type...">
+                                    <button type="button" id="btn-camera-scan-product" class="btn btn-secondary" title="Scan Barcode" style="padding: 0 12px; display: flex; align-items: center; justify-content: center;">
+                                        <i class='bx bx-camera' style="font-size: 20px;"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <div class="form-group" style="display:flex; gap:10px;">

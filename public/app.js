@@ -1080,7 +1080,7 @@ function updateBillUI() {
         div.style.borderBottom = '1px dashed var(--border)';
         
         div.innerHTML = `
-            <div class="bill-item-details" style="flex: 2; padding-right: 10px;">
+            <div class="bill-item-details" style="flex: 1; padding-right: 10px;">
                 <h4 style="font-size: 15px; margin-bottom: 6px; color: var(--text-main); font-weight: 600;">${item.name}</h4>
                 <div style="display:flex; align-items:center; gap:8px;">
                     <span style="font-size:13px; color:var(--text-muted)">@</span>
@@ -1089,15 +1089,15 @@ function updateBillUI() {
                 </div>
             </div>
             
-            <div class="qty-control" style="background: transparent; padding: 0; display:flex; align-items:center; width: 70px; justify-content: center;">
+            <div class="qty-control" style="background: transparent; padding: 0; display:flex; align-items:center; width: 100px; justify-content: center;">
                 <button class="qty-btn" style="background: var(--bg-card); border: 1px solid var(--border);" onclick="updateBillQuantity('${item.id}', -1)">-</button>
                 <input type="number" class="bill-item-input qty-input" style="width: 50px; margin: 0 4px;" value="${item.quantity}" onchange="updateBillQuantityDirect('${item.id}', this)">
                 <button class="qty-btn" style="background: var(--bg-card); border: 1px solid var(--border);" onclick="updateBillQuantity('${item.id}', 1)">+</button>
             </div>
             
-            <div style="width: 80px; display:flex; justify-content: flex-end; align-items: center; gap: 8px;">
+            <div style="width: 140px; display:flex; justify-content: flex-end; align-items: center; gap: 8px;">
                 <div class="item-total" style="font-size: 16px; color: var(--text-main); font-weight: 600;">${formatCurrency(amount)}</div>
-                <button class="btn btn-icon-only text-danger" style="background: transparent; border: none; font-size: 18px; padding: 0;" onclick="updateBillQuantityDirect('${item.id}', {value: 0})"><i class='bx bx-trash'></i></button>
+                <button class="btn btn-icon-only text-danger" style="background: transparent; border: none; font-size: 18px; padding: 0; margin-left: 8px;" onclick="updateBillQuantityDirect('${item.id}', {value: 0})"><i class='bx bx-trash'></i></button>
             </div>
         `;
         itemsContainer.appendChild(div);

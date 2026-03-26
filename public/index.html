@@ -339,15 +339,29 @@
                                         class='bx bx-x'></i></button>
                             </div>
                         </div>
-                        <div style="display: flex; gap: 10px; flex: 1; min-width: 300px;">
-                            <div style="position: relative; flex: 1;">
-                                <i class='bx bx-search' style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
-                                <input type="text" id="inventory-search-input" class="form-control" style="padding-left: 38px;" placeholder="Search inventory by name or barcode...">
+                        <div style="display: flex; gap: 10px; flex: 1; min-width: 300px; flex-wrap: wrap;">
+                            <!-- Dedicated Barcode Scanner Input for Inventory -->
+                            <div style="flex: 1; min-width: 250px; position: relative; display: flex; gap: 8px;">
+                                <div style="flex: 1; position: relative;">
+                                    <i class='bx bx-barcode' style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 20px;"></i>
+                                    <input type="text" id="inventory-barcode-input" class="form-control" style="padding-left: 44px; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);" placeholder="Scan barcode to add or find product...">
+                                </div>
+                                <button type="button" id="btn-camera-scan-inventory" class="btn btn-outline" style="padding: 0 12px; height: 38px; display: flex; align-items: center;" title="Scan with Mobile Camera">
+                                    <i class='bx bx-camera' style="font-size: 20px;"></i>
+                                </button>
                             </div>
-                            <button class="btn btn-outline" id="btn-export-inventory"><i class='bx bx-download'></i>
-                                Export CSV</button>
-                            <button class="btn btn-primary" id="btn-add-product"><i class='bx bx-plus'></i> Add
-                                Product</button>
+
+                            <div style="position: relative; flex: 1; min-width: 200px;">
+                                <i class='bx bx-search' style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+                                <input type="text" id="inventory-search-input" class="form-control" style="padding-left: 38px;" placeholder="Search inventory by name...">
+                            </div>
+                            
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn btn-outline" id="btn-export-inventory"><i class='bx bx-download'></i>
+                                    Export CSV</button>
+                                <button class="btn btn-primary" id="btn-add-product"><i class='bx bx-plus'></i> Add
+                                    Product</button>
+                            </div>
                         </div>
                     </div>
                     <div class="table-card">

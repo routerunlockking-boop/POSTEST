@@ -287,7 +287,7 @@ function setupBarcodeScanner() {
         lastKeyTime = now;
 
         const activeEl = document.activeElement;
-        const isBarcodeField = activeEl.id === 'pos-barcode-input' || activeEl.id === 'product-barcode';
+        const isBarcodeField = activeEl.id === 'pos-barcode-input' || activeEl.id === 'product-barcode' || activeEl.id === 'inventory-barcode-input';
         const isOtherInput = (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA') && !isBarcodeField;
 
         // Collect characters
@@ -331,13 +331,19 @@ function setupBarcodeScanner() {
                         pBarcodeInput.style.backgroundColor = 'rgba(16, 185, 129, 0.2)';
                         setTimeout(() => pBarcodeInput.style.backgroundColor = '', 500);
                     }
-                } else if (isPosView) {
+                } else if (isPosView || isInventoryView) {
                     const product = products.find(p => p.barcode === finalBarcode);
                     if (product) {
-                        addToBill(product);
-                        if (activeEl.id === 'pos-barcode-input') activeEl.value = '';
+                        if (isPosView) {
+                            addToBill(product);
+                            if (activeEl.id === 'pos-barcode-input') activeEl.value = '';
+                        } else {
+                            editProduct(product.id);
+                            if (activeEl.id === 'inventory-barcode-input') activeEl.value = '';
+                        }
                     } else {
                         openAddProductModal(finalBarcode);
+                        if (activeEl.id === 'pos-barcode-input' || activeEl.id === 'inventory-barcode-input') activeEl.value = '';
                     }
                 } else {
                     // Switch to inventory for other views
@@ -373,6 +379,7 @@ function setupBarcodeScanner() {
 
     const btnCamera = document.getElementById('btn-camera-scan');
     const btnCameraProduct = document.getElementById('btn-camera-scan-product');
+    const btnCameraInventory = document.getElementById('btn-camera-scan-inventory');
     const scannerModal = document.getElementById('scanner-modal');
     
     if (btnCamera && scannerModal) {
@@ -386,6 +393,14 @@ function setupBarcodeScanner() {
     if (btnCameraProduct && scannerModal) {
         btnCameraProduct.addEventListener('click', () => {
             currentScanMode = 'addProduct';
+            showModal(scannerModal);
+            startScanner();
+        });
+    }
+
+    if (btnCameraInventory && scannerModal) {
+        btnCameraInventory.addEventListener('click', () => {
+            currentScanMode = 'inventory';
             showModal(scannerModal);
             startScanner();
         });
@@ -461,6 +476,20 @@ function startScanner() {
                 setTimeout(() => { document.getElementById('reader').style.boxShadow = "none"; }, 500);
                 document.getElementById('product-barcode').value = decodedText;
                 hideModal();
+                return;
+            }
+
+            if (currentScanMode === 'inventory') {
+                document.getElementById('reader').style.boxShadow = "inset 0 0 0 10px #10b981";
+                setTimeout(() => { document.getElementById('reader').style.boxShadow = "none"; }, 500);
+                
+                const product = products.find(p => p.barcode === decodedText);
+                hideModal();
+                if (product) {
+                    editProduct(product.id);
+                } else {
+                    openAddProductModal(decodedText);
+                }
                 return;
             }
 

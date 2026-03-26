@@ -975,12 +975,12 @@ function renderPOSProducts(productArray) {
     productArray.forEach(p => {
         const div = document.createElement('div');
         div.className = 'pos-product-card';
-        const imgStyle = p.image ? `background-image:url('${p.image}');background-size:cover;background-position:center;` : `background:#e2e8f0;`;
+        const imgStyle = p.image ? `background-image:url('${p.image}');` : `background-color:#e2e8f0;`;
         div.innerHTML = `
-            <div style="width:100%;height:100px;border-radius:8px;margin-bottom:12px;${imgStyle}"></div>
+            <div class="product-img" style="${imgStyle}"></div>
             <h4>${p.name}</h4>
             <div class="price">${formatCurrency(p.price)}</div>
-            <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Stock: ${p.quantity}</div>
+            <div class="stock">Stock: ${p.quantity}</div>
         `;
         div.addEventListener('click', () => addToBill(p));
         grid.appendChild(div);

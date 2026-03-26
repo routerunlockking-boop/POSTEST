@@ -284,8 +284,8 @@ function setupBarcodeScanner() {
 
         if (e.key === 'Enter') {
             if (barcodeBuffer) {
-                // If they typed in the barcode input, it's handled by its own event, but we can clear buffer
                 if (e.target.id !== 'pos-barcode-input') {
+                    e.preventDefault(); // Prevent Enter from triggering focused buttons
                     const product = products.find(p => p.barcode === barcodeBuffer);
                     if (product) {
                         addToBill(product);
@@ -540,6 +540,12 @@ function setupModals() {
         document.getElementById('product-image-preview').innerHTML = '<span style="color:var(--text-muted);font-size:12px;">+ Add Image</span>';
         document.getElementById('product-modal-title').textContent = 'Add Product';
         showModal(productModal);
+        
+        // Focus barcode input out of the button so Enter doesn't trigger a reset
+        setTimeout(() => {
+            const barcodeInput = document.getElementById('product-barcode');
+            if (barcodeInput) barcodeInput.focus();
+        }, 100);
     });
 
     // Handle Image Selection
@@ -923,6 +929,12 @@ function editProduct(id) {
         
         document.getElementById('product-modal-title').textContent = 'Edit Product';
         showModal(productModal);
+
+        // Focus barcode input out of the button
+        setTimeout(() => {
+            const barcodeInput = document.getElementById('product-barcode');
+            if (barcodeInput) barcodeInput.focus();
+        }, 100);
     }
 }
 

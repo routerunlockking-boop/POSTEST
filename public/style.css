@@ -398,7 +398,7 @@ body {
 .pos-products-area {
     background: var(--bg-card);
     border-radius: 16px;
-    padding: 24px;
+    padding: 16px;
     border: 1px solid var(--border);
     box-shadow: var(--shadow-sm);
     display: flex;
@@ -426,7 +426,7 @@ body {
 .pos-products-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-    gap: 12px;
+    gap: 8px;
     overflow-y: auto;
     padding-right: 8px;
     flex: 1;
@@ -452,7 +452,7 @@ body {
     width: 100%;
     height: 55%;
     border-radius: 6px;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -461,7 +461,7 @@ body {
 
 .pos-product-card h4 {
     font-size: 12px;
-    margin-bottom: 2px;
+    margin-bottom: 0;
     color: var(--text-main);
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -480,7 +480,7 @@ body {
 .pos-product-card .stock {
     font-size: 10px;
     color: var(--text-muted);
-    margin-top: 1px;
+    margin-top: 0;
 }
 
 .pos-bill-area {

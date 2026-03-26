@@ -456,6 +456,12 @@ function setupNavigation() {
             pageTitle.textContent = link.querySelector('.link-name').textContent;
             currentTab = target;
             
+            if (target === 'pos-view') {
+                document.body.classList.add('pos-fullscreen-active');
+            } else {
+                document.body.classList.remove('pos-fullscreen-active');
+            }
+            
             // Load specific view data
             if(target === 'dashboard-view') loadDashboard();
             if(target === 'inventory-view') loadInventory();
@@ -865,13 +871,14 @@ function renderPOSProducts(productArray) {
     
     productArray.forEach(p => {
         const div = document.createElement('div');
-        div.className = 'pos-product-card';
-        const imgStyle = p.image ? `background-image:url('${p.image}');background-size:cover;background-position:center;` : `background:#e2e8f0;`;
+        div.className = 'pos-new-product-card';
+        const imgHtml = p.image ? `<img src="${p.image}" class="product-thumb">` : `<div class="img-placeholder"><i class='bx bx-image-alt'></i></div>`;
         div.innerHTML = `
-            <div style="width:100%;height:100px;border-radius:8px;margin-bottom:12px;${imgStyle}"></div>
-            <h4>${p.name}</h4>
-            <div class="price">${formatCurrency(p.price)}</div>
-            <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Stock: ${p.quantity}</div>
+            ${imgHtml}
+            <div class="p-name">${p.name}</div>
+            <div class="p-weight">1 Unit</div>
+            <div class="p-price">${formatCurrency(p.price)}</div>
+            <button class="pos-btn-add">Add</button>
         `;
         div.addEventListener('click', () => addToBill(p));
         grid.appendChild(div);
@@ -935,37 +942,45 @@ function updateBillPrice(id, newPrice) {
 function updateBillUI() {
     const itemsContainer = document.getElementById('pos-bill-items');
     itemsContainer.innerHTML = '';
-    let total = 0;
+    let subtotal = 0;
     
     currentBill.forEach(item => {
         const amount = item.price * item.quantity;
-        total += amount;
+        subtotal += amount;
         
+        const pRecord = products.find(p => p.id === item.id);
+        const imgSrc = pRecord && pRecord.image ? pRecord.image : '';
+        const imgHtml = imgSrc ? `<img src="${imgSrc}">` : `<i class='bx bx-image-alt'></i>`;
+
         const div = document.createElement('div');
-        div.className = 'bill-item';
+        div.className = 'pos-cart-item';
         div.innerHTML = `
-            <div class="bill-item-details">
-                <h4>${item.name}</h4>
-                <div style="display:flex; align-items:center; gap:8px; margin-top:4px;">
-                    <input type="number" step="0.01" value="${item.price}" 
-                           onchange="updateBillPrice('${item.id}', this.value)" 
-                           style="width:80px; padding:4px; font-size:13px; border:1px solid var(--border); border-radius:4px;"> 
-                    <span style="font-size:13px; color:var(--text-muted)">x ${item.quantity}</span>
-                </div>
+            <div class="pos-cart-img-holder">
+                ${imgHtml}
             </div>
-            <div class="bill-item-actions">
-                <div class="qty-control">
-                    <button class="qty-btn" onclick="updateBillQuantity('${item.id}', -1)">-</button>
-                    <span>${item.quantity}</span>
-                    <button class="qty-btn" onclick="updateBillQuantity('${item.id}', 1)">+</button>
-                </div>
-                <div class="item-total">${formatCurrency(amount)}</div>
+            <div class="pos-cart-info">
+                <div class="pos-cart-name">${item.name}</div>
+                <div class="pos-cart-price">${formatCurrency(item.price)}</div>
             </div>
+            <div class="pos-cart-qty">
+                <button class="pos-qty-btn" onclick="updateBillQuantity('${item.id}', -1)">-</button>
+                <span class="pos-qty-val">${item.quantity}</span>
+                <button class="pos-qty-btn" onclick="updateBillQuantity('${item.id}', 1)">+</button>
+            </div>
+            <div class="pos-cart-total">${formatCurrency(amount)}</div>
+            <button class="pos-cart-del" onclick="updateBillQuantity('${item.id}', -${item.quantity})"><i class='bx bx-trash'></i></button>
         `;
         itemsContainer.appendChild(div);
     });
     
-    document.getElementById('pos-total-amount').textContent = formatCurrency(total);
+    const tax = subtotal * 0.15; // 15% VAT
+    const discount = 0;
+    const finalTotal = subtotal + tax - discount;
+    
+    document.getElementById('pos-subtotal-amount').textContent = formatCurrency(subtotal);
+    document.getElementById('pos-tax-amount').textContent = formatCurrency(tax);
+    document.getElementById('pos-discount-amount').textContent = formatCurrency(discount);
+    document.getElementById('pos-total-amount').textContent = formatCurrency(finalTotal);
 }
 
 document.getElementById('btn-submit-bill').addEventListener('click', async () => {
@@ -974,7 +989,8 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
         return;
     }
     
-    let total = currentBill.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    let subtotal = currentBill.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    let total = subtotal + (subtotal * 0.15); // +15% VAT
     
     const customer_name = document.getElementById('pos-customer-name').value;
     const customer_phone = document.getElementById('pos-customer-phone').value;
@@ -1294,5 +1310,55 @@ document.querySelector('#admin-users-table tbody').addEventListener('click', asy
                 loadAdminUsers();
             } catch (err) { console.error(err); }
         }
+    }
+});
+
+// ==== POS SPECIFIC GLOBAL EVENTS ====
+document.addEventListener('DOMContentLoaded', () => {
+    const posExit = document.getElementById('btn-exit-pos');
+    if(posExit) {
+        posExit.addEventListener('click', () => {
+            const dashLink = document.querySelector('[data-target="dashboard-view"]');
+            if (dashLink) dashLink.click();
+        });
+    }
+
+    const posLogout = document.getElementById('btn-pos-logout');
+    if(posLogout) {
+        posLogout.addEventListener('click', () => {
+            document.getElementById('btn-logout').click();
+        });
+    }
+
+    const customCancel = document.getElementById('btn-cancel-bill');
+    if(customCancel) {
+        customCancel.addEventListener('click', () => {
+            if(confirm('Clear the current transaction?')) {
+                currentBill = [];
+                updateBillUI();
+                const cd = document.getElementById('pos-customer-details');
+                if(cd) cd.style.display = 'none';
+            }
+        });
+    }
+
+    // Connect global clock to POS clock
+    setInterval(() => {
+        const d = new Date();
+        const pd = document.getElementById('pos-date');
+        const pt = document.getElementById('pos-clock');
+        if (pd && pt) {
+            pd.textContent = d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            pt.textContent = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+    }, 1000);
+});
+
+// Capture F12 for paying
+document.addEventListener('keydown', (e) => {
+    if (currentTab === 'pos-view' && e.key === 'F12') {
+        e.preventDefault();
+        const pBtn = document.getElementById('btn-submit-bill');
+        if(pBtn) pBtn.click();
     }
 });

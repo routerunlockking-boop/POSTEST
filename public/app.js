@@ -446,8 +446,11 @@ function startScanner() {
                 hideModal();
             } else {
                 document.getElementById('reader').style.boxShadow = "inset 0 0 0 10px #ef4444";
-                setTimeout(() => { document.getElementById('reader').style.boxShadow = "none"; }, 500);
-                // alert(`Scanned barcode ${decodedText} not found in inventory.`);
+                setTimeout(() => { 
+                    document.getElementById('reader').style.boxShadow = "none";
+                    hideModal();
+                    openAddProductModal(decodedText);
+                }, 500);
             }
         },
         (errorMessage) => {

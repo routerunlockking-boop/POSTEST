@@ -341,7 +341,6 @@ app.get('/api/invoices', async (req, res) => {
             time: inv.time,
             total_amount: inv.total_amount,
             total_profit: inv.total_profit || 0,
-            operator_name: inv.operator_name || 'Admin',
             owner_name: inv.user_id ? inv.user_id.business_name : 'Unknown'
         }));
         
@@ -366,7 +365,6 @@ app.get('/api/invoices/:id', async (req, res) => {
             date: invoice.date,
             time: invoice.time,
             total_amount: invoice.total_amount,
-            operator_name: invoice.operator_name || 'Admin',
             owner_name: invoice.user_id ? invoice.user_id.business_name : 'Unknown',
             items: invoice.items.map(item => ({
                 id: item._id ? item._id.toString() : null,
@@ -383,7 +381,7 @@ app.get('/api/invoices/:id', async (req, res) => {
 });
 
 app.post('/api/invoices', async (req, res) => {
-    const { items, total_amount, customer_name, customer_phone, payment_method, operator_name } = req.body;
+    const { items, total_amount, customer_name, customer_phone, payment_method } = req.body;
     if (!items || items.length === 0 || !total_amount) {
         return res.status(400).json({ error: 'Invalid invoice data' });
     }
@@ -419,7 +417,6 @@ app.post('/api/invoices', async (req, res) => {
             invoice_number,
             customer_name,
             customer_phone,
-            operator_name: operator_name || 'Admin',
             payment_method: payment_method || 'Cash',
             date,
             time,
@@ -443,7 +440,6 @@ app.post('/api/invoices', async (req, res) => {
                 invoice_number,
                 customer_name,
                 customer_phone,
-                operator_name: operator_name || 'Admin',
                 payment_method: payment_method || 'Cash',
                 date,
                 time,

@@ -205,7 +205,7 @@ let chartInstance = null;
 let currentProductImageBase64 = null;
 let html5QrCode = null;
 let isScanTorchOn = false;
-let currentScanContext = 'bill'; // 'bill' or 'product'
+let currentScanMode = 'billing'; // 'billing' or 'addProduct'
 
 // ==== DOM ELEMENTS ====
 const clockEl = document.getElementById('clock');
@@ -311,19 +311,30 @@ function setupBarcodeScanner() {
     
     if (btnCamera && scannerModal) {
         btnCamera.addEventListener('click', () => {
-            currentScanContext = 'bill';
+            currentScanMode = 'billing';
             showModal(scannerModal);
             startScanner();
         });
+    }
 
-        if (btnCameraProduct) {
-            btnCameraProduct.addEventListener('click', () => {
-                currentScanContext = 'product';
-                showModal(scannerModal);
-                startScanner();
-            });
-        }
+    if (btnCameraProduct && scannerModal) {
+        btnCameraProduct.addEventListener('click', () => {
+            currentScanMode = 'addProduct';
+            showModal(scannerModal);
+            startScanner();
+        });
+    }
 
+    const productBarcodeInput = document.getElementById('product-barcode');
+    if (productBarcodeInput) {
+        productBarcodeInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault(); // Prevent form submission
+            }
+        });
+    }
+
+    if ((btnCamera || btnCameraProduct) && scannerModal) {
         document.getElementById('btn-toggle-torch').addEventListener('click', async () => {
             if (html5QrCode && html5QrCode.getState() === 2) { // 2 = SCANNING
                 try {
@@ -378,31 +389,29 @@ function startScanner() {
         { facingMode: "environment" }, 
         { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 },
         (decodedText, decodedResult) => {
-            if (currentScanContext === 'product') {
+            // Success handler
+            if (currentScanMode === 'addProduct') {
+                document.getElementById('reader').style.boxShadow = "inset 0 0 0 10px #10b981";
+                setTimeout(() => { document.getElementById('reader').style.boxShadow = "none"; }, 500);
+                document.getElementById('product-barcode').value = decodedText;
+                hideModal();
+                return;
+            }
+
+            const product = products.find(p => p.barcode === decodedText);
+            if (product) {
                 // Flash success color briefly
                 document.getElementById('reader').style.boxShadow = "inset 0 0 0 10px #10b981";
                 setTimeout(() => { document.getElementById('reader').style.boxShadow = "none"; }, 500);
                 
-                document.getElementById('product-barcode').value = decodedText;
+                addToBill(product);
+                
+                // Close the modal after successful scan
                 hideModal();
-                showModal(document.getElementById('product-modal'));
             } else {
-                // Success handler
-                const product = products.find(p => p.barcode === decodedText);
-                if (product) {
-                    // Flash success color briefly
-                    document.getElementById('reader').style.boxShadow = "inset 0 0 0 10px #10b981";
-                    setTimeout(() => { document.getElementById('reader').style.boxShadow = "none"; }, 500);
-                    
-                    addToBill(product);
-                    
-                    // Close the modal after successful scan
-                    hideModal();
-                } else {
-                    document.getElementById('reader').style.boxShadow = "inset 0 0 0 10px #ef4444";
-                    setTimeout(() => { document.getElementById('reader').style.boxShadow = "none"; }, 500);
-                    // alert(`Scanned barcode ${decodedText} not found in inventory.`);
-                }
+                document.getElementById('reader').style.boxShadow = "inset 0 0 0 10px #ef4444";
+                setTimeout(() => { document.getElementById('reader').style.boxShadow = "none"; }, 500);
+                // alert(`Scanned barcode ${decodedText} not found in inventory.`);
             }
         },
         (errorMessage) => {
@@ -455,12 +464,6 @@ function setupNavigation() {
             
             pageTitle.textContent = link.querySelector('.link-name').textContent;
             currentTab = target;
-            
-            if (target === 'pos-view') {
-                document.body.classList.add('pos-fullscreen-active');
-            } else {
-                document.body.classList.remove('pos-fullscreen-active');
-            }
             
             // Load specific view data
             if(target === 'dashboard-view') loadDashboard();
@@ -521,13 +524,6 @@ function setupModals() {
     document.getElementById('btn-close-modal').addEventListener('click', hideModal);
     document.getElementById('btn-close-invoice-modal').addEventListener('click', hideModal);
     document.getElementById('btn-close-admin-modal').addEventListener('click', hideModal);
-    
-    document.getElementById('btn-close-scanner-modal').addEventListener('click', () => {
-        hideModal();
-        if (currentScanContext === 'product') {
-            showModal(document.getElementById('product-modal'));
-        }
-    });
     
     // Add product
     document.getElementById('btn-add-product').addEventListener('click', () => {
@@ -871,14 +867,13 @@ function renderPOSProducts(productArray) {
     
     productArray.forEach(p => {
         const div = document.createElement('div');
-        div.className = 'pos-new-product-card';
-        const imgHtml = p.image ? `<img src="${p.image}" class="product-thumb">` : `<div class="img-placeholder"><i class='bx bx-image-alt'></i></div>`;
+        div.className = 'pos-product-card';
+        const imgStyle = p.image ? `background-image:url('${p.image}');background-size:cover;background-position:center;` : `background:#e2e8f0;`;
         div.innerHTML = `
-            ${imgHtml}
-            <div class="p-name">${p.name}</div>
-            <div class="p-weight">1 Unit</div>
-            <div class="p-price">${formatCurrency(p.price)}</div>
-            <button class="pos-btn-add">Add</button>
+            <div style="width:100%;height:100px;border-radius:8px;margin-bottom:12px;${imgStyle}"></div>
+            <h4>${p.name}</h4>
+            <div class="price">${formatCurrency(p.price)}</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Stock: ${p.quantity}</div>
         `;
         div.addEventListener('click', () => addToBill(p));
         grid.appendChild(div);
@@ -939,70 +934,40 @@ function updateBillPrice(id, newPrice) {
     }
 }
 
-function updateBillName(id, newName) {
-    const item = currentBill.find(i => i.id === id);
-    if (item) {
-        item.name = newName;
-        updateBillUI();
-    }
-}
-
-function setBillQuantity(id, newQty) {
-    const item = currentBill.find(i => i.id === id);
-    if (item) {
-        let val = parseInt(newQty);
-        if (isNaN(val) || val <= 0) val = 1;
-        if (val > item.maxQty) {
-            alert('Cannot exceed available stock!');
-            val = item.maxQty;
-        }
-        item.quantity = val;
-        updateBillUI();
-    }
-}
-
 function updateBillUI() {
     const itemsContainer = document.getElementById('pos-bill-items');
     itemsContainer.innerHTML = '';
-    let subtotal = 0;
+    let total = 0;
     
     currentBill.forEach(item => {
         const amount = item.price * item.quantity;
-        subtotal += amount;
+        total += amount;
         
-        const pRecord = products.find(p => p.id === item.id);
-        const imgSrc = pRecord && pRecord.image ? pRecord.image : '';
-        const imgHtml = imgSrc ? `<img src="${imgSrc}">` : `<i class='bx bx-image-alt'></i>`;
-
         const div = document.createElement('div');
-        div.className = 'pos-cart-item';
+        div.className = 'bill-item';
         div.innerHTML = `
-            <div class="pos-cart-img-holder">
-                ${imgHtml}
+            <div class="bill-item-details">
+                <h4>${item.name}</h4>
+                <div style="display:flex; align-items:center; gap:8px; margin-top:4px;">
+                    <input type="number" step="0.01" value="${item.price}" 
+                           onchange="updateBillPrice('${item.id}', this.value)" 
+                           style="width:80px; padding:4px; font-size:13px; border:1px solid var(--border); border-radius:4px;"> 
+                    <span style="font-size:13px; color:var(--text-muted)">x ${item.quantity}</span>
+                </div>
             </div>
-            <div class="pos-cart-info">
-                <input type="text" value="${item.name}" onchange="updateBillName('${item.id}', this.value)" class="pos-cart-name" style="width: 100%; border: 1px dashed transparent; background: transparent; padding: 0; outline: none; transition: 0.2s;" onfocus="this.style.borderBottom='1px dashed var(--border)'" onblur="this.style.borderBottom='1px dashed transparent'">
-                <input type="number" step="0.01" value="${item.price}" onchange="updateBillPrice('${item.id}', this.value)" class="pos-cart-price" style="width: 100%; border: 1px dashed transparent; background: transparent; padding: 0; outline: none; transition: 0.2s;" onfocus="this.style.borderBottom='1px dashed var(--border)'" onblur="this.style.borderBottom='1px dashed transparent'">
+            <div class="bill-item-actions">
+                <div class="qty-control">
+                    <button class="qty-btn" onclick="updateBillQuantity('${item.id}', -1)">-</button>
+                    <span>${item.quantity}</span>
+                    <button class="qty-btn" onclick="updateBillQuantity('${item.id}', 1)">+</button>
+                </div>
+                <div class="item-total">${formatCurrency(amount)}</div>
             </div>
-            <div class="pos-cart-qty">
-                <button class="pos-qty-btn" onclick="updateBillQuantity('${item.id}', -1)">-</button>
-                <input type="number" value="${item.quantity}" onchange="setBillQuantity('${item.id}', this.value)" style="width: 32px; text-align: center; border: 1px dashed transparent; background: transparent; font-size: 13px; font-weight: 600; outline: none; transition: 0.2s; -moz-appearance: textfield;" onfocus="this.style.borderBottom='1px dashed var(--border)'" onblur="this.style.borderBottom='1px dashed transparent'">
-                <button class="pos-qty-btn" onclick="updateBillQuantity('${item.id}', 1)">+</button>
-            </div>
-            <div class="pos-cart-total">${formatCurrency(amount)}</div>
-            <button class="pos-cart-del" onclick="updateBillQuantity('${item.id}', -${item.quantity})"><i class='bx bx-trash'></i></button>
         `;
         itemsContainer.appendChild(div);
     });
     
-    const tax = subtotal * 0.15; // 15% VAT
-    const discount = 0;
-    const finalTotal = subtotal + tax - discount;
-    
-    document.getElementById('pos-subtotal-amount').textContent = formatCurrency(subtotal);
-    document.getElementById('pos-tax-amount').textContent = formatCurrency(tax);
-    document.getElementById('pos-discount-amount').textContent = formatCurrency(discount);
-    document.getElementById('pos-total-amount').textContent = formatCurrency(finalTotal);
+    document.getElementById('pos-total-amount').textContent = formatCurrency(total);
 }
 
 document.getElementById('btn-submit-bill').addEventListener('click', async () => {
@@ -1011,20 +976,17 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
         return;
     }
     
-    let subtotal = currentBill.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    let total = subtotal + (subtotal * 0.15); // +15% VAT
+    let total = currentBill.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     
-    const customer_name = document.getElementById('pos-customer-name')?.value || '';
-    const customer_phone = document.getElementById('pos-customer-phone')?.value || '';
-    const payment_method = document.getElementById('pos-payment-method')?.value || 'Cash';
-    const operator_name = document.getElementById('pos-operator-name')?.value || 'Admin';
+    const customer_name = document.getElementById('pos-customer-name').value;
+    const customer_phone = document.getElementById('pos-customer-phone').value;
+    const payment_method = document.getElementById('pos-payment-method').value;
     
     const payload = {
         items: currentBill,
         total_amount: total,
         customer_name,
         customer_phone,
-        operator_name,
         payment_method
     };
     
@@ -1064,14 +1026,6 @@ function showInvoicePrintout(invoice) {
     document.getElementById('receipt-date').textContent = invoice.date;
     document.getElementById('receipt-time').textContent = invoice.time;
     document.getElementById('receipt-payment-method').textContent = invoice.payment_method || 'Cash';
-    
-    const opRow = document.getElementById('receipt-operator-row');
-    if (opRow && invoice.operator_name) {
-        opRow.style.display = 'block';
-        document.getElementById('receipt-operator-name').textContent = invoice.operator_name;
-    } else if (opRow) {
-        opRow.style.display = 'none';
-    }
     
     if (invoice.customer_name || invoice.customer_phone) {
         if (invoice.customer_name) {
@@ -1342,55 +1296,5 @@ document.querySelector('#admin-users-table tbody').addEventListener('click', asy
                 loadAdminUsers();
             } catch (err) { console.error(err); }
         }
-    }
-});
-
-// ==== POS SPECIFIC GLOBAL EVENTS ====
-document.addEventListener('DOMContentLoaded', () => {
-    const posExit = document.getElementById('btn-exit-pos');
-    if(posExit) {
-        posExit.addEventListener('click', () => {
-            const dashLink = document.querySelector('[data-target="dashboard-view"]');
-            if (dashLink) dashLink.click();
-        });
-    }
-
-    const posLogout = document.getElementById('btn-pos-logout');
-    if(posLogout) {
-        posLogout.addEventListener('click', () => {
-            document.getElementById('btn-logout').click();
-        });
-    }
-
-    const customCancel = document.getElementById('btn-cancel-bill');
-    if(customCancel) {
-        customCancel.addEventListener('click', () => {
-            if(confirm('Clear the current transaction?')) {
-                currentBill = [];
-                updateBillUI();
-                const cd = document.getElementById('pos-customer-details');
-                if(cd) cd.style.display = 'none';
-            }
-        });
-    }
-
-    // Connect global clock to POS clock
-    setInterval(() => {
-        const d = new Date();
-        const pd = document.getElementById('pos-date');
-        const pt = document.getElementById('pos-clock');
-        if (pd && pt) {
-            pd.textContent = d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            pt.textContent = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        }
-    }, 1000);
-});
-
-// Capture F12 for paying
-document.addEventListener('keydown', (e) => {
-    if (currentTab === 'pos-view' && e.key === 'F12') {
-        e.preventDefault();
-        const pBtn = document.getElementById('btn-submit-bill');
-        if(pBtn) pBtn.click();
     }
 });

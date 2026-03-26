@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartZone - Retail POS</title>
+    <title>RaviMotors - Retail POS</title>
     <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Boxicons for modern icons -->
@@ -20,7 +20,7 @@
     <div id="auth-overlay" class="auth-overlay active">
         <div class="auth-box">
             <div class="auth-header">
-                <h2>Welcome To SmartZone POS</h2>
+                <h2>Welcome To RaviMotors POS</h2>
                 <p id="auth-subtitle">Login to your account OR register a new business</p>
             </div>
 
@@ -105,7 +105,7 @@
         <aside class="sidebar" id="sidebar">
             <div class="logo-container">
                 <i class='bx bx-store-alt icon'></i>
-                <span class="logo-name">SmartZone POS</span>
+                <span class="logo-name">RAVIMOTORS POS</span>
             </div>
             <ul class="nav-list">
                 <li>
@@ -258,139 +258,71 @@
                     </div>
                 </section>
 
-                <!-- NOS Bill View -->
+                <!-- NOS Bill View (Placeholder for now) -->
                 <section id="pos-view" class="view">
-                    <div class="pos-fullscreen-layout">
-                        <!-- POS Top Header -->
-                        <header class="pos-header">
-                            <div class="pos-header-left">
-                                <i class='bx bx-left-arrow-alt' id="btn-exit-pos" title="Dashboard" style="font-size: 24px; cursor: pointer; color: var(--text-muted); margin-right: 12px;"></i>
-                                <div class="pos-logo">
-                                    <i class='bx bxs-leaf' style="color: #10b981; font-size: 24px;"></i>
-                                    <div class="pos-logo-text">
-                                        <div class="pos-logo-main" id="pos-business-name" style="font-weight: 700; font-size: 16px; color: #064e3b;">SURAKSHA</div>
-                                        <div class="pos-logo-sub" style="font-size: 10px; color: var(--text-muted); font-weight: 600; letter-spacing: 0.5px;">SUPERMARKET</div>
-                                    </div>
+                    <div class="pos-layout">
+                        <!-- Left: Products -->
+                        <div class="pos-products-area">
+                            <h2>Select Product</h2>
+                            <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                                <div style="flex: 1; position: relative;">
+                                    <i class='bx bx-barcode' style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 20px;"></i>
+                                    <input type="text" id="pos-barcode-input" class="form-control" style="padding-left: 44px; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);" placeholder="Scan or type barcode via scanner... (Press Enter)">
                                 </div>
+                                <button id="btn-camera-scan" class="btn btn-primary" title="Scan with Mobile Camera">
+                                    <i class='bx bx-camera' style="font-size: 20px;"></i>
+                                </button>
                             </div>
-                            <div class="pos-header-center">
-                                <div class="pos-datetime">
-                                    <div id="pos-date" class="pos-date" style="font-size: 13px; font-weight: 500;">Thursday, March 26, 2026</div>
-                                    <div id="pos-clock" class="pos-time" style="font-size: 16px; font-weight: 700;">1:41:00 PM</div>
-                                </div>
+                            <!-- Search and Categories -->
+                            <div class="pos-search">
+                                <i class='bx bx-search'></i>
+                                <input type="text" id="pos-search-input" placeholder="Search products by name...">
                             </div>
-                            <div class="pos-header-right">
-
-                                <div class="pos-header-icons" style="display: flex; gap: 8px;">
-                                    <button class="pos-icon-btn"><i class='bx bx-user'></i></button>
-                                    <button class="pos-icon-btn"><i class='bx bx-cog'></i></button>
-                                </div>
-                            </div>
-                        </header>
-
-                        <!-- Main Workspace -->
-                        <div class="pos-workspace">
-                            <!-- Left: Product Catalogue -->
-                            <div class="pos-catalogue-area">
-                                <div class="pos-catalogue-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                                    <h2 style="font-size: 20px; font-weight: 700;">Product Catalogue</h2>
-                                    <div class="pos-sort-wrap" style="display: flex; align-items: center; gap: 8px;">
-                                        <label style="font-size: 13px; color: var(--text-muted);">Sort by:</label>
-                                        <select class="pos-select" style="padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; background: white;"><option>Name</option></select>
-                                    </div>
-                                </div>
-                                
-                                <div class="pos-catalogue-body">
-                                    <!-- Products Grid Area -->
-                                    <div class="pos-products-main">
-                                        <div class="pos-filters-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                                            <div class="pos-filter-tags" style="display: flex; align-items: center; gap: 12px;">
-                                                <span class="pos-tag-label" style="font-size: 14px; font-weight: 600;">Filter(s)</span>
-                                                <div style="display: flex; gap: 8px;">
-                                                    <input type="text" id="pos-search-input" placeholder="Search..." class="form-control" style="width:140px; padding: 6px 10px; font-size:13px; height: 32px; border-radius: 8px;">
-                                                    <div style="position: relative; width: 140px;">
-                                                        <i class='bx bx-barcode' style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
-                                                        <input type="text" id="pos-barcode-input" class="form-control" style="padding-left: 28px; height: 32px; font-size:12px; border-radius: 8px;" placeholder="Scan barcode...">
-                                                    </div>
-                                                    <button id="btn-camera-scan" class="btn btn-primary" style="height: 32px; width: 32px; padding: 0; display:flex; align-items:center; justify-content:center; border-radius: 8px;"><i class='bx bx-camera'></i></button>
-                                                </div>
-                                            </div>
-                                            <button class="pos-btn-outline-sm" style="padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px; background: white; font-size: 13px; display: flex; align-items: center; gap: 4px;">Filter <i class='bx bx-chevron-down'></i></button>
-                                        </div>
-                                        
-                                        <div class="pos-new-products-grid" id="pos-products-grid">
-                                            <!-- Populated via JS -->
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Right: New Transaction -->
-                            <div class="pos-transaction-area">
-                                <div class="pos-transaction-header" style="margin-bottom: 16px;">
-                                    <h2 style="font-size: 20px; font-weight: 700;">New Transaction</h2>
-                                    <span id="pos-bill-no" style="display:none;"></span>
-                                </div>
-
-                                <div class="pos-transaction-table-header" style="display: flex; font-size: 12px; font-weight: 600; color: var(--text-muted); padding-bottom: 8px; border-bottom: 1px solid var(--border); margin-bottom: 12px;">
-                                    <span class="col-item" style="flex: 2;">Item</span>
-                                    <span class="col-qty" style="flex: 1; text-align: center;">Qty</span>
-                                    <span class="col-total" style="flex: 1; text-align: right;">Total</span>
-                                </div>
-                                
-                                <div class="pos-new-bill-items" id="pos-bill-items">
-                                    <!-- Populated via JS -->
-                                </div>
-
-                                <div class="operator-details" id="pos-operator-details" style="display: none; padding: 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--border);">
-                                    <div style="font-size:12px; font-weight:600; margin-bottom:8px; display:flex; justify-content:space-between;">Operator Details <i class='bx bx-x' style="cursor:pointer;" onclick="document.getElementById('pos-operator-details').style.display='none'"></i></div>
-                                    <input type="text" id="pos-operator-name" class="form-control" placeholder="Operator Name" value="Admin" style="font-size:13px; padding:8px;">
-                                </div>
-
-                                <div class="customer-details" id="pos-customer-details" style="display: none; padding: 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--border);">
-                                    <div style="font-size:12px; font-weight:600; margin-bottom:8px; display:flex; justify-content:space-between;">Customer Details <i class='bx bx-x' style="cursor:pointer;" onclick="document.getElementById('pos-customer-details').style.display='none'"></i></div>
-                                    <input type="text" id="pos-customer-name" class="form-control" placeholder="Customer Name" style="margin-bottom:8px; font-size:13px; padding:8px;">
-                                    <input type="tel" id="pos-customer-phone" class="form-control" placeholder="Phone Number" style="font-size:13px; padding:8px;">
-                                </div>
-                                <div style="display: none;">
-                                    <select id="pos-payment-method"><option value="Cash">Cash</option><option value="Bank Payment">Bank Payment</option><option value="Cash On Delivery">COD</option></select>
-                                </div>
-
-                                <div class="pos-transaction-summary">
-                                    <div class="summary-line">
-                                        <span>Subtotal</span>
-                                        <span id="pos-subtotal-amount">LKR 0.00</span>
-                                    </div>
-
-                                    <div class="summary-line">
-                                        <span>Discount</span>
-                                        <span id="pos-discount-amount">LKR 0.00</span>
-                                    </div>
-                                    <div class="summary-line pos-grand-total">
-                                        <span style="font-size: 24px; font-weight: 700; color: var(--text-main);">Total</span>
-                                        <span id="pos-total-amount" class="pos-total-text" style="font-size: 28px; font-weight: 700; color: #16a34a;">LKR 0.00</span>
-                                    </div>
-                                </div>
-
-                                <div class="pos-transaction-actions">
-                                    <div class="pos-action-grid">
-                                        <button class="pos-btn-dark" id="btn-toggle-operator" onclick="document.getElementById('pos-operator-details').style.display='block'">Add Operator</button>
-                                        <button class="pos-btn-dark">Apply Discount</button>
-                                        <button class="pos-btn-dark" id="btn-toggle-customer" onclick="document.getElementById('pos-customer-details').style.display='block'">Add Customer</button>
-                                        <button class="pos-btn-outline" id="btn-cancel-bill">Cancel</button>
-                                    </div>
-                                    <button class="pos-btn-pay" id="btn-submit-bill">Pay Now (F12)</button>
-                                </div>
+                            <!-- Products Grid -->
+                            <div class="pos-products-grid" id="pos-products-grid">
+                                <!-- Populated via JS -->
                             </div>
                         </div>
-
-                        <!-- POS Bottom Bar -->
-                        <footer class="pos-bottom-bar">
-                            <button class="pos-bottom-btn"><i class='bx bx-receipt'></i> Reprint Receipt</button>
-                            <button class="pos-bottom-btn"><i class='bx bx-money'></i> Cash Drawer</button>
-                            <button class="pos-bottom-btn"><i class='bx bx-group'></i> Customers</button>
-                            <button class="pos-bottom-btn" id="btn-pos-logout"><i class='bx bx-log-out'></i> Log Out</button>
-                        </footer>
+                        <!-- Right: Current Bill -->
+                        <div class="pos-bill-area">
+                            <div class="bill-header">
+                                <h2>Current Bill</h2>
+                                <p id="pos-bill-no">Auto Generate</p>
+                            </div>
+                            <div class="pos-tabs" style="display: flex; gap: 16px; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+                                <button class="pos-tab-btn active" id="tab-btn-items" style="background:none; border:none; font-weight:600; color:var(--primary); cursor:pointer; font-size: 14px; position:relative;">Bill Items</button>
+                                <button class="pos-tab-btn" id="tab-btn-customer" style="background:none; border:none; font-weight:500; color:var(--text-muted); cursor:pointer; font-size: 14px; position:relative;">Customer Details</button>
+                            </div>
+                            <div class="bill-items" id="pos-bill-items">
+                                <!-- Populated via JS -->
+                            </div>
+                            <div class="customer-details" id="pos-customer-details" style="display: none; flex: 1; padding: 8px 0;">
+                                <div class="form-group">
+                                    <label>Customer Name (Optional)</label>
+                                    <input type="text" id="pos-customer-name" class="form-control" placeholder="Enter name">
+                                </div>
+                                <div class="form-group">
+                                    <label>WhatsApp / Phone (Optional)</label>
+                                    <input type="tel" id="pos-customer-phone" class="form-control" placeholder="Enter phone number">
+                                </div>
+                            </div>
+                            <div class="bill-summary">
+                                <div class="form-group" style="margin-bottom: 16px;">
+                                    <label style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">Payment Method</label>
+                                    <select id="pos-payment-method" class="form-control" style="padding: 10px; cursor: pointer;">
+                                        <option value="Cash">Cash</option>
+                                        <option value="Bank Payment">Bank payment</option>
+                                        <option value="Cash On Delivery">COD</option>
+                                    </select>
+                                </div>
+                                <div class="summary-row total">
+                                    <span>TOTAL</span>
+                                    <span id="pos-total-amount">0.00</span>
+                                </div>
+                                <button class="btn btn-primary btn-block btn-lg" id="btn-submit-bill">Submit Bill &
+                                    Print</button>
+                            </div>
+                        </div>
                     </div>
                 </section>
 
@@ -497,7 +429,7 @@
                             <!-- Account Settings Container -->
                             <div id="reports-account-container" style="display:none; padding: 20px; background: #fff; border-radius: 12px; border: 1px solid var(--border);">
                                 <h3 style="margin-top:0; color:var(--danger); display:flex; align-items:center; gap:8px;"><i class='bx bx-error-circle'></i> Danger Zone</h3>
-                                <p style="color:var(--text-muted); font-size:14px; margin-bottom:15px;">If you no longer wish to use SmartZone POS, you can request your account and all associated data to be permanently deleted. This action will be reviewed by an admin.</p>
+                                <p style="color:var(--text-muted); font-size:14px; margin-bottom:15px;">If you no longer wish to use RaviMotors POS, you can request your account and all associated data to be permanently deleted. This action will be reviewed by an admin.</p>
                                 <button class="btn btn-danger btn-outline" id="btn-request-disconnect-tab" style="color: var(--danger); border-color: var(--danger);"><i class='bx bx-user-x'></i> Request Account Disconnect</button>
                             </div>
                         </div>
@@ -556,8 +488,11 @@
                             <div style="flex:1;">
                                 <label>Barcode / SKU (Optional)</label>
                                 <div style="display: flex; gap: 8px;">
-                                    <input type="text" id="product-barcode" class="form-control" placeholder="Scan or type...">
-                                    <button type="button" id="btn-camera-scan-product" class="btn btn-secondary" title="Scan Barcode" style="padding: 0 12px; display: flex; align-items: center; justify-content: center;">
+                                    <div style="flex: 1; position: relative;">
+                                        <i class='bx bx-barcode' style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 18px;"></i>
+                                        <input type="text" id="product-barcode" class="form-control" style="padding-left: 36px;" placeholder="Scan or type...">
+                                    </div>
+                                    <button type="button" id="btn-camera-scan-product" class="btn btn-outline" style="padding: 0 12px; height: 38px; display: flex; align-items: center;" title="Scan with Mobile Camera">
                                         <i class='bx bx-camera' style="font-size: 20px;"></i>
                                     </button>
                                 </div>
@@ -626,7 +561,7 @@
                 <div class="modal-body print-area" id="print-area">
                     <div class="receipt">
                         <div class="receipt-header">
-                            <h2 id="receipt-business-name">Smart Zone</h2>
+                            <h2 id="receipt-business-name">RaviMotors</h2>
                             <p>Retail Shop POS</p>
                             <p>----------------------------</p>
                         </div>
@@ -634,7 +569,6 @@
                             <p>Invoice: <span id="receipt-no"></span></p>
                             <p>Date: <span id="receipt-date"></span></p>
                             <p>Time: <span id="receipt-time"></span></p>
-                            <p id="receipt-operator-row">Operator: <span id="receipt-operator-name"></span></p>
                             <p id="receipt-customer-row" style="display:none;">Customer: <span id="receipt-customer-name"></span></p>
                             <p id="receipt-phone-row" style="display:none;">Contact: <span id="receipt-customer-phone"></span></p>
                             <p>Payment: <span id="receipt-payment-method"></span></p>

@@ -10,7 +10,7 @@ const connectDB = async () => {
     }
 
     try {
-        const uri = process.env.MONGO_URI || 'mongodb+srv://Admin:Admin%4012345@cluster0.czllghf.mongodb.net/myDatabase?retryWrites=true&w=majority';
+        const uri = process.env.MONGO_URI || 'mongodb+srv://ravimotors:10669Abc@cluster0.mqdicae.mongodb.net/testdb?retryWrites=true&w=majority';
         const db = await mongoose.connect(uri, {
             serverSelectionTimeoutMS: 5000 // Tweak timeout down so Serverless fails faster instead of hanging
         });
@@ -63,7 +63,6 @@ const InvoiceSchema = new mongoose.Schema({
     time: { type: String, required: true }, // Format: HH:MM
     customer_name: { type: String, default: '' },
     customer_phone: { type: String, default: '' },
-    operator_name: { type: String, default: '' },
     payment_method: { type: String, default: 'Cash' },
     total_amount: { type: Number, default: 0.0 },
     total_profit: { type: Number, default: 0.0 },
@@ -81,9 +80,9 @@ const initializeDatabase = async () => {
         const adminExists = await User.findOne({ role: 'admin' });
         if (!adminExists) {
             await User.create({
-                email: 'smartzonelk101@gmail.com',
-                password: '200723800385@',
-                business_name: 'SMART ZONE',
+                email: 'ochithyaminsilu6@gmail.com',
+                password: '10669Abc',
+                business_name: 'RAVI MOTORS',
                 role: 'admin',
                 is_active: true
             });
@@ -92,9 +91,9 @@ const initializeDatabase = async () => {
             await User.updateOne(
                 { _id: adminExists._id },
                 {
-                    email: 'smartzonelk101@gmail.com',
-                    password: '200723800385@',
-                    business_name: 'SMART ZONE',
+                    email: 'ochithyaminsilu6@gmail.com',
+                    password: '10669Abc',
+                    business_name: 'RAVI MOTORS',
                     role: 'admin',
                     is_active: true
                 }

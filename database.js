@@ -65,6 +65,7 @@ const InvoiceSchema = new mongoose.Schema({
     customer_phone: { type: String, default: '' },
     payment_method: { type: String, default: 'Cash' },
     total_amount: { type: Number, default: 0.0 },
+    amount_paid: { type: Number, default: 0.0 },
     total_profit: { type: Number, default: 0.0 },
     items: [InvoiceItemSchema]
 });

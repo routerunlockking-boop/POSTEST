@@ -1075,7 +1075,41 @@ function updateBillUI() {
     });
     
     document.getElementById('pos-total-amount').textContent = formatCurrency(total);
+    
+    // Update amount to pay if it's a new bill or if total changes
+    const amountToPayInput = document.getElementById('pos-amount-to-pay');
+    amountToPayInput.value = total.toFixed(2);
+    
+    calculateChange();
 }
+
+function calculateChange() {
+    const amountToPay = parseFloat(document.getElementById('pos-amount-to-pay').value) || 0;
+    const amountPaid = parseFloat(document.getElementById('pos-amount-paid').value) || 0;
+    const change = amountPaid - amountToPay;
+    
+    const changeEl = document.getElementById('pos-change-amount');
+    changeEl.textContent = formatCurrency(Math.max(0, change));
+    
+    if (change < 0 && amountPaid > 0) {
+        changeEl.style.color = '#ef4444'; // Red for insufficient payment
+    } else {
+        changeEl.style.color = 'var(--text-main)';
+    }
+}
+
+// Add event listeners for payment calculation
+document.addEventListener('DOMContentLoaded', () => {
+    const amountPaidInput = document.getElementById('pos-amount-paid');
+    const amountToPayInput = document.getElementById('pos-amount-to-pay');
+    
+    if (amountPaidInput) {
+        amountPaidInput.addEventListener('input', calculateChange);
+    }
+    if (amountToPayInput) {
+        amountToPayInput.addEventListener('input', calculateChange);
+    }
+});
 
 document.getElementById('btn-submit-bill').addEventListener('click', async () => {
     if (currentBill.length === 0) {
@@ -1083,7 +1117,8 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
         return;
     }
     
-    let total = currentBill.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    let total = parseFloat(document.getElementById('pos-amount-to-pay').value) || 0;
+    const amountPaid = parseFloat(document.getElementById('pos-amount-paid').value) || 0;
     
     const customer_name = document.getElementById('pos-customer-name').value;
     const customer_phone = document.getElementById('pos-customer-phone').value;
@@ -1092,6 +1127,7 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
     const payload = {
         items: currentBill,
         total_amount: total,
+        amount_paid: amountPaid,
         customer_name,
         customer_phone,
         payment_method
@@ -1116,6 +1152,7 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
         document.getElementById('pos-customer-name').value = '';
         document.getElementById('pos-customer-phone').value = '';
         document.getElementById('pos-payment-method').value = 'Cash';
+        document.getElementById('pos-amount-paid').value = '';
         updateBillUI();
         
         // Reload products cache
@@ -1170,6 +1207,13 @@ function showInvoicePrintout(invoice) {
     });
     
     document.getElementById('receipt-total-amount').textContent = total.toFixed(2);
+    
+    // Payment details for receipt
+    const amountPaid = invoice.amount_paid || 0;
+    const change = amountPaid > 0 ? (amountPaid - total) : 0;
+    
+    document.getElementById('receipt-amount-paid').textContent = amountPaid.toFixed(2);
+    document.getElementById('receipt-change-amount').textContent = Math.max(0, change).toFixed(2);
     
     // Automatically open modal and print dialog as per rules
     showModal(invoiceModal);

@@ -360,13 +360,12 @@
                                     <button class="btn btn-outline" style="background: #0f766e; color: white; border: none; padding: 14px;">Hold Order</button>
                                     <button class="btn btn-outline" style="background: #0f766e; color: white; border: none; padding: 14px;">Apply Discount</button>
                                     <button class="btn btn-outline" id="btn-show-customer" style="background: #0f766e; color: white; border: none; padding: 14px;">Add Customer</button>
-                                    <button class="btn btn-outline" id="btn-payment-method" style="background: var(--bg-card); color: var(--text-main); border: 2px solid var(--border); padding: 14px; font-weight: 700;">Pay with:</button>
+                                    <button class="btn btn-outline" id="btn-payment-method" style="background: var(--bg-card); color: var(--primary); border: 2px solid var(--border); padding: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 16px;">
+                                        <i class='bx bx-wallet'></i> <span id="pos-selected-payment">Cash</span> <i class='bx bx-chevron-down'></i>
+                                    </button>
                                 </div>
                                 
-                                <!-- Active payment method indicator -->
-                                <div style="text-align: center; margin-bottom: 15px; font-size: 14px; font-weight: 500; color: var(--text-main);" id="active-payment-method-display">
-                                    Paying with: <strong style="color: var(--primary);" id="pos-selected-payment">Cash</strong>
-                                </div>
+                                <div id="active-payment-method-display" style="display:none;"></div>
 
                                 <button class="btn btn-primary btn-block btn-lg" id="btn-submit-bill" style="background: #16a34a; font-size: 18px; font-weight: 700; border-radius: 12px; padding: 18px;">Pay Now (F12)</button>
                             </div>

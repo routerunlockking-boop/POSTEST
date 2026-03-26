@@ -280,10 +280,7 @@
                                 </div>
                             </div>
                             <div class="pos-header-right">
-                                <div class="pos-operator" style="text-align: right; margin-right: 16px;">
-                                    <div class="operator-label" style="font-size: 12px; color: var(--text-muted);">Operator:</div>
-                                    <input type="text" id="pos-operator-name" value="Admin" style="font-size: 14px; font-weight: 600; text-align: right; border: none; background: transparent; width: 100px; outline: none; color: var(--text-main);">
-                                </div>
+
                                 <div class="pos-header-icons" style="display: flex; gap: 8px;">
                                     <button class="pos-icon-btn"><i class='bx bx-user'></i></button>
                                     <button class="pos-icon-btn"><i class='bx bx-cog'></i></button>
@@ -345,6 +342,11 @@
                                     <!-- Populated via JS -->
                                 </div>
 
+                                <div class="operator-details" id="pos-operator-details" style="display: none; padding: 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--border);">
+                                    <div style="font-size:12px; font-weight:600; margin-bottom:8px; display:flex; justify-content:space-between;">Operator Details <i class='bx bx-x' style="cursor:pointer;" onclick="document.getElementById('pos-operator-details').style.display='none'"></i></div>
+                                    <input type="text" id="pos-operator-name" class="form-control" placeholder="Operator Name" value="Admin" style="font-size:13px; padding:8px;">
+                                </div>
+
                                 <div class="customer-details" id="pos-customer-details" style="display: none; padding: 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--border);">
                                     <div style="font-size:12px; font-weight:600; margin-bottom:8px; display:flex; justify-content:space-between;">Customer Details <i class='bx bx-x' style="cursor:pointer;" onclick="document.getElementById('pos-customer-details').style.display='none'"></i></div>
                                     <input type="text" id="pos-customer-name" class="form-control" placeholder="Customer Name" style="margin-bottom:8px; font-size:13px; padding:8px;">
@@ -359,10 +361,7 @@
                                         <span>Subtotal</span>
                                         <span id="pos-subtotal-amount">LKR 0.00</span>
                                     </div>
-                                    <div class="summary-line">
-                                        <span>Tax (VAT 15%)</span>
-                                        <span id="pos-tax-amount">LKR 0.00</span>
-                                    </div>
+
                                     <div class="summary-line">
                                         <span>Discount</span>
                                         <span id="pos-discount-amount">LKR 0.00</span>
@@ -375,7 +374,7 @@
 
                                 <div class="pos-transaction-actions">
                                     <div class="pos-action-grid">
-                                        <button class="pos-btn-dark">Hold Order</button>
+                                        <button class="pos-btn-dark" id="btn-toggle-operator" onclick="document.getElementById('pos-operator-details').style.display='block'">Add Operator</button>
                                         <button class="pos-btn-dark">Apply Discount</button>
                                         <button class="pos-btn-dark" id="btn-toggle-customer" onclick="document.getElementById('pos-customer-details').style.display='block'">Add Customer</button>
                                         <button class="pos-btn-outline" id="btn-cancel-bill">Cancel</button>

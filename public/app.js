@@ -228,18 +228,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setupModals();
     setupPOSTabs();
     setupBarcodeScanner();
-    
-    const inventorySearch = document.getElementById('inventory-search-input');
-    if (inventorySearch) {
-        inventorySearch.addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            const filtered = products.filter(p => 
-                p.name.toLowerCase().includes(term) || 
-                (p.barcode && p.barcode.toLowerCase().includes(term))
-            );
-            renderInventory(filtered);
-        });
-    }
 });
 
 function initTheme() {

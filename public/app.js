@@ -448,7 +448,13 @@ function setupPOSTabs() {
 
 function updateClock() {
     const now = new Date();
+    const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const dateString = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     clockEl.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' - ' + now.toLocaleDateString();
+    const posClock = document.getElementById('pos-clock');
+    if (posClock) {
+        posClock.innerHTML = `<div style="text-align: right; color: var(--text-main);"><div style="font-size: 13px; font-weight: 500; color: #475569;">${dateString}</div><div style="font-size: 16px; margin-top: 4px; font-weight: 700;">${timeString}</div></div>`;
+    }
 }
 
 function setupNavigation() {
@@ -640,6 +646,88 @@ function setupModals() {
             alert('Error updating user');
         }
     });
+
+    // Custom POS UI Elements
+    const btnEditCashier = document.getElementById('btn-edit-cashier');
+    const cashierModal = document.getElementById('cashier-modal');
+    const posCashierName = document.getElementById('pos-cashier-name');
+    const inputCashierName = document.getElementById('input-cashier-name');
+    const btnSaveCashier = document.getElementById('btn-save-cashier');
+    
+    if (btnEditCashier) {
+        let savedCashier = localStorage.getItem('pos_cashier') || currentBusiness || 'Admin';
+        if(posCashierName) posCashierName.textContent = savedCashier;
+        
+        btnEditCashier.addEventListener('click', () => {
+            inputCashierName.value = posCashierName.textContent;
+            showModal(cashierModal);
+        });
+    }
+
+    if (btnSaveCashier) {
+        btnSaveCashier.addEventListener('click', () => {
+            const newName = inputCashierName.value.trim() || 'Cashier';
+            posCashierName.textContent = newName;
+            localStorage.setItem('pos_cashier', newName);
+            hideModal();
+        });
+    }
+    
+    const btnPaymentMethod = document.getElementById('btn-payment-method');
+    const paymentModal = document.getElementById('payment-method-modal');
+    const paymentOptions = document.querySelectorAll('.payment-option-btn');
+    const posSelectedPayment = document.getElementById('pos-selected-payment');
+    const activePaymentMethodDisplay = document.getElementById('active-payment-method-display');
+    
+    if (btnPaymentMethod && paymentModal) {
+        btnPaymentMethod.addEventListener('click', () => {
+            showModal(paymentModal);
+        });
+    }
+    
+    paymentOptions.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            paymentOptions.forEach(b => b.classList.remove('active'));
+            const targetBtn = e.currentTarget;
+            targetBtn.classList.add('active');
+            
+            posSelectedPayment.textContent = targetBtn.dataset.method;
+            activePaymentMethodDisplay.style.display = 'block';
+            
+            setTimeout(() => {
+                hideModal();
+            }, 200);
+        });
+    });
+    
+    const btnClosePaymentModal = document.getElementById('btn-close-payment-modal');
+    if (btnClosePaymentModal) btnClosePaymentModal.addEventListener('click', hideModal);
+    const btnCloseCashierModal = document.getElementById('btn-close-cashier-modal');
+    if (btnCloseCashierModal) btnCloseCashierModal.addEventListener('click', hideModal);
+    
+    const btnExitPos = document.getElementById('btn-exit-pos');
+    if (btnExitPos) {
+        btnExitPos.addEventListener('click', () => {
+            document.querySelector('[data-target="dashboard-view"]').click();
+        });
+    }
+    
+    const btnShowCustomer = document.getElementById('btn-show-customer');
+    const btnHideCustomer = document.getElementById('btn-hide-customer');
+    if (btnShowCustomer && btnHideCustomer) {
+        btnShowCustomer.addEventListener('click', () => {
+            document.getElementById('pos-bill-items').style.display = 'none';
+            document.getElementById('pos-customer-details').style.display = 'block';
+            const billTableHeader = document.querySelector('.bill-table-header');
+            if(billTableHeader) billTableHeader.style.display = 'none';
+        });
+        btnHideCustomer.addEventListener('click', () => {
+            document.getElementById('pos-bill-items').style.display = 'block';
+            document.getElementById('pos-customer-details').style.display = 'none';
+            const billTableHeader = document.querySelector('.bill-table-header');
+            if(billTableHeader) billTableHeader.style.display = 'flex';
+        });
+    }
 }
 
 function showModal(modal) {
@@ -934,10 +1022,34 @@ function updateBillPrice(id, newPrice) {
     }
 }
 
+window.updateBillQuantityDirect = function(id, input) {
+    const value = input.value;
+    const item = currentBill.find(i => i.id === id);
+    if (item) {
+        const newQty = parseInt(value);
+        if (newQty > 0 && newQty <= item.maxQty) {
+            item.quantity = newQty;
+            updateBillUI();
+        } else if (newQty === 0) {
+            currentBill = currentBill.filter(i => i.id !== id);
+            updateBillUI();
+        } else {
+            alert('Invalid quantity or out of stock!');
+            input.value = item.quantity;
+        }
+    }
+}
+
 function updateBillUI() {
     const itemsContainer = document.getElementById('pos-bill-items');
+    if (!itemsContainer) return;
     itemsContainer.innerHTML = '';
     let total = 0;
+    
+    const billNoEl = document.getElementById('pos-bill-no');
+    if (billNoEl && billNoEl.textContent === 'Auto Generate') {
+        billNoEl.textContent = 'INV-' + Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+    }
     
     currentBill.forEach(item => {
         const amount = item.price * item.quantity;
@@ -945,29 +1057,40 @@ function updateBillUI() {
         
         const div = document.createElement('div');
         div.className = 'bill-item';
+        div.style.display = 'flex';
+        div.style.alignItems = 'center';
+        div.style.justifyContent = 'space-between';
+        div.style.padding = '12px 10px';
+        div.style.borderBottom = '1px dashed var(--border)';
+        
         div.innerHTML = `
-            <div class="bill-item-details">
-                <h4>${item.name}</h4>
-                <div style="display:flex; align-items:center; gap:8px; margin-top:4px;">
-                    <input type="number" step="0.01" value="${item.price}" 
-                           onchange="updateBillPrice('${item.id}', this.value)" 
-                           style="width:80px; padding:4px; font-size:13px; border:1px solid var(--border); border-radius:4px;"> 
-                    <span style="font-size:13px; color:var(--text-muted)">x ${item.quantity}</span>
+            <div class="bill-item-details" style="flex: 2; padding-right: 10px;">
+                <h4 style="font-size: 15px; margin-bottom: 6px; color: var(--text-main); font-weight: 600;">${item.name}</h4>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:13px; color:var(--text-muted)">@</span>
+                    <input type="number" step="0.01" class="bill-item-input price-input" value="${item.price}" 
+                           onchange="updateBillPrice('${item.id}', this.value)" style="width: 80px;">
                 </div>
             </div>
-            <div class="bill-item-actions">
-                <div class="qty-control">
-                    <button class="qty-btn" onclick="updateBillQuantity('${item.id}', -1)">-</button>
-                    <span>${item.quantity}</span>
-                    <button class="qty-btn" onclick="updateBillQuantity('${item.id}', 1)">+</button>
-                </div>
-                <div class="item-total">${formatCurrency(amount)}</div>
+            
+            <div class="qty-control" style="background: transparent; padding: 0; display:flex; align-items:center; width: 70px; justify-content: center;">
+                <button class="qty-btn" style="background: var(--bg-card); border: 1px solid var(--border);" onclick="updateBillQuantity('${item.id}', -1)">-</button>
+                <input type="number" class="bill-item-input qty-input" style="width: 50px; margin: 0 4px;" value="${item.quantity}" onchange="updateBillQuantityDirect('${item.id}', this)">
+                <button class="qty-btn" style="background: var(--bg-card); border: 1px solid var(--border);" onclick="updateBillQuantity('${item.id}', 1)">+</button>
+            </div>
+            
+            <div style="width: 80px; display:flex; justify-content: flex-end; align-items: center; gap: 8px;">
+                <div class="item-total" style="font-size: 16px; color: var(--text-main); font-weight: 600;">${formatCurrency(amount)}</div>
+                <button class="btn btn-icon-only text-danger" style="background: transparent; border: none; font-size: 18px; padding: 0;" onclick="updateBillQuantityDirect('${item.id}', {value: 0})"><i class='bx bx-trash'></i></button>
             </div>
         `;
         itemsContainer.appendChild(div);
     });
     
-    document.getElementById('pos-total-amount').textContent = formatCurrency(total);
+    document.getElementById('pos-subtotal-amount').textContent = formatCurrency(total);
+    let discount = 0;
+    document.getElementById('pos-discount-amount').textContent = formatCurrency(discount);
+    document.getElementById('pos-total-amount').textContent = formatCurrency(total - discount);
 }
 
 document.getElementById('btn-submit-bill').addEventListener('click', async () => {
@@ -977,14 +1100,16 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
     }
     
     let total = currentBill.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    let discount = 0;
     
     const customer_name = document.getElementById('pos-customer-name').value;
     const customer_phone = document.getElementById('pos-customer-phone').value;
-    const payment_method = document.getElementById('pos-payment-method').value;
+    const paymentElement = document.getElementById('pos-selected-payment');
+    const payment_method = paymentElement ? paymentElement.textContent : 'Cash';
     
     const payload = {
         items: currentBill,
-        total_amount: total,
+        total_amount: total - discount,
         customer_name,
         customer_phone,
         payment_method
@@ -1001,17 +1126,24 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
         
         const data = await res.json();
         
-        // Print
         showInvoicePrintout(data.invoice);
         
-        // Clear bill
         currentBill = [];
         document.getElementById('pos-customer-name').value = '';
         document.getElementById('pos-customer-phone').value = '';
-        document.getElementById('pos-payment-method').value = 'Cash';
+        if (paymentElement) paymentElement.textContent = 'Cash';
+        const activeDisplay = document.getElementById('active-payment-method-display');
+        if (activeDisplay) activeDisplay.style.display = 'none';
+        
+        document.querySelectorAll('.payment-option-btn').forEach(b => b.classList.remove('active'));
+        const cashObj = document.querySelector('.payment-option-btn[data-method="Cash"]');
+        if(cashObj) cashObj.classList.add('active');
+        
+        const billNoEl = document.getElementById('pos-bill-no');
+        if(billNoEl) billNoEl.textContent = 'Auto Generate';
+        
         updateBillUI();
         
-        // Reload products cache
         fetchAuth(`${API_BASE}/products`).then(r => r.json()).then(p => products = p);
         
     } catch (err) {

@@ -619,6 +619,7 @@
                             <p>Time: <span id="receipt-time"></span></p>
                             <p id="receipt-customer-row" style="display:none;">Customer: <span id="receipt-customer-name"></span></p>
                             <p id="receipt-phone-row" style="display:none;">Contact: <span id="receipt-customer-phone"></span></p>
+                            <p id="receipt-cashier-row">Cashier: <span id="receipt-cashier-name"></span> (<span id="receipt-cashier-number"></span>)</p>
                             <p>Payment: <span id="receipt-payment-method"></span></p>
                         </div>
                         <p>----------------------------</p>
@@ -682,7 +683,7 @@
                     <button class="close-btn" id="btn-close-payment-modal"><i class='bx bx-x'></i></button>
                 </div>
                 <div class="modal-body" style="display: flex; flex-direction: column; gap: 15px;">
-                    <button class="btn btn-outline payment-option-btn active" data-method="Cash" style="justify-content: flex-start; padding: 16px; font-size: 16px border-color: var(--primary);">
+                    <button class="btn btn-outline payment-option-btn active" data-method="Cash" style="justify-content: flex-start; padding: 16px; font-size: 16px; border-color: var(--primary);">
                         <i class='bx bx-money' style="font-size: 24px; color: #10b981; margin-right: 12px;"></i> Cash
                     </button>
                     <button class="btn btn-outline payment-option-btn" data-method="Bank deposit" style="justify-content: flex-start; padding: 16px; font-size: 16px;">
@@ -697,7 +698,7 @@
             <!-- Cashier Edit Modal -->
             <div class="modal" id="cashier-modal">
                 <div class="modal-header">
-                    <h3>Change Cashier Name</h3>
+                    <h3>Cashier Details</h3>
                     <button class="close-btn" id="btn-close-cashier-modal"><i class='bx bx-x'></i></button>
                 </div>
                 <div class="modal-body">
@@ -705,7 +706,11 @@
                         <label>Cashier Name</label>
                         <input type="text" id="input-cashier-name" class="form-control" placeholder="Enter cashier name">
                     </div>
-                    <button class="btn btn-primary btn-block" id="btn-save-cashier">Save</button>
+                    <div class="form-group">
+                        <label>Cashier Number / ID</label>
+                        <input type="text" id="input-cashier-number" class="form-control" placeholder="Enter cashier number">
+                    </div>
+                    <button class="btn btn-primary btn-block" id="btn-save-cashier">Save Details</button>
                 </div>
             </div>
         </div>

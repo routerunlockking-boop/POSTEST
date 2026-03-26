@@ -652,23 +652,33 @@ function setupModals() {
     const cashierModal = document.getElementById('cashier-modal');
     const posCashierName = document.getElementById('pos-cashier-name');
     const inputCashierName = document.getElementById('input-cashier-name');
+    const inputCashierNumber = document.getElementById('input-cashier-number');
     const btnSaveCashier = document.getElementById('btn-save-cashier');
     
     if (btnEditCashier) {
-        let savedCashier = localStorage.getItem('pos_cashier') || currentBusiness || 'Admin';
-        if(posCashierName) posCashierName.textContent = savedCashier;
+        let savedCashierName = localStorage.getItem('pos_cashier_name');
+        if(posCashierName) {
+            posCashierName.textContent = savedCashierName ? savedCashierName : 'Not Set';
+        }
         
         btnEditCashier.addEventListener('click', () => {
-            inputCashierName.value = posCashierName.textContent;
+            inputCashierName.value = localStorage.getItem('pos_cashier_name') || '';
+            if (inputCashierNumber) inputCashierNumber.value = localStorage.getItem('pos_cashier_number') || '';
             showModal(cashierModal);
         });
     }
 
     if (btnSaveCashier) {
         btnSaveCashier.addEventListener('click', () => {
-            const newName = inputCashierName.value.trim() || 'Cashier';
+            const newName = inputCashierName.value.trim();
+            const newNumber = inputCashierNumber ? inputCashierNumber.value.trim() : '';
+            if (!newName || !newNumber) {
+                alert('Please enter both Cashier Name and Number.');
+                return;
+            }
             posCashierName.textContent = newName;
-            localStorage.setItem('pos_cashier', newName);
+            localStorage.setItem('pos_cashier_name', newName);
+            localStorage.setItem('pos_cashier_number', newNumber);
             hideModal();
         });
     }
@@ -681,6 +691,12 @@ function setupModals() {
     
     if (btnPaymentMethod && paymentModal) {
         btnPaymentMethod.addEventListener('click', () => {
+            const cName = localStorage.getItem('pos_cashier_name');
+            const cNum = localStorage.getItem('pos_cashier_number');
+            if (!cName || !cNum) {
+                alert('To be able to change the payment method, you need to add a cashier. Click on the icon next to Cashier at the top and enter the Cashier name and number.');
+                return;
+            }
             showModal(paymentModal);
         });
     }
@@ -1107,11 +1123,16 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
     const paymentElement = document.getElementById('pos-selected-payment');
     const payment_method = paymentElement ? paymentElement.textContent : 'Cash';
     
+    const cashier_name = localStorage.getItem('pos_cashier_name') || '';
+    const cashier_number = localStorage.getItem('pos_cashier_number') || '';
+    
     const payload = {
         items: currentBill,
         total_amount: total - discount,
         customer_name,
         customer_phone,
+        cashier_name,
+        cashier_number,
         payment_method
     };
     
@@ -1158,6 +1179,17 @@ function showInvoicePrintout(invoice) {
     document.getElementById('receipt-date').textContent = invoice.date;
     document.getElementById('receipt-time').textContent = invoice.time;
     document.getElementById('receipt-payment-method').textContent = invoice.payment_method || 'Cash';
+    
+    const cashierRow = document.getElementById('receipt-cashier-row');
+    if (cashierRow) {
+        if (invoice.cashier_name) {
+            cashierRow.style.display = 'block';
+            document.getElementById('receipt-cashier-name').textContent = invoice.cashier_name;
+            document.getElementById('receipt-cashier-number').textContent = invoice.cashier_number || '';
+        } else {
+            cashierRow.style.display = 'none';
+        }
+    }
     
     if (invoice.customer_name || invoice.customer_phone) {
         if (invoice.customer_name) {

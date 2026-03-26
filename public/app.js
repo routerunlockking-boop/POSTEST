@@ -683,36 +683,27 @@ function setupModals() {
         });
     }
     
-    const btnPaymentMethod = document.getElementById('btn-payment-method');
-    const paymentModal = document.getElementById('payment-method-modal');
     const paymentOptions = document.querySelectorAll('.payment-option-btn');
-    const posSelectedPayment = document.getElementById('pos-selected-payment');
-    const activePaymentMethodDisplay = document.getElementById('active-payment-method-display');
     
-    if (btnPaymentMethod && paymentModal) {
-        btnPaymentMethod.addEventListener('click', () => {
+    paymentOptions.forEach(btn => {
+        btn.addEventListener('click', (e) => {
             const cName = localStorage.getItem('pos_cashier_name');
             const cNum = localStorage.getItem('pos_cashier_number');
             if (!cName || !cNum) {
                 alert('To be able to change the payment method, you need to add a cashier. Click on the icon next to Cashier at the top and enter the Cashier name and number.');
                 return;
             }
-            showModal(paymentModal);
-        });
-    }
-    
-    paymentOptions.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            paymentOptions.forEach(b => b.classList.remove('active'));
+            
+            paymentOptions.forEach(b => {
+                b.classList.remove('active');
+                b.style.borderColor = 'var(--border)';
+                b.style.color = 'var(--text-main)';
+            });
+            
             const targetBtn = e.currentTarget;
             targetBtn.classList.add('active');
-            
-            posSelectedPayment.textContent = targetBtn.dataset.method;
-            activePaymentMethodDisplay.style.display = 'block';
-            
-            setTimeout(() => {
-                hideModal();
-            }, 200);
+            targetBtn.style.borderColor = 'var(--primary)';
+            targetBtn.style.color = 'var(--primary)';
         });
     });
     
@@ -1120,8 +1111,8 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
     
     const customer_name = document.getElementById('pos-customer-name').value;
     const customer_phone = document.getElementById('pos-customer-phone').value;
-    const paymentElement = document.getElementById('pos-selected-payment');
-    const payment_method = paymentElement ? paymentElement.textContent : 'Cash';
+    const activePaymentBtn = document.querySelector('.payment-option-btn.active');
+    const payment_method = activePaymentBtn ? activePaymentBtn.dataset.method : 'Cash';
     
     const cashier_name = localStorage.getItem('pos_cashier_name') || '';
     const cashier_number = localStorage.getItem('pos_cashier_number') || '';
@@ -1152,13 +1143,19 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
         currentBill = [];
         document.getElementById('pos-customer-name').value = '';
         document.getElementById('pos-customer-phone').value = '';
-        if (paymentElement) paymentElement.textContent = 'Cash';
-        const activeDisplay = document.getElementById('active-payment-method-display');
-        if (activeDisplay) activeDisplay.style.display = 'none';
         
-        document.querySelectorAll('.payment-option-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.payment-option-btn').forEach(b => {
+            b.classList.remove('active');
+            b.style.borderColor = 'var(--border)';
+            b.style.color = 'var(--text-main)';
+        });
+        
         const cashObj = document.querySelector('.payment-option-btn[data-method="Cash"]');
-        if(cashObj) cashObj.classList.add('active');
+        if(cashObj) {
+            cashObj.classList.add('active');
+            cashObj.style.borderColor = 'var(--primary)';
+            cashObj.style.color = 'var(--primary)';
+        }
         
         const billNoEl = document.getElementById('pos-bill-no');
         if(billNoEl) billNoEl.textContent = 'Auto Generate';

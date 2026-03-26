@@ -356,13 +356,15 @@
                                     <span id="pos-total-amount">0.00</span>
                                 </div>
                                 
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
                                     <button class="btn btn-outline" style="background: #0f766e; color: white; border: none; padding: 14px;">Hold Order</button>
                                     <button class="btn btn-outline" style="background: #0f766e; color: white; border: none; padding: 14px;">Apply Discount</button>
                                     <button class="btn btn-outline" id="btn-show-customer" style="background: #0f766e; color: white; border: none; padding: 14px;">Add Customer</button>
-                                    <button class="btn btn-outline" id="btn-payment-method" style="background: var(--bg-card); color: var(--primary); border: 2px solid var(--border); padding: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 16px;">
-                                        <i class='bx bx-wallet'></i> <span id="pos-selected-payment">Cash</span>
-                                    </button>
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;" id="inline-payment-methods">
+                                    <button class="btn btn-outline payment-option-btn active" data-method="Cash" style="border: 2px solid var(--primary); color: var(--primary); padding: 14px; font-weight: 700;">Cash</button>
+                                    <button class="btn btn-outline payment-option-btn" data-method="Bank deposit" style="border: 2px solid var(--border); color: var(--text-main); padding: 14px; font-weight: 700;">Bank</button>
+                                    <button class="btn btn-outline payment-option-btn" data-method="Cash on delivery" style="border: 2px solid var(--border); color: var(--text-main); padding: 14px; font-weight: 700;">COD</button>
                                 </div>
                                 
                                 <div id="active-payment-method-display" style="display:none;"></div>

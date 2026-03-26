@@ -171,6 +171,18 @@ body {
     position: relative;
 }
 
+/* Disable main container scroll when POS is active to allow internal scrolling only */
+.views-container:has(#pos-view.active) {
+    overflow: hidden;
+}
+
+/* POS specific height fix */
+#pos-view.active {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 70px - 64px);
+}
+
 .view {
     display: none;
     animation: fadeIn 0.4s ease forwards;
@@ -375,7 +387,12 @@ body {
     grid-template-columns: 2fr 1.2fr;
     gap: 24px;
     height: 100%;
-    min-height: 600px;
+    align-items: stretch;
+}
+
+.pos-products-area, .pos-bill-area {
+    height: 100%;
+    overflow: hidden; /* Prevent area itself from scrolling, use internal grids/lists */
 }
 
 .pos-products-area {
@@ -408,10 +425,11 @@ body {
 
 .pos-products-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 16px;
     overflow-y: auto;
     padding-right: 8px;
+    flex: 1;
 }
 
 .pos-product-card {

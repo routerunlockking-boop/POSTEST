@@ -265,7 +265,8 @@ function setupBarcodeScanner() {
                         addToBill(product);
                         e.target.value = '';
                     } else {
-                        alert('Product not found with this barcode.');
+                        // Product not found, open add product modal
+                        openAddProductModal(barcode);
                     }
                 }
             }
@@ -327,7 +328,12 @@ function setupBarcodeScanner() {
                 } else if (isPosView) {
                     if (activeEl.id !== 'pos-barcode-input') {
                         const product = products.find(p => p.barcode === barcodeBuffer);
-                        if (product) addToBill(product);
+                        if (product) {
+                            addToBill(product);
+                        } else {
+                            // Scanned barcode not found in inventory, redirect to add product
+                            openAddProductModal(barcodeBuffer);
+                        }
                     }
                     barcodeBuffer = '';
                 }
@@ -550,22 +556,24 @@ function setupNavigation() {
     }
 }
 
+function openAddProductModal(barcode = '') {
+    document.getElementById('product-form').reset();
+    document.getElementById('product-id').value = '';
+    document.getElementById('product-barcode').value = barcode;
+    currentProductImageBase64 = null;
+    document.getElementById('product-image-preview').innerHTML = '<span style="color:var(--text-muted);font-size:12px;">+ Add Image</span>';
+    document.getElementById('product-modal-title').textContent = 'Add Product';
+    showModal(productModal);
+    setTimeout(() => document.getElementById('product-barcode').focus(), 100);
+}
+
 function setupModals() {
     document.getElementById('btn-close-modal').addEventListener('click', hideModal);
     document.getElementById('btn-close-invoice-modal').addEventListener('click', hideModal);
     document.getElementById('btn-close-admin-modal').addEventListener('click', hideModal);
     
     // Add product
-    document.getElementById('btn-add-product').addEventListener('click', () => {
-        document.getElementById('product-form').reset();
-        document.getElementById('product-id').value = '';
-        document.getElementById('product-barcode').value = '';
-        currentProductImageBase64 = null;
-        document.getElementById('product-image-preview').innerHTML = '<span style="color:var(--text-muted);font-size:12px;">+ Add Image</span>';
-        document.getElementById('product-modal-title').textContent = 'Add Product';
-        showModal(productModal);
-        setTimeout(() => document.getElementById('product-barcode').focus(), 100);
-    });
+    document.getElementById('btn-add-product').addEventListener('click', () => openAddProductModal());
 
     // Handle Image Selection
     document.getElementById('product-image').addEventListener('change', function(e) {

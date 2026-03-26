@@ -398,7 +398,7 @@ body {
 .pos-products-area {
     background: var(--bg-card);
     border-radius: 16px;
-    padding: 16px;
+    padding: 12px;
     border: 1px solid var(--border);
     box-shadow: var(--shadow-sm);
     display: flex;
@@ -425,17 +425,17 @@ body {
 
 .pos-products-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-    gap: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 4px;
     overflow-y: auto;
-    padding-right: 8px;
+    padding-right: 4px;
     flex: 1;
 }
 
 .pos-product-card {
     border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 8px;
+    border-radius: 8px;
+    padding: 6px;
     text-align: center;
     cursor: pointer;
     transition: var(--transition);

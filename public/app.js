@@ -307,15 +307,20 @@ function setupBarcodeScanner() {
         } 
         
         if (e.key === 'Enter' || e.key === 'Tab') {
-            // Use either the buffer (from scanner) or the input value (if focused)
-            let finalBarcode = barcodeBuffer;
-            if (isBarcodeField && activeEl.value.trim()) {
+            // Priority: buffer (from scanner) > input value (if manually typed)
+            let finalBarcode = barcodeBuffer.trim();
+            if (!finalBarcode && isBarcodeField) {
                 finalBarcode = activeEl.value.trim();
             }
 
             if (finalBarcode) {
                 e.preventDefault();
                 
+                // We clear buffer immediately to prevent double-processing 
+                // but keep the value in finalBarcode
+                barcodeBuffer = '';
+                clearTimeout(barcodeTimer);
+
                 if (isProductModalActive) {
                     const pBarcodeInput = document.getElementById('product-barcode');
                     if (pBarcodeInput) {
@@ -335,28 +340,33 @@ function setupBarcodeScanner() {
                         openAddProductModal(finalBarcode);
                     }
                 } else {
-                    // Switch to inventory for Dashboard, Reports, etc.
+                    // Switch to inventory for other views
                     if (!isInventoryView) {
                         navLinks.forEach(l => l.classList.remove('active'));
                         const invLink = document.querySelector('[data-target="inventory-view"]');
                         if (invLink) invLink.classList.add('active');
                         
                         views.forEach(v => v.classList.remove('active'));
-                        document.getElementById('inventory-view').classList.add('active');
+                        const invView = document.getElementById('inventory-view');
+                        if (invView) invView.classList.add('active');
+                        
                         pageTitle.textContent = "Inventory";
                         currentTab = 'inventory-view';
                         loadInventory();
                     }
 
-                    const product = products.find(p => p.barcode === finalBarcode);
-                    if (product) {
-                        editProduct(product.id);
-                    } else {
-                        openAddProductModal(finalBarcode);
-                    }
+                    // Small delay to ensure inventory is loaded if we just switched
+                    setTimeout(() => {
+                        const product = products.find(p => p.barcode === finalBarcode);
+                        if (product) {
+                            editProduct(product.id);
+                        } else {
+                            openAddProductModal(finalBarcode);
+                        }
+                    }, isInventoryView ? 0 : 100);
                 }
             }
-            // Always clear buffer on Enter/Tab to prepare for next scan
+            // Always clear buffer
             barcodeBuffer = '';
         }
     });
@@ -580,14 +590,29 @@ function setupNavigation() {
 }
 
 function openAddProductModal(barcode = '') {
-    document.getElementById('product-form').reset();
+    const form = document.getElementById('product-form');
+    form.reset();
     document.getElementById('product-id').value = '';
-    document.getElementById('product-barcode').value = barcode;
     currentProductImageBase64 = null;
     document.getElementById('product-image-preview').innerHTML = '<span style="color:var(--text-muted);font-size:12px;">+ Add Image</span>';
     document.getElementById('product-modal-title').textContent = 'Add Product';
+    
+    // Set barcode after reset
+    if (barcode) {
+        document.getElementById('product-barcode').value = barcode;
+    }
+    
     showModal(productModal);
-    setTimeout(() => document.getElementById('product-barcode').focus(), 100);
+    
+    // Focus and highlight
+    setTimeout(() => {
+        const input = document.getElementById('product-barcode');
+        input.focus();
+        if (barcode) {
+            input.style.backgroundColor = 'rgba(16, 185, 129, 0.2)';
+            setTimeout(() => input.style.backgroundColor = '', 500);
+        }
+    }, 150);
 }
 
 function setupModals() {

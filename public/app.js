@@ -268,20 +268,7 @@ function setupBarcodeScanner() {
     const barcodeInput = document.getElementById('pos-barcode-input');
     if (barcodeInput) {
         barcodeInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                const barcode = e.target.value.trim();
-                if (barcode) {
-                    const product = products.find(p => p.barcode === barcode);
-                    if (product) {
-                        addToBill(product);
-                        e.target.value = '';
-                    } else {
-                        // Product not found, open add product modal
-                        openAddProductModal(barcode);
-                    }
-                }
-            }
+            if (e.key === 'Enter') e.preventDefault();
         });
     }
 
@@ -295,8 +282,6 @@ function setupBarcodeScanner() {
         const isPosView = currentTab === 'pos-view';
         const isInventoryView = currentTab === 'inventory-view';
         
-        // If not on a relevant view and not in a modal, we still want to handle scans 
-        // by switching to the inventory view.
         const now = Date.now();
         const interval = now - lastKeyTime;
         lastKeyTime = now;
@@ -308,7 +293,6 @@ function setupBarcodeScanner() {
         // Collect characters
         if (e.key.length === 1) {
             // If it's a fast sequence, it's a scanner. 
-            // We'll collect it regardless of the current tab.
             barcodeBuffer += e.key;
             
             // If it's fast and we are in an input that isn't the barcode field, prevent it
@@ -319,40 +303,40 @@ function setupBarcodeScanner() {
             clearTimeout(barcodeTimer);
             barcodeTimer = setTimeout(() => {
                 barcodeBuffer = '';
-            }, 300);
+            }, 500); // Increased slightly for slower hardware
         } 
         
         if (e.key === 'Enter' || e.key === 'Tab') {
-            if (barcodeBuffer) {
-                // Determine what to do based on context
+            // Use either the buffer (from scanner) or the input value (if focused)
+            let finalBarcode = barcodeBuffer;
+            if (isBarcodeField && activeEl.value.trim()) {
+                finalBarcode = activeEl.value.trim();
+            }
+
+            if (finalBarcode) {
+                e.preventDefault();
+                
                 if (isProductModalActive) {
                     const pBarcodeInput = document.getElementById('product-barcode');
                     if (pBarcodeInput) {
-                        pBarcodeInput.value = barcodeBuffer;
+                        pBarcodeInput.value = finalBarcode;
                         pBarcodeInput.dispatchEvent(new Event('input'));
                         pBarcodeInput.dispatchEvent(new Event('change'));
+                        
                         pBarcodeInput.style.backgroundColor = 'rgba(16, 185, 129, 0.2)';
                         setTimeout(() => pBarcodeInput.style.backgroundColor = '', 500);
                     }
-                    barcodeBuffer = '';
-                    e.preventDefault();
                 } else if (isPosView) {
-                    // In POS view, if not in the main barcode input, handle the scan
-                    if (activeEl.id !== 'pos-barcode-input') {
-                        const product = products.find(p => p.barcode === barcodeBuffer);
-                        if (product) {
-                            addToBill(product);
-                        } else {
-                            openAddProductModal(barcodeBuffer);
-                        }
-                        barcodeBuffer = '';
-                        e.preventDefault();
+                    const product = products.find(p => p.barcode === finalBarcode);
+                    if (product) {
+                        addToBill(product);
+                        if (activeEl.id === 'pos-barcode-input') activeEl.value = '';
+                    } else {
+                        openAddProductModal(finalBarcode);
                     }
                 } else {
-                    // For all other views (Dashboard, Inventory, etc.), 
-                    // switch to inventory and handle the scan
+                    // Switch to inventory for Dashboard, Reports, etc.
                     if (!isInventoryView) {
-                        // Switch to inventory view
                         navLinks.forEach(l => l.classList.remove('active'));
                         const invLink = document.querySelector('[data-target="inventory-view"]');
                         if (invLink) invLink.classList.add('active');
@@ -364,16 +348,16 @@ function setupBarcodeScanner() {
                         loadInventory();
                     }
 
-                    const product = products.find(p => p.barcode === barcodeBuffer);
+                    const product = products.find(p => p.barcode === finalBarcode);
                     if (product) {
                         editProduct(product.id);
                     } else {
-                        openAddProductModal(barcodeBuffer);
+                        openAddProductModal(finalBarcode);
                     }
-                    barcodeBuffer = '';
-                    e.preventDefault();
                 }
             }
+            // Always clear buffer on Enter/Tab to prepare for next scan
+            barcodeBuffer = '';
         }
     });
 

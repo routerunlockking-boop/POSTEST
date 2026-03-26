@@ -80,7 +80,7 @@ const initializeDatabase = async () => {
         const adminExists = await User.findOne({ role: 'admin' });
         if (!adminExists) {
             await User.create({
-                email: 'smartzonelk1016@gmail.com',
+                email: 'smartzonelk101@gmail.com',
                 password: '200723800385@',
                 business_name: 'SMART ZONE',
                 role: 'admin',
@@ -91,7 +91,7 @@ const initializeDatabase = async () => {
             await User.updateOne(
                 { _id: adminExists._id },
                 {
-                    email: 'smartzonelk1016@gmail.com',
+                    email: 'smartzonelk101@gmail.com',
                     password: '200723800385@',
                     business_name: 'SMART ZONE',
                     role: 'admin',

@@ -290,17 +290,20 @@
                                 <p id="pos-bill-no">Auto Generate</p>
                             </div>
                             <div class="pos-tabs" style="display: flex; gap: 16px; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
-                                <button class="pos-tab-btn active" id="tab-btn-items" style="background:none; border:none; font-weight:600; color:var(--primary); cursor:pointer; font-size: 14px; position:relative;">Bill Items</button>
-                                <button class="pos-tab-btn" id="tab-btn-customer" style="background:none; border:none; font-weight:500; color:var(--text-muted); cursor:pointer; font-size: 14px; position:relative;">Customer Details</button>
+                                <button class="pos-tab-btn active" id="tab-btn-items" style="display: flex; align-items: center; gap: 6px; background:none; border:none; font-weight:600; color:var(--primary); cursor:pointer; font-size: 13px; position:relative;"><i class='bx bx-receipt' style="font-size: 18px;"></i> Bill Items</button>
+                                <button class="pos-tab-btn" id="tab-btn-cashier" style="display: flex; align-items: center; gap: 6px; background:none; border:none; font-weight:500; color:var(--text-muted); cursor:pointer; font-size: 13px; position:relative;"><i class='bx bx-user-pin' style="font-size: 18px;"></i> Add Cashier</button>
+                                <button class="pos-tab-btn" id="tab-btn-customer" style="display: flex; align-items: center; gap: 6px; background:none; border:none; font-weight:500; color:var(--text-muted); cursor:pointer; font-size: 13px; position:relative;"><i class='bx bx-id-card' style="font-size: 18px;"></i> Customer</button>
                             </div>
                             <div class="bill-items" id="pos-bill-items">
                                 <!-- Populated via JS -->
                             </div>
-                            <div class="customer-details" id="pos-customer-details" style="display: none; flex: 1; padding: 8px 0;">
+                            <div class="cashier-details" id="pos-cashier-details" style="display: none; flex: 1; padding: 8px 0;">
                                 <div class="form-group">
                                     <label>Cashier Name</label>
                                     <input type="text" id="pos-cashier-name" class="form-control" placeholder="Enter cashier name">
                                 </div>
+                            </div>
+                            <div class="customer-details" id="pos-customer-details" style="display: none; flex: 1; padding: 8px 0;">
                                 <div class="form-group">
                                     <label>Customer Name (Optional)</label>
                                     <input type="text" id="pos-customer-name" class="form-control" placeholder="Enter name">

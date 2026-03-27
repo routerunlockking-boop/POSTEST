@@ -511,25 +511,33 @@ function startScanner() {
 
 function setupPOSTabs() {
     const tabItems = document.getElementById('tab-btn-items');
+    const tabCashier = document.getElementById('tab-btn-cashier');
     const tabCustomer = document.getElementById('tab-btn-customer');
+    
     const panelItems = document.getElementById('pos-bill-items');
+    const panelCashier = document.getElementById('pos-cashier-details');
     const panelCustomer = document.getElementById('pos-customer-details');
     
-    if (tabItems && tabCustomer) {
-        tabItems.addEventListener('click', () => {
-            tabItems.classList.add('active');
-            tabCustomer.classList.remove('active');
-            panelItems.style.display = 'block';
-            panelCustomer.style.display = 'none';
-        });
-
-        tabCustomer.addEventListener('click', () => {
-            tabCustomer.classList.add('active');
-            tabItems.classList.remove('active');
-            panelItems.style.display = 'none';
-            panelCustomer.style.display = 'block';
-        });
-    }
+    const tabs = [tabItems, tabCashier, tabCustomer];
+    const panels = [panelItems, panelCashier, panelCustomer];
+    
+    tabs.forEach((tab, index) => {
+        if (tab) {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => {
+                    t.classList.remove('active');
+                    t.style.color = 'var(--text-muted)';
+                    t.style.fontWeight = '500';
+                });
+                panels.forEach(p => p.style.display = 'none');
+                
+                tab.classList.add('active');
+                tab.style.color = 'var(--primary)';
+                tab.style.fontWeight = '600';
+                panels[index].style.display = 'block';
+            });
+        }
+    });
 }
 
 function updateClock() {
@@ -1151,11 +1159,15 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
         
         // Clear bill
         currentBill = [];
+        document.getElementById('pos-cashier-name').value = '';
         document.getElementById('pos-customer-name').value = '';
         document.getElementById('pos-customer-phone').value = '';
         document.getElementById('pos-payment-method').value = 'Cash';
         document.getElementById('pos-amount-paid').value = '';
         updateBillUI();
+        
+        // Reset tabs to items
+        document.getElementById('tab-btn-items').click();
         
         // Reload products cache
         fetchAuth(`${API_BASE}/products`).then(r => r.json()).then(p => products = p);

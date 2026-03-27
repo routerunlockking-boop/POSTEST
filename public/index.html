@@ -290,16 +290,23 @@
                                 <p id="pos-bill-no">Auto Generate</p>
                             </div>
                             <div class="pos-tabs" style="display: flex; gap: 16px; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
-                                <button class="pos-tab-btn active" id="tab-btn-items" style="background:none; border:none; font-weight:600; color:var(--primary); cursor:pointer; font-size: 14px; position:relative;">Bill Items</button>
-                                <button class="pos-tab-btn" id="tab-btn-customer" style="background:none; border:none; font-weight:500; color:var(--text-muted); cursor:pointer; font-size: 14px; position:relative;">Customer Details</button>
+                                <button class="pos-tab-btn active" id="tab-btn-items" style="display: flex; align-items: center; gap: 6px; background:none; border:none; font-weight:600; color:var(--primary); cursor:pointer; font-size: 13px; position:relative;"><i class='bx bx-receipt' style="font-size: 18px;"></i> Bill Items</button>
+                                <button class="pos-tab-btn" id="tab-btn-cashier" style="display: flex; align-items: center; gap: 6px; background:none; border:none; font-weight:500; color:var(--text-muted); cursor:pointer; font-size: 13px; position:relative;"><i class='bx bx-user-pin' style="font-size: 18px;"></i> Add Cashier</button>
+                                <button class="pos-tab-btn" id="tab-btn-customer" style="display: flex; align-items: center; gap: 6px; background:none; border:none; font-weight:500; color:var(--text-muted); cursor:pointer; font-size: 13px; position:relative;"><i class='bx bx-id-card' style="font-size: 18px;"></i> Customer</button>
                             </div>
                             <div class="bill-items" id="pos-bill-items">
                                 <!-- Populated via JS -->
                             </div>
+                            <div class="cashier-details" id="pos-cashier-details" style="display: none; flex: 1; padding: 8px 0;">
+                                <div class="form-group">
+                                    <label>Cashier Name</label>
+                                    <input type="text" id="pos-cashier-name" class="form-control" placeholder="Enter cashier name" value="Pamidu">
+                                </div>
+                            </div>
                             <div class="customer-details" id="pos-customer-details" style="display: none; flex: 1; padding: 8px 0;">
                                 <div class="form-group">
-                                    <label>Customer Name (Optional)</label>
-                                    <input type="text" id="pos-customer-name" class="form-control" placeholder="Enter name">
+                                    <label>Customer Name</label>
+                                    <input type="text" id="pos-customer-name" class="form-control" placeholder="Enter name" value="Walk-in Customer">
                                 </div>
                                 <div class="form-group">
                                     <label>WhatsApp / Phone (Optional)</label>
@@ -307,34 +314,37 @@
                                 </div>
                             </div>
                             <div class="bill-summary">
-                                <div class="form-group" style="margin-bottom: 16px;">
-                                    <label style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">Payment Method</label>
-                                    <select id="pos-payment-method" class="form-control" style="padding: 10px; cursor: pointer;">
+                                <div class="form-group" style="margin-bottom: 16px; background: var(--secondary); padding: 12px; border-radius: 12px; border: 1px solid var(--primary);">
+                                    <label style="font-size: 13px; font-weight: 700; color: var(--primary); margin-bottom: 8px; display: block;">Payment Method</label>
+                                    <select id="pos-payment-method" class="form-control" style="padding: 10px; cursor: pointer; border-color: var(--primary); font-weight: 600;">
                                         <option value="Cash">Cash</option>
                                         <option value="Bank Payment">Bank payment</option>
                                         <option value="Cash On Delivery">COD</option>
                                     </select>
                                 </div>
                                 <div class="payment-details" style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
-                                    <div class="form-group" style="margin-bottom: 12px;">
-                                        <label style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">Amount to Pay</label>
-                                        <input type="number" id="pos-amount-to-pay" class="form-control" step="0.01" style="font-weight: 600; color: var(--primary);">
+                                    <div class="form-group" style="margin-bottom: 8px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                            <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Amount to Pay</label>
+                                            <input type="number" id="pos-amount-to-pay" class="form-control" step="0.01" readonly style="font-weight: 700; color: var(--text-main); border: none; background: transparent; padding: 0; text-align: right; width: 100px; height: auto; pointer-events: none;">
+                                        </div>
                                     </div>
-                                    <div class="form-group" style="margin-bottom: 12px;">
-                                        <label style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">Amount Paid</label>
-                                        <input type="number" id="pos-amount-paid" class="form-control" step="0.01" placeholder="Enter amount paid">
+                                    <div class="form-group" style="margin-bottom: 12px; background: #f0fdf4; padding: 12px; border-radius: 12px; border: 1px solid #10b981;">
+                                        <label style="font-size: 13px; font-weight: 700; color: #10b981; margin-bottom: 8px; display: block;">Amount Paid</label>
+                                        <input type="number" id="pos-amount-paid" class="form-control" step="0.01" placeholder="Enter amount paid" style="border-color: #10b981; font-weight: 600;">
                                     </div>
                                     <div class="summary-row" style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; font-weight: 600; color: var(--text-main);">
-                                        <span>BALANCE</span>
-                                        <span id="pos-balance-amount">0.00</span>
+                                        <span>CHANGE</span>
+                                        <span id="pos-change-amount">0.00</span>
                                     </div>
                                 </div>
                                 <div class="summary-row total">
                                     <span>TOTAL</span>
                                     <span id="pos-total-amount">0.00</span>
                                 </div>
-                                <button class="btn btn-primary btn-block btn-lg" id="btn-submit-bill">Submit Bill &
-                                    Print</button>
+                                <button class="btn btn-success btn-block btn-lg" id="btn-submit-bill" style="background: #10b981; border: none; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); font-weight: 700; padding: 16px;">
+                                    <i class='bx bx-printer' style="margin-right: 8px;"></i> Submit Bill & Print
+                                </button>
                             </div>
                         </div>
                     </div>

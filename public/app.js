@@ -1201,6 +1201,7 @@ function showInvoicePrintout(invoice) {
     document.getElementById('receipt-time').textContent = invoice.time;
     document.getElementById('receipt-payment-method').textContent = invoice.payment_method || 'Cash';
     document.getElementById('receipt-cashier-name').textContent = invoice.cashier_name || 'System';
+    document.getElementById('receipt-cashier-name').textContent = invoice.cashier_name || 'System';
     
     if (invoice.customer_name || invoice.customer_phone) {
         if (invoice.customer_name) {

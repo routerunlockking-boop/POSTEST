@@ -668,6 +668,11 @@ function setupModals() {
     document.getElementById('btn-create-voucher').addEventListener('click', () => {
         document.getElementById('voucher-form').reset();
         document.getElementById('voucher-id').value = '';
+        
+        // Update modal title for creating
+        const modalTitle = voucherModal.querySelector('.modal-header h3');
+        modalTitle.textContent = 'Create Voucher';
+        
         generateVoucherCode();
         showModal(voucherModal);
     });
@@ -1942,6 +1947,10 @@ async function loadVouchers() {
 async function editVoucher(voucherId) {
     const voucher = vouchers.find(v => v.id == voucherId);
     if (!voucher) return;
+    
+    // Update modal title for editing
+    const modalTitle = voucherModal.querySelector('.modal-header h3');
+    modalTitle.textContent = 'Edit Voucher';
     
     document.getElementById('voucher-id').value = voucher.id;
     document.getElementById('voucher-code').value = voucher.code;

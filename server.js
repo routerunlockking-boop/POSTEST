@@ -381,7 +381,7 @@ app.get('/api/invoices/:id', async (req, res) => {
 });
 
 app.post('/api/invoices', async (req, res) => {
-    const { items, total_amount, amount_paid, customer_name, customer_phone, payment_method } = req.body;
+    const { items, total_amount, amount_paid, cashier_name, customer_name, customer_phone, payment_method } = req.body;
     if (!items || items.length === 0 || !total_amount) {
         return res.status(400).json({ error: 'Invalid invoice data' });
     }
@@ -417,6 +417,7 @@ app.post('/api/invoices', async (req, res) => {
             invoice_number,
             customer_name,
             customer_phone,
+            cashier_name: cashier_name || 'System',
             payment_method: payment_method || 'Cash',
             date,
             time,
@@ -441,6 +442,7 @@ app.post('/api/invoices', async (req, res) => {
                 invoice_number,
                 customer_name,
                 customer_phone,
+                cashier_name: invoice.cashier_name,
                 payment_method: payment_method || 'Cash',
                 date,
                 time,

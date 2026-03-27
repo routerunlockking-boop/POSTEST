@@ -63,6 +63,7 @@ const InvoiceSchema = new mongoose.Schema({
     time: { type: String, required: true }, // Format: HH:MM
     customer_name: { type: String, default: '' },
     customer_phone: { type: String, default: '' },
+    cashier_name: { type: String, default: 'System' },
     payment_method: { type: String, default: 'Cash' },
     total_amount: { type: Number, default: 0.0 },
     amount_paid: { type: Number, default: 0.0 },

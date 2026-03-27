@@ -298,6 +298,10 @@
                             </div>
                             <div class="customer-details" id="pos-customer-details" style="display: none; flex: 1; padding: 8px 0;">
                                 <div class="form-group">
+                                    <label>Cashier Name</label>
+                                    <input type="text" id="pos-cashier-name" class="form-control" placeholder="Enter cashier name">
+                                </div>
+                                <div class="form-group">
                                     <label>Customer Name (Optional)</label>
                                     <input type="text" id="pos-customer-name" class="form-control" placeholder="Enter name">
                                 </div>
@@ -307,9 +311,9 @@
                                 </div>
                             </div>
                             <div class="bill-summary">
-                                <div class="form-group" style="margin-bottom: 16px;">
-                                    <label style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">Payment Method</label>
-                                    <select id="pos-payment-method" class="form-control" style="padding: 10px; cursor: pointer;">
+                                <div class="form-group" style="margin-bottom: 16px; background: var(--secondary); padding: 12px; border-radius: 12px; border: 1px solid var(--primary);">
+                                    <label style="font-size: 13px; font-weight: 700; color: var(--primary); margin-bottom: 8px; display: block;">Payment Method</label>
+                                    <select id="pos-payment-method" class="form-control" style="padding: 10px; cursor: pointer; border-color: var(--primary); font-weight: 600;">
                                         <option value="Cash">Cash</option>
                                         <option value="Bank Payment">Bank payment</option>
                                         <option value="Cash On Delivery">COD</option>
@@ -322,9 +326,9 @@
                                             <input type="number" id="pos-amount-to-pay" class="form-control" step="0.01" readonly style="font-weight: 700; color: var(--text-main); border: none; background: transparent; padding: 0; text-align: right; width: 100px; height: auto; pointer-events: none;">
                                         </div>
                                     </div>
-                                    <div class="form-group" style="margin-bottom: 12px;">
-                                        <label style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">Amount Paid</label>
-                                        <input type="number" id="pos-amount-paid" class="form-control" step="0.01" placeholder="Enter amount paid">
+                                    <div class="form-group" style="margin-bottom: 12px; background: #f0fdf4; padding: 12px; border-radius: 12px; border: 1px solid #10b981;">
+                                        <label style="font-size: 13px; font-weight: 700; color: #10b981; margin-bottom: 8px; display: block;">Amount Paid</label>
+                                        <input type="number" id="pos-amount-paid" class="form-control" step="0.01" placeholder="Enter amount paid" style="border-color: #10b981; font-weight: 600;">
                                     </div>
                                     <div class="summary-row" style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; font-weight: 600; color: var(--text-main);">
                                         <span>CHANGE</span>
@@ -335,8 +339,9 @@
                                     <span>TOTAL</span>
                                     <span id="pos-total-amount">0.00</span>
                                 </div>
-                                <button class="btn btn-primary btn-block btn-lg" id="btn-submit-bill">Submit Bill &
-                                    Print</button>
+                                <button class="btn btn-success btn-block btn-lg" id="btn-submit-bill" style="background: #10b981; border: none; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); font-weight: 700; padding: 16px;">
+                                    <i class='bx bx-printer' style="margin-right: 8px;"></i> Submit Bill & Print
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -598,6 +603,7 @@
                             <p>Invoice: <span id="receipt-no"></span></p>
                             <p>Date: <span id="receipt-date"></span></p>
                             <p>Time: <span id="receipt-time"></span></p>
+                            <p id="receipt-cashier-row">Cashier: <span id="receipt-cashier-name"></span></p>
                             <p id="receipt-customer-row" style="display:none;">Customer: <span id="receipt-customer-name"></span></p>
                             <p id="receipt-phone-row" style="display:none;">Contact: <span id="receipt-customer-phone"></span></p>
                             <p>Payment: <span id="receipt-payment-method"></span></p>

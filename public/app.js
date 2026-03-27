@@ -1120,6 +1120,7 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
     let total = parseFloat(document.getElementById('pos-amount-to-pay').value) || 0;
     const amountPaid = parseFloat(document.getElementById('pos-amount-paid').value) || 0;
     
+    const cashier_name = document.getElementById('pos-cashier-name').value || 'System';
     const customer_name = document.getElementById('pos-customer-name').value;
     const customer_phone = document.getElementById('pos-customer-phone').value;
     const payment_method = document.getElementById('pos-payment-method').value;
@@ -1128,6 +1129,7 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
         items: currentBill,
         total_amount: total,
         amount_paid: amountPaid,
+        cashier_name,
         customer_name,
         customer_phone,
         payment_method
@@ -1170,6 +1172,7 @@ function showInvoicePrintout(invoice) {
     document.getElementById('receipt-date').textContent = invoice.date;
     document.getElementById('receipt-time').textContent = invoice.time;
     document.getElementById('receipt-payment-method').textContent = invoice.payment_method || 'Cash';
+    document.getElementById('receipt-cashier-name').textContent = invoice.cashier_name || 'System';
     
     if (invoice.customer_name || invoice.customer_phone) {
         if (invoice.customer_name) {

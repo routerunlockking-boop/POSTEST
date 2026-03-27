@@ -1166,7 +1166,10 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
             body: JSON.stringify(payload)
         });
         
-        if (!res.ok) throw new Error('Failed to create invoice');
+        if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.error || 'Failed to create invoice');
+        }
         
         const data = await res.json();
         
@@ -1190,7 +1193,7 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
         
     } catch (err) {
         console.error(err);
-        alert('Error saving bill');
+        alert('Error saving bill: ' + err.message);
     }
 });
 
@@ -1200,7 +1203,6 @@ function showInvoicePrintout(invoice) {
     document.getElementById('receipt-date').textContent = invoice.date;
     document.getElementById('receipt-time').textContent = invoice.time;
     document.getElementById('receipt-payment-method').textContent = invoice.payment_method || 'Cash';
-    document.getElementById('receipt-cashier-name').textContent = invoice.cashier_name || 'System';
     document.getElementById('receipt-cashier-name').textContent = invoice.cashier_name || 'System';
     
     if (invoice.customer_name || invoice.customer_phone) {

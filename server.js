@@ -37,6 +37,7 @@ app.post('/api/auth/register', async (req, res) => {
             message: 'Account creation successful. Pending admin approval.'
         });
     } catch (err) {
+        console.error("INVOICE SAVE ERROR:", err);
         return res.status(500).json({ error: err.message });
     }
 });
@@ -382,7 +383,11 @@ app.get('/api/invoices/:id', async (req, res) => {
 
 app.post('/api/invoices', async (req, res) => {
     const { items, total_amount, amount_paid, cashier_name, customer_name, customer_phone, payment_method } = req.body;
-    if (!items || items.length === 0 || !total_amount) {
+    
+    const parsedTotal = parseFloat(total_amount) || 0;
+    const parsedPaid = parseFloat(amount_paid) || 0;
+
+    if (!items || items.length === 0 || !parsedTotal) {
         return res.status(400).json({ error: 'Invalid invoice data' });
     }
 
@@ -399,15 +404,17 @@ app.post('/api/invoices', async (req, res) => {
         for (const item of items) {
             const product = await Product.findOne({ name: item.name, user_id: req.user._id });
             const item_cost_price = product ? product.cost_price || 0 : 0;
-            const item_profit = (item.price - item_cost_price) * item.quantity;
+            const quantity = parseFloat(item.quantity) || 0;
+            const price = parseFloat(item.price) || 0;
+            const item_profit = (price - item_cost_price) * quantity;
             total_profit += item_profit;
             
             formattedItems.push({
                 product_name: item.name,
-                quantity: item.quantity,
+                quantity: quantity,
                 cost_price: item_cost_price,
-                price: item.price,
-                subtotal: item.quantity * item.price,
+                price: price,
+                subtotal: quantity * price,
                 profit: item_profit
             });
         }
@@ -421,17 +428,18 @@ app.post('/api/invoices', async (req, res) => {
             payment_method: payment_method || 'Cash',
             date,
             time,
-            total_amount,
-            amount_paid: amount_paid || 0,
+            total_amount: parsedTotal,
+            amount_paid: parsedPaid,
             total_profit,
             items: formattedItems
         });
         
         // Update product stock manually in series or parallel
         for (const item of items) {
+            const quantity = parseFloat(item.quantity) || 0;
             await Product.findOneAndUpdate(
                 { name: item.name, user_id: req.user._id },
-                { $inc: { quantity: -item.quantity } }
+                { $inc: { quantity: -quantity } }
             );
         }
 
@@ -446,13 +454,14 @@ app.post('/api/invoices', async (req, res) => {
                 payment_method: payment_method || 'Cash',
                 date,
                 time,
-                total_amount,
-                amount_paid: amount_paid || 0,
+                total_amount: parsedTotal,
+                amount_paid: parsedPaid,
                 owner_name: req.user.business_name,
                 items: formattedItems
             }
         });
     } catch (err) {
+        console.error("INVOICE SAVE ERROR:", err);
         return res.status(500).json({ error: err.message });
     }
 });

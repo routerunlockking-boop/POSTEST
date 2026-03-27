@@ -1493,6 +1493,25 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
         
         const data = await res.json();
         
+        // Update voucher usage count if voucher was applied
+        if (appliedVoucher) {
+            try {
+                // Try API first
+                const voucherRes = await fetchAuth(`${API_BASE}/vouchers/${appliedVoucher.id}/use`, { method: 'POST' });
+                if (!voucherRes.ok) {
+                    throw new Error('API not available');
+                }
+            } catch (err) {
+                // Fallback to local storage
+                let savedVouchers = JSON.parse(localStorage.getItem('pos_vouchers') || '[]');
+                const voucherIndex = savedVouchers.findIndex(v => v.id === appliedVoucher.id);
+                if (voucherIndex !== -1) {
+                    savedVouchers[voucherIndex].used_count = (savedVouchers[voucherIndex].used_count || 0) + 1;
+                    localStorage.setItem('pos_vouchers', JSON.stringify(savedVouchers));
+                }
+            }
+        }
+        
         // Print
         showInvoicePrintout(data.invoice);
         
@@ -1557,10 +1576,10 @@ function showInvoicePrintout(invoice) {
     const tbody = document.querySelector('#receipt-items tbody');
     tbody.innerHTML = '';
     
-    let total = 0;
+    let subtotal = 0;
     invoice.items.forEach(item => {
         const amt = item.price * item.quantity;
-        total += amt;
+        subtotal += amt;
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${item.product_name || item.name}</td>
@@ -1571,6 +1590,24 @@ function showInvoicePrintout(invoice) {
         tbody.appendChild(tr);
     });
     
+    // Handle voucher information
+    let voucherDiscount = 0;
+    if (invoice.voucher) {
+        document.getElementById('receipt-voucher-section').style.display = 'block';
+        document.getElementById('receipt-voucher-code').textContent = invoice.voucher.code;
+        
+        if (invoice.voucher.discount_type === 'percentage') {
+            voucherDiscount = subtotal * (invoice.voucher.discount_value / 100);
+        } else {
+            voucherDiscount = invoice.voucher.discount_amount;
+        }
+        
+        document.getElementById('receipt-voucher-discount').textContent = '-' + voucherDiscount.toFixed(2);
+    } else {
+        document.getElementById('receipt-voucher-section').style.display = 'none';
+    }
+    
+    const total = subtotal - voucherDiscount;
     document.getElementById('receipt-total-amount').textContent = total.toFixed(2);
     
     // Payment details for receipt

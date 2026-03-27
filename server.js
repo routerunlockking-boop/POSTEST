@@ -242,24 +242,49 @@ app.get('/api/dashboard/low-stock', async (req, res) => {
 
 app.get('/api/products', async (req, res) => {
     try {
+        const { lite } = req.query;
         const queryFilter = req.user.role === 'admin' ? {} : { user_id: req.user._id };
-        const products = await Product.find(queryFilter)
+        
+        // Use select to exclude image if lite is true
+        let query = Product.find(queryFilter)
             .populate('user_id', 'business_name')
             .sort({ name: 1 });
+            
+        if (lite === 'true') {
+            query = query.select('-image');
+        }
+        
+        const products = await query;
         
         // Map _id to id for the frontend
-        const mappedProducts = products.map(p => ({
-            id: p._id.toString(),
-            name: p.name,
-            barcode: p.barcode || '',
-            quantity: p.quantity,
-            cost_price: p.cost_price,
-            price: p.price,
-            image: p.image,
-            owner_name: p.user_id ? p.user_id.business_name : 'Unknown'
-        }));
+        const mappedProducts = products.map(p => {
+            const result = {
+                id: p._id.toString(),
+                name: p.name,
+                barcode: p.barcode || '',
+                quantity: p.quantity,
+                cost_price: p.cost_price,
+                price: p.price,
+                owner_name: p.user_id ? p.user_id.business_name : 'Unknown'
+            };
+            if (lite !== 'true') {
+                result.image = p.image;
+            }
+            return result;
+        });
         
         res.json(mappedProducts);
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/api/products/:id/image', async (req, res) => {
+    try {
+        const queryFilter = req.user.role === 'admin' ? { _id: req.params.id } : { _id: req.params.id, user_id: req.user._id };
+        const product = await Product.findOne(queryFilter).select('image');
+        if (!product) return res.status(404).json({ error: 'Product not found' });
+        res.json({ image: product.image });
     } catch (err) {
         return res.status(500).json({ error: err.message });
     }

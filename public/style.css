@@ -423,6 +423,42 @@ body {
     padding-left: 44px;
 }
 
+/* Shimmer Animation for Lazy Loading */
+@keyframes shimmer {
+    0% { background-position: -468px 0; }
+    100% { background-position: 468px 0; }
+}
+
+.shimmer-placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #f6f7f8;
+    background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+    background-repeat: no-repeat;
+    background-size: 800px 100%;
+    animation: shimmer 1.5s infinite linear;
+    transition: opacity 0.3s ease;
+}
+
+body.dark-mode .shimmer-placeholder {
+    background: #1e293b;
+    background-image: linear-gradient(to right, #1e293b 0%, #334155 20%, #1e293b 40%, #1e293b 100%);
+}
+
+.product-img.loaded .shimmer-placeholder {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.product-img {
+    background-size: cover;
+    background-position: center;
+    transition: background-image 0.4s ease-in-out;
+}
+
 .pos-products-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));

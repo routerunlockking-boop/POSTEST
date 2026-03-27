@@ -859,7 +859,8 @@ let adminInventoryFilter = null;
 
 async function loadInventory() {
     try {
-        const res = await fetchAuth(`${API_BASE}/products`);
+        // Fetch 'lite' products for inventory table too
+        const res = await fetchAuth(`${API_BASE}/products?lite=true`);
         products = await res.json();
         renderInventory(products);
     } catch (err) {
@@ -882,8 +883,14 @@ function renderInventory(productsToRender) {
     }
     
     productsToRender.forEach(p => {
-        const imgHtml = p.image ? `<img src="${p.image}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;">` : `<div style="width:40px;height:40px;border-radius:8px;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-size:10px;color:#64748b;">No Img</div>`;
         const tr = document.createElement('tr');
+        tr.dataset.id = p.id;
+        
+        // Placeholder for image
+        const imgId = `inv-img-${p.id}`;
+        const imgHtml = `<div id="${imgId}" class="inventory-img-placeholder" style="width:40px;height:40px;border-radius:8px;background:#e2e8f0;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;">
+            <div class="shimmer-placeholder"></div>
+        </div>`;
         
         let nameDisplay = `<span>${p.name}</span>`;
         if (currentRole === 'admin') {
@@ -901,6 +908,43 @@ function renderInventory(productsToRender) {
             </td>
         `;
         tbody.appendChild(tr);
+
+        // Lazy load the inventory image
+        const imgPlaceholder = tr.querySelector('.inventory-img-placeholder');
+        const invObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const productId = p.id;
+                    if (imageCache.has(productId)) {
+                        const img = document.createElement('img');
+                        img.src = imageCache.get(productId);
+                        img.style = "width:100%;height:100%;object-fit:cover;";
+                        imgPlaceholder.innerHTML = '';
+                        imgPlaceholder.appendChild(img);
+                    } else {
+                        fetchAuth(`${API_BASE}/products/${productId}/image`)
+                            .then(r => r.json())
+                            .then(data => {
+                                if (data.image) {
+                                    imageCache.set(productId, data.image);
+                                    const img = document.createElement('img');
+                                    img.src = data.image;
+                                    img.style = "width:100%;height:100%;object-fit:cover;";
+                                    imgPlaceholder.innerHTML = '';
+                                    imgPlaceholder.appendChild(img);
+                                } else {
+                                    imgPlaceholder.innerHTML = '<div style="font-size:10px;color:#64748b;">No Img</div>';
+                                }
+                            })
+                            .catch(() => {
+                                imgPlaceholder.innerHTML = '<div style="font-size:10px;color:#64748b;">No Img</div>';
+                            });
+                    }
+                    observer.unobserve(imgPlaceholder);
+                }
+            });
+        }, { root: document.querySelector('.table-responsive'), rootMargin: '50px' });
+        invObserver.observe(imgPlaceholder);
     });
 }
 
@@ -968,7 +1012,8 @@ async function loadPOS() {
     document.getElementById('pos-search-input').value = '';
     
     try {
-        const res = await fetchAuth(`${API_BASE}/products`);
+        // Fetch 'lite' products (without images) for faster loading
+        const res = await fetchAuth(`${API_BASE}/products?lite=true`);
         products = await res.json();
         renderPOSProducts(products);
     } catch (err) {
@@ -976,22 +1021,61 @@ async function loadPOS() {
     }
 }
 
+// Image cache to avoid re-fetching the same image
+const imageCache = new Map();
+
 function renderPOSProducts(productArray) {
     const grid = document.getElementById('pos-products-grid');
     grid.innerHTML = '';
     
+    // Intersection Observer for lazy loading images
+    const imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const card = entry.target;
+                const imgDiv = card.querySelector('.product-img');
+                const productId = card.dataset.id;
+                
+                // If we have it in cache, use it
+                if (imageCache.has(productId)) {
+                    imgDiv.style.backgroundImage = `url('${imageCache.get(productId)}')`;
+                    imgDiv.classList.add('loaded');
+                } else {
+                    // Fetch image from API
+                    fetchAuth(`${API_BASE}/products/${productId}/image`)
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.image) {
+                                imageCache.set(productId, data.image);
+                                imgDiv.style.backgroundImage = `url('${data.image}')`;
+                                imgDiv.classList.add('loaded');
+                            }
+                        })
+                        .catch(err => console.error('Error loading image', err));
+                }
+                observer.unobserve(card);
+            }
+        });
+    }, { root: null, rootMargin: '100px' });
+    
     productArray.forEach(p => {
         const div = document.createElement('div');
         div.className = 'pos-product-card';
-        const imgStyle = p.image ? `background-image:url('${p.image}');` : `background-color:#e2e8f0;`;
+        div.dataset.id = p.id;
+        
         div.innerHTML = `
-            <div class="product-img" style="${imgStyle}"></div>
+            <div class="product-img" style="background-color:#e2e8f0; position:relative;">
+                <div class="shimmer-placeholder"></div>
+            </div>
             <h4>${p.name}</h4>
             <div class="price">${formatCurrency(p.price)}</div>
             <div class="stock">Stock: ${p.quantity}</div>
         `;
         div.addEventListener('click', () => addToBill(p));
         grid.appendChild(div);
+        
+        // Start observing this card for image lazy loading
+        imageObserver.observe(div);
     });
 }
 
@@ -1188,8 +1272,8 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
         // Reset tabs to items
         document.getElementById('tab-btn-items').click();
         
-        // Reload products cache
-        fetchAuth(`${API_BASE}/products`).then(r => r.json()).then(p => products = p);
+        // Reload products cache (lite)
+        fetchAuth(`${API_BASE}/products?lite=true`).then(r => r.json()).then(p => products = p);
         
     } catch (err) {
         console.error(err);

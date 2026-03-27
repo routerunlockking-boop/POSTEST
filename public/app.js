@@ -1686,6 +1686,12 @@ async function loadInvoices() {
                 <td>${inv.time}</td>
                 <td style="font-weight:bold">${formatCurrency(inv.total_amount)}</td>
                 <td style="color: #15803d; font-weight:bold">${formatCurrency(inv.total_profit || 0)}</td>
+                <td style="text-align: center;">
+                    ${inv.voucher ? 
+                        `<i class='bx bx-ticket' style="color: #0284c7; font-size: 16px;" title="Voucher: ${inv.voucher.code}"></i>` : 
+                        '<span style="color: var(--text-muted); font-size: 12px;">-</span>'
+                    }
+                </td>
                 <td>
                     <button class="btn btn-outline btn-icon-only view-invoice-btn" data-id="${inv.id}" title="View Invoice"><i class='bx bx-receipt'></i></button>
                     <button class="btn btn-primary btn-icon-only print-invoice-btn" data-id="${inv.id}" title="Print Invoice"><i class='bx bx-printer'></i></button>

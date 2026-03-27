@@ -683,6 +683,8 @@ function setupModals() {
     // Handle voucher form submission
     document.getElementById('voucher-form').addEventListener('submit', async (e) => {
         e.preventDefault();
+        console.log('Voucher form submitted');
+        
         const id = document.getElementById('voucher-id').value;
         const code = document.getElementById('voucher-code').value.trim();
         const discount_type = document.getElementById('voucher-discount-type').value;
@@ -692,6 +694,22 @@ function setupModals() {
         const expiry_date = document.getElementById('voucher-expiry-date').value;
         const description = document.getElementById('voucher-description').value.trim();
         const is_active = document.getElementById('voucher-is-active').checked;
+        
+        console.log('Voucher data:', { code, discount_type, discount_value, usage_limit });
+        
+        // Validation
+        if (!code) {
+            showToast('Please enter a voucher code', 'error');
+            return;
+        }
+        if (!discount_value || discount_value <= 0) {
+            showToast('Please enter a valid discount value', 'error');
+            return;
+        }
+        if (!usage_limit || usage_limit <= 0) {
+            showToast('Please enter a valid usage limit', 'error');
+            return;
+        }
         
         const payload = {
             id: id || Date.now().toString(),
@@ -707,45 +725,35 @@ function setupModals() {
             created_at: new Date().toISOString()
         };
         
+        console.log('Saving voucher:', payload);
+        
+        // Always use local storage for now to ensure it works
         try {
-            const method = id ? 'PUT' : 'POST';
-            const url = id ? `${API_BASE}/vouchers/${id}` : `${API_BASE}/vouchers`;
-            
-            const response = await fetchAuth(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            
-            if (!response.ok) {
-                throw new Error('API error');
-            }
-            
-            hideModal();
-            loadVouchers();
-            showToast('Voucher saved successfully!', 'success');
-        } catch (err) {
-            console.log('API not available, using local storage fallback');
-            
-            // Fallback to local storage
             let savedVouchers = JSON.parse(localStorage.getItem('pos_vouchers') || '[]');
+            console.log('Current vouchers:', savedVouchers);
             
             if (id) {
                 // Update existing voucher
                 const index = savedVouchers.findIndex(v => v.id == id);
                 if (index !== -1) {
                     savedVouchers[index] = { ...savedVouchers[index], ...payload };
+                    console.log('Updated voucher at index:', index);
                 }
             } else {
                 // Add new voucher
                 savedVouchers.push(payload);
+                console.log('Added new voucher');
             }
             
             localStorage.setItem('pos_vouchers', JSON.stringify(savedVouchers));
+            console.log('Vouchers saved to localStorage');
             
             hideModal();
             loadVouchers();
             showToast('Voucher saved successfully!', 'success');
+        } catch (err) {
+            console.error('Error saving voucher:', err);
+            alert('Error saving voucher: ' + err.message);
         }
     });
 
@@ -1856,19 +1864,11 @@ function generateVoucherCode() {
 }
 
 async function loadVouchers() {
-    try {
-        // Try API first
-        const res = await fetchAuth(`${API_BASE}/vouchers`);
-        if (res.ok) {
-            vouchers = await res.json();
-        } else {
-            throw new Error('API not available');
-        }
-    } catch (err) {
-        console.log('Using local storage for vouchers');
-        // Fallback to local storage
-        vouchers = JSON.parse(localStorage.getItem('pos_vouchers') || '[]');
-    }
+    console.log('Loading vouchers...');
+    
+    // Always use local storage for now
+    vouchers = JSON.parse(localStorage.getItem('pos_vouchers') || '[]');
+    console.log('Loaded vouchers:', vouchers);
     
     const tbody = document.querySelector('#vouchers-table tbody');
     tbody.innerHTML = '';
@@ -1964,10 +1964,13 @@ async function loadVouchers() {
         tbody.appendChild(tr);
     });
     
+    console.log('Vouchers displayed in table');
+    
     // Add event listeners for voucher actions
     document.querySelectorAll('.edit-voucher-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const voucherId = e.target.closest('.edit-voucher-btn').dataset.id;
+            console.log('Edit voucher clicked:', voucherId);
             editVoucher(voucherId);
         });
     });
@@ -1975,6 +1978,7 @@ async function loadVouchers() {
     document.querySelectorAll('.delete-voucher-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const voucherId = e.target.closest('.delete-voucher-btn').dataset.id;
+            console.log('Delete voucher clicked:', voucherId);
             deleteVoucher(voucherId);
         });
     });
@@ -2004,24 +2008,24 @@ async function editVoucher(voucherId) {
 async function deleteVoucher(voucherId) {
     if (!confirm('Are you sure you want to delete this voucher?')) return;
     
+    console.log('Deleting voucher:', voucherId);
+    
     try {
-        // Try API first
-        const response = await fetchAuth(`${API_BASE}/vouchers/${voucherId}`, { method: 'DELETE' });
-        if (response.ok) {
-            loadVouchers();
-            showToast('Voucher deleted successfully!', 'success');
-        } else {
-            throw new Error('API not available');
-        }
-    } catch (err) {
-        console.log('Using local storage for voucher deletion');
-        // Fallback to local storage
+        // Always use local storage for now
         let savedVouchers = JSON.parse(localStorage.getItem('pos_vouchers') || '[]');
+        console.log('Vouchers before deletion:', savedVouchers);
+        
         savedVouchers = savedVouchers.filter(v => v.id != voucherId);
+        console.log('Vouchers after deletion:', savedVouchers);
+        
         localStorage.setItem('pos_vouchers', JSON.stringify(savedVouchers));
+        console.log('Voucher deleted from localStorage');
         
         loadVouchers();
         showToast('Voucher deleted successfully!', 'success');
+    } catch (err) {
+        console.error('Error deleting voucher:', err);
+        alert('Error deleting voucher: ' + err.message);
     }
 }
 

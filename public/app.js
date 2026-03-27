@@ -1054,6 +1054,17 @@ function updateBillUI() {
     itemsContainer.innerHTML = '';
     let total = 0;
     
+    if (currentBill.length > 0) {
+        const header = document.createElement('div');
+        header.style = "display: flex; justify-content: space-between; padding: 0 12px 8px 12px; border-bottom: 1px solid var(--border); margin-bottom: 12px; font-size: 12px; font-weight: 700; color: var(--text-muted);";
+        header.innerHTML = `
+            <span style="flex: 1;">ITEM</span>
+            <span style="width: 80px; text-align: center;">QTY</span>
+            <span style="width: 80px; text-align: right;">TOTAL</span>
+        `;
+        itemsContainer.appendChild(header);
+    }
+
     currentBill.forEach(item => {
         const amount = item.price * item.quantity;
         total += amount;
@@ -1066,17 +1077,17 @@ function updateBillUI() {
                 <div style="display:flex; align-items:center; gap:8px; margin-top:4px;">
                     <input type="number" step="0.01" value="${item.price}" 
                            onchange="updateBillPrice('${item.id}', this.value)" 
-                           style="width:80px; padding:4px; font-size:13px; border:1px solid var(--border); border-radius:4px;"> 
-                    <span style="font-size:13px; color:var(--text-muted)">x ${item.quantity}</span>
+                           style="width:70px; padding:2px 4px; font-size:12px; border:1px solid var(--border); border-radius:4px;"> 
+                    <span style="font-size:12px; color:var(--text-muted)">@ ${item.price}</span>
                 </div>
             </div>
-            <div class="bill-item-actions">
-                <div class="qty-control">
+            <div class="bill-item-actions" style="display: flex; align-items: center; gap: 15px;">
+                <div class="qty-control" style="width: 80px; justify-content: center;">
                     <button class="qty-btn" onclick="updateBillQuantity('${item.id}', -1)">-</button>
-                    <span>${item.quantity}</span>
+                    <span style="font-weight: 600;">${item.quantity}</span>
                     <button class="qty-btn" onclick="updateBillQuantity('${item.id}', 1)">+</button>
                 </div>
-                <div class="item-total">${formatCurrency(amount)}</div>
+                <div class="item-total" style="width: 80px; text-align: right; font-weight: 700; color: var(--text-main);">${formatCurrency(amount)}</div>
             </div>
         `;
         itemsContainer.appendChild(div);
@@ -1159,8 +1170,8 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
         
         // Clear bill
         currentBill = [];
-        document.getElementById('pos-cashier-name').value = '';
-        document.getElementById('pos-customer-name').value = '';
+        document.getElementById('pos-cashier-name').value = 'Pamidu';
+        document.getElementById('pos-customer-name').value = 'Walk-in Customer';
         document.getElementById('pos-customer-phone').value = '';
         document.getElementById('pos-payment-method').value = 'Cash';
         document.getElementById('pos-amount-paid').value = '';

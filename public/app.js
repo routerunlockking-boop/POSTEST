@@ -1619,9 +1619,17 @@ function showInvoicePrintout(invoice) {
         
         document.getElementById('receipt-voucher-discount').textContent = '-' + voucherDiscount.toFixed(2);
         
+        // Calculate remaining uses
+        const totalUses = invoice.voucher.usage_limit || 0;
+        const usedCount = (invoice.voucher.used_count || 0) + 1; // +1 for this use
+        const remainingUses = Math.max(0, totalUses - usedCount);
+        
+        // Show remaining uses
+        document.getElementById('receipt-voucher-remaining').textContent = `${remainingUses}/${totalUses}`;
+        
         // Show reduced total
         document.getElementById('receipt-reduced-total').style.display = 'block';
-        document.getElementById('receipt-final-total').textContent = total.toFixed(2);
+        document.getElementById('receipt-final-total').textContent = (subtotal - voucherDiscount).toFixed(2);
     } else {
         // Hide voucher sections
         document.getElementById('receipt-voucher-label').style.display = 'none';

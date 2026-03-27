@@ -1395,6 +1395,17 @@ function updateBillUI() {
         subtotalEl.textContent = formatCurrency(total);
     }
     
+    // Show voucher discount row if voucher is applied
+    const voucherDiscountRow = document.getElementById('pos-voucher-discount-row');
+    const voucherDiscountAmount = document.getElementById('pos-voucher-discount-amount');
+    if (appliedVoucher && voucherDiscount > 0) {
+        voucherDiscountRow.style.display = 'flex';
+        voucherDiscountAmount.textContent = `-${formatCurrency(voucherDiscount)}`;
+    } else {
+        voucherDiscountRow.style.display = 'none';
+    }
+    
+    document.getElementById('pos-amount-to-pay').value = finalTotal.toFixed(2);
     document.getElementById('pos-total-amount').textContent = formatCurrency(finalTotal);
     
     // Update voucher applied info
@@ -1658,10 +1669,52 @@ async function loadInvoices() {
                 <td style="color: #15803d; font-weight:bold">${formatCurrency(inv.total_profit || 0)}</td>
                 <td>
                     <button class="btn btn-outline btn-icon-only view-invoice-btn" data-id="${inv.id}" title="View Invoice"><i class='bx bx-receipt'></i></button>
+                    <button class="btn btn-primary btn-icon-only print-invoice-btn" data-id="${inv.id}" title="Print Invoice"><i class='bx bx-printer'></i></button>
                     ${adminActions}
                 </td>
             `;
             tbody.appendChild(tr);
+        });
+        
+        // Add event listeners for invoice actions
+        document.querySelectorAll('.view-invoice-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const id = e.target.closest('.view-invoice-btn').dataset.id;
+                try {
+                    const res = await fetchAuth(`${API_BASE}/invoices/${id}`);
+                    const inv = await res.json();
+                    showInvoicePrintout(inv);
+                } catch(err) { 
+                    console.error(err); 
+                }
+            });
+        });
+        
+        document.querySelectorAll('.print-invoice-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const id = e.target.closest('.print-invoice-btn').dataset.id;
+                try {
+                    const res = await fetchAuth(`${API_BASE}/invoices/${id}`);
+                    const inv = await res.json();
+                    showInvoicePrintout(inv);
+                } catch(err) { 
+                    console.error(err); 
+                }
+            });
+        });
+        
+        document.querySelectorAll('.delete-invoice-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                if(confirm('Are you sure you want to delete this invoice? (This will restock the inventory automatically)')) {
+                    const id = e.target.closest('.delete-invoice-btn').dataset.id;
+                    try {
+                        await fetchAuth(`${API_BASE}/invoices/${id}`, { method: 'DELETE' });
+                        loadInvoices();
+                    } catch(err) { 
+                        console.error(err); 
+                    }
+                }
+            });
         });
         
     } catch (err) {

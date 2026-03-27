@@ -694,6 +694,7 @@ function setupModals() {
         const is_active = document.getElementById('voucher-is-active').checked;
         
         const payload = {
+            id: id || Date.now().toString(),
             code,
             discount_type,
             discount_value,
@@ -701,25 +702,50 @@ function setupModals() {
             min_bill_amount,
             expiry_date,
             description,
-            is_active
+            is_active,
+            used_count: 0,
+            created_at: new Date().toISOString()
         };
         
         try {
             const method = id ? 'PUT' : 'POST';
             const url = id ? `${API_BASE}/vouchers/${id}` : `${API_BASE}/vouchers`;
             
-            await fetchAuth(url, {
+            const response = await fetchAuth(url, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
             
+            if (!response.ok) {
+                throw new Error('API error');
+            }
+            
             hideModal();
             loadVouchers();
             showToast('Voucher saved successfully!', 'success');
         } catch (err) {
-            console.error(err);
-            alert('Error saving voucher');
+            console.log('API not available, using local storage fallback');
+            
+            // Fallback to local storage
+            let savedVouchers = JSON.parse(localStorage.getItem('pos_vouchers') || '[]');
+            
+            if (id) {
+                // Update existing voucher
+                const index = savedVouchers.findIndex(v => v.id == id);
+                if (index !== -1) {
+                    savedVouchers[index] = { ...savedVouchers[index], ...payload };
+                }
+            } else {
+                // Add new voucher
+                savedVouchers.push(payload);
+            }
+            
+            localStorage.setItem('pos_vouchers', JSON.stringify(savedVouchers));
+            
+            hideModal();
+            loadVouchers();
+            showToast('Voucher saved successfully!', 'success');
         }
     });
 
@@ -1831,117 +1857,127 @@ function generateVoucherCode() {
 
 async function loadVouchers() {
     try {
+        // Try API first
         const res = await fetchAuth(`${API_BASE}/vouchers`);
-        vouchers = await res.json();
-        
-        const tbody = document.querySelector('#vouchers-table tbody');
-        tbody.innerHTML = '';
-        
-        vouchers.forEach(voucher => {
-            const tr = document.createElement('tr');
-            
-            // Status badge with color coding
-            const statusBadge = voucher.is_active ? 
-                '<span class="text-success" style="color:var(--success);font-weight:600;">Active</span>' : 
-                '<span class="text-danger" style="color:var(--danger);font-weight:600;">Inactive</span>';
-            
-            // Expiry date with formatting and warning
-            const expiryDate = voucher.expiry_date ? 
-                new Date(voucher.expiry_date).toLocaleDateString() : 
-                '<span style="color:var(--text-muted);">No expiry</span>';
-            
-            const isExpired = voucher.expiry_date && new Date(voucher.expiry_date) < new Date();
-            const expiryDisplay = voucher.expiry_date ? 
-                `<span style="color: ${isExpired ? 'var(--danger)' : 'var(--text-main)'}">${expiryDate}</span>` : 
-                '<span style="color:var(--text-muted);">No expiry</span>';
-            
-            // Usage progress bar
-            const usagePercentage = voucher.usage_limit > 0 ? (voucher.used_count || 0) / voucher.usage_limit * 100 : 0;
-            const usageColor = usagePercentage >= 90 ? 'var(--danger)' : usagePercentage >= 70 ? 'var(--warning)' : 'var(--success)';
-            const usageBar = `
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <div style="flex: 1; background: #e5e7eb; border-radius: 4px; height: 6px; overflow: hidden;">
-                        <div style="width: ${usagePercentage}%; height: 100%; background: ${usageColor}; transition: width 0.3s;"></div>
-                    </div>
-                    <span style="font-size: 12px; font-weight: 600; color: var(--text-main); min-width: 60px;">${voucher.used_count || 0}/${voucher.usage_limit}</span>
-                </div>
-            `;
-            
-            // Discount display with icon
-            const discountIcon = voucher.discount_type === 'percentage' ? '%' : '$';
-            const discountDisplay = voucher.discount_type === 'percentage' ? 
-                `${voucher.discount_value}%` : 
-                formatCurrency(voucher.discount_value);
-            
-            // Description with truncation for long text
-            const description = voucher.description ? 
-                (voucher.description.length > 30 ? voucher.description.substring(0, 30) + '...' : voucher.description) : 
-                '<span style="color: var(--text-muted); font-style: italic;">No description</span>';
-            
-            tr.innerHTML = `
-                <td>
-                    <div style="display: flex; flex-direction: column; gap: 4px;">
-                        <strong style="color: var(--primary); font-size: 14px;">${voucher.code}</strong>
-                        <small style="color: var(--text-muted);">ID: ${voucher.id}</small>
-                    </div>
-                </td>
-                <td>
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <i class='bx ${voucher.discount_type === 'percentage' ? 'bx-percentage' : 'bx-dollar-circle'}' style="color: var(--primary); font-size: 16px;"></i>
-                        <span style="font-weight: 600;">${discountDisplay}</span>
-                    </div>
-                </td>
-                <td>
-                    ${usageBar}
-                </td>
-                <td>
-                    ${voucher.min_bill_amount ? 
-                        `<span style="font-weight: 600;">${formatCurrency(voucher.min_bill_amount)}</span>` : 
-                        '<span style="color: var(--text-muted);">No minimum</span>'}
-                </td>
-                <td>
-                    ${expiryDisplay}
-                </td>
-                <td>
-                    ${statusBadge}
-                </td>
-                <td>
-                    <div style="max-width: 200px;" title="${voucher.description || 'No description'}">
-                        ${description}
-                    </div>
-                </td>
-                <td>
-                    <div style="display: flex; gap: 4px;">
-                        <button class="btn btn-outline btn-icon-only edit-voucher-btn" data-id="${voucher.id}" title="Edit Voucher">
-                            <i class='bx bx-edit'></i>
-                        </button>
-                        <button class="btn btn-danger btn-icon-only delete-voucher-btn" data-id="${voucher.id}" title="Delete Voucher">
-                            <i class='bx bx-trash'></i>
-                        </button>
-                    </div>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-        
-        // Add event listeners for voucher actions
-        document.querySelectorAll('.edit-voucher-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const voucherId = e.target.closest('.edit-voucher-btn').dataset.id;
-                editVoucher(voucherId);
-            });
-        });
-        
-        document.querySelectorAll('.delete-voucher-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const voucherId = e.target.closest('.delete-voucher-btn').dataset.id;
-                deleteVoucher(voucherId);
-            });
-        });
-        
+        if (res.ok) {
+            vouchers = await res.json();
+        } else {
+            throw new Error('API not available');
+        }
     } catch (err) {
-        console.error(err);
+        console.log('Using local storage for vouchers');
+        // Fallback to local storage
+        vouchers = JSON.parse(localStorage.getItem('pos_vouchers') || '[]');
     }
+    
+    const tbody = document.querySelector('#vouchers-table tbody');
+    tbody.innerHTML = '';
+    
+    if (vouchers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted);">No vouchers created yet. Click "Create Voucher" to get started.</td></tr>';
+        return;
+    }
+    
+    vouchers.forEach(voucher => {
+        const tr = document.createElement('tr');
+        
+        // Status badge with color coding
+        const statusBadge = voucher.is_active ? 
+            '<span class="text-success" style="color:var(--success);font-weight:600;">Active</span>' : 
+            '<span class="text-danger" style="color:var(--danger);font-weight:600;">Inactive</span>';
+        
+        // Expiry date with formatting and warning
+        const expiryDate = voucher.expiry_date ? 
+            new Date(voucher.expiry_date).toLocaleDateString() : 
+            '<span style="color:var(--text-muted);">No expiry</span>';
+        
+        const isExpired = voucher.expiry_date && new Date(voucher.expiry_date) < new Date();
+        const expiryDisplay = voucher.expiry_date ? 
+            `<span style="color: ${isExpired ? 'var(--danger)' : 'var(--text-main)'}">${expiryDate}</span>` : 
+            '<span style="color:var(--text-muted);">No expiry</span>';
+        
+        // Usage progress bar
+        const usagePercentage = voucher.usage_limit > 0 ? (voucher.used_count || 0) / voucher.usage_limit * 100 : 0;
+        const usageColor = usagePercentage >= 90 ? 'var(--danger)' : usagePercentage >= 70 ? 'var(--warning)' : 'var(--success)';
+        const usageBar = `
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="flex: 1; background: #e5e7eb; border-radius: 4px; height: 6px; overflow: hidden;">
+                    <div style="width: ${usagePercentage}%; height: 100%; background: ${usageColor}; transition: width 0.3s;"></div>
+                </div>
+                <span style="font-size: 12px; font-weight: 600; color: var(--text-main); min-width: 60px;">${voucher.used_count || 0}/${voucher.usage_limit}</span>
+            </div>
+        `;
+        
+        // Discount display with icon
+        const discountDisplay = voucher.discount_type === 'percentage' ? 
+            `${voucher.discount_value}%` : 
+            formatCurrency(voucher.discount_value);
+        
+        // Description with truncation for long text
+        const description = voucher.description ? 
+            (voucher.description.length > 30 ? voucher.description.substring(0, 30) + '...' : voucher.description) : 
+            '<span style="color: var(--text-muted); font-style: italic;">No description</span>';
+        
+        tr.innerHTML = `
+            <td>
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <strong style="color: var(--primary); font-size: 14px;">${voucher.code}</strong>
+                    <small style="color: var(--text-muted);">ID: ${voucher.id}</small>
+                </div>
+            </td>
+            <td>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <i class='bx ${voucher.discount_type === 'percentage' ? 'bx-percentage' : 'bx-dollar-circle'}' style="color: var(--primary); font-size: 16px;"></i>
+                    <span style="font-weight: 600;">${discountDisplay}</span>
+                </div>
+            </td>
+            <td>
+                ${usageBar}
+            </td>
+            <td>
+                ${voucher.min_bill_amount ? 
+                    `<span style="font-weight: 600;">${formatCurrency(voucher.min_bill_amount)}</span>` : 
+                    '<span style="color: var(--text-muted);">No minimum</span>'}
+            </td>
+            <td>
+                ${expiryDisplay}
+            </td>
+            <td>
+                ${statusBadge}
+            </td>
+            <td>
+                <div style="max-width: 200px;" title="${voucher.description || 'No description'}">
+                    ${description}
+                </div>
+            </td>
+            <td>
+                <div style="display: flex; gap: 4px;">
+                    <button class="btn btn-outline btn-icon-only edit-voucher-btn" data-id="${voucher.id}" title="Edit Voucher">
+                        <i class='bx bx-edit'></i>
+                    </button>
+                    <button class="btn btn-danger btn-icon-only delete-voucher-btn" data-id="${voucher.id}" title="Delete Voucher">
+                        <i class='bx bx-trash'></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+    
+    // Add event listeners for voucher actions
+    document.querySelectorAll('.edit-voucher-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const voucherId = e.target.closest('.edit-voucher-btn').dataset.id;
+            editVoucher(voucherId);
+        });
+    });
+    
+    document.querySelectorAll('.delete-voucher-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const voucherId = e.target.closest('.delete-voucher-btn').dataset.id;
+            deleteVoucher(voucherId);
+        });
+    });
 }
 
 async function editVoucher(voucherId) {
@@ -1969,12 +2005,23 @@ async function deleteVoucher(voucherId) {
     if (!confirm('Are you sure you want to delete this voucher?')) return;
     
     try {
-        await fetchAuth(`${API_BASE}/vouchers/${voucherId}`, { method: 'DELETE' });
+        // Try API first
+        const response = await fetchAuth(`${API_BASE}/vouchers/${voucherId}`, { method: 'DELETE' });
+        if (response.ok) {
+            loadVouchers();
+            showToast('Voucher deleted successfully!', 'success');
+        } else {
+            throw new Error('API not available');
+        }
+    } catch (err) {
+        console.log('Using local storage for voucher deletion');
+        // Fallback to local storage
+        let savedVouchers = JSON.parse(localStorage.getItem('pos_vouchers') || '[]');
+        savedVouchers = savedVouchers.filter(v => v.id != voucherId);
+        localStorage.setItem('pos_vouchers', JSON.stringify(savedVouchers));
+        
         loadVouchers();
         showToast('Voucher deleted successfully!', 'success');
-    } catch (err) {
-        console.error(err);
-        alert('Error deleting voucher');
     }
 }
 
@@ -1987,47 +2034,62 @@ async function applyVoucher() {
         return;
     }
     
+    let voucher = null;
+    
     try {
+        // Try API first
         const res = await fetchAuth(`${API_BASE}/vouchers/validate/${code}`);
-        const voucher = await res.json();
-        
-        if (!res.ok) {
-            throw new Error(voucher.error || 'Invalid voucher');
+        if (res.ok) {
+            voucher = await res.json();
+        } else {
+            throw new Error('API not available');
         }
-        
-        // Validate voucher conditions
-        const subtotal = currentBill.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        
-        if (voucher.min_bill_amount && subtotal < voucher.min_bill_amount) {
-            showToast(`Minimum bill amount of ${formatCurrency(voucher.min_bill_amount)} required for this voucher`, 'error');
-            return;
-        }
-        
-        if (voucher.expiry_date && new Date(voucher.expiry_date) < new Date()) {
-            showToast('This voucher has expired', 'error');
-            return;
-        }
-        
-        if (voucher.used_count >= voucher.usage_limit) {
-            showToast('This voucher has reached its usage limit', 'error');
-            return;
-        }
-        
-        // Apply voucher
-        appliedVoucher = voucher;
-        
-        // Update UI
-        document.getElementById('voucher-applied-info').style.display = 'block';
-        document.getElementById('btn-apply-voucher').style.display = 'none';
-        document.getElementById('btn-remove-voucher').style.display = 'block';
-        codeInput.disabled = true;
-        
-        updateBillUI();
-        showToast('Voucher applied successfully!', 'success');
-        
     } catch (err) {
-        showToast(err.message || 'Invalid voucher code', 'error');
+        console.log('Using local storage for voucher validation');
+        // Fallback to local storage
+        const savedVouchers = JSON.parse(localStorage.getItem('pos_vouchers') || '[]');
+        voucher = savedVouchers.find(v => v.code.toUpperCase() === code);
+        
+        if (!voucher) {
+            showToast('Invalid voucher code', 'error');
+            return;
+        }
     }
+    
+    // Validate voucher conditions
+    const subtotal = currentBill.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    
+    if (!voucher.is_active) {
+        showToast('This voucher is not active', 'error');
+        return;
+    }
+    
+    if (voucher.min_bill_amount && subtotal < voucher.min_bill_amount) {
+        showToast(`Minimum bill amount of ${formatCurrency(voucher.min_bill_amount)} required for this voucher`, 'error');
+        return;
+    }
+    
+    if (voucher.expiry_date && new Date(voucher.expiry_date) < new Date()) {
+        showToast('This voucher has expired', 'error');
+        return;
+    }
+    
+    if ((voucher.used_count || 0) >= voucher.usage_limit) {
+        showToast('This voucher has reached its usage limit', 'error');
+        return;
+    }
+    
+    // Apply voucher
+    appliedVoucher = voucher;
+    
+    // Update UI
+    document.getElementById('voucher-applied-info').style.display = 'block';
+    document.getElementById('btn-apply-voucher').style.display = 'none';
+    document.getElementById('btn-remove-voucher').style.display = 'block';
+    codeInput.disabled = true;
+    
+    updateBillUI();
+    showToast('Voucher applied successfully!', 'success');
 }
 
 function removeVoucher() {

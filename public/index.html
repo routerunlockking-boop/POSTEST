@@ -133,6 +133,12 @@
                     </a>
                 </li>
                 <li>
+                    <a href="#" class="nav-link" data-target="vouchers-view">
+                        <i class='bx bx-ticket icon'></i>
+                        <span class="link-name">Vouchers</span>
+                    </a>
+                </li>
+                <li>
                     <a href="#" class="nav-link" data-target="customers-view">
                         <i class='bx bx-group icon'></i>
                         <span class="link-name">Customers</span>
@@ -470,38 +476,6 @@
                         </div>
                     </div>
                     
-                    <!-- Voucher Management Section -->
-                    <div class="voucher-section" style="margin-bottom: 20px;">
-                        <div class="view-header" style="border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 20px;">
-                            <h3 style="color: var(--primary); display: flex; align-items: center; gap: 8px;">
-                                <i class='bx bx-ticket'></i> Voucher Management
-                            </h3>
-                            <button class="btn btn-primary" id="btn-create-voucher">
-                                <i class='bx bx-plus'></i> Create Voucher
-                            </button>
-                        </div>
-                        <div class="table-card">
-                            <div class="table-responsive">
-                                <table class="data-table" id="vouchers-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Voucher Code</th>
-                                            <th>Discount Type</th>
-                                            <th>Discount Value</th>
-                                            <th>Usage Limit</th>
-                                            <th>Used</th>
-                                            <th>Status</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <!-- Populated via JS -->
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                    
                     <div class="table-card">
                         <div class="table-responsive">
                             <table class="data-table" id="invoices-table">
@@ -540,6 +514,38 @@
                                         <th>Phone Number</th>
                                         <th>Type</th>
                                         <th>Address</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Populated via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Vouchers View -->
+                <section id="vouchers-view" class="view">
+                    <div class="view-header">
+                        <h2>Voucher Management</h2>
+                        <div class="header-actions">
+                            <button class="btn btn-primary" id="btn-create-voucher">
+                                <i class='bx bx-plus'></i> Create Voucher
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-card">
+                        <div class="table-responsive">
+                            <table class="data-table" id="vouchers-table">
+                                <thead>
+                                    <tr>
+                                        <th>Voucher Code</th>
+                                        <th>Discount Type</th>
+                                        <th>Discount Value</th>
+                                        <th>Usage Limit</th>
+                                        <th>Used</th>
+                                        <th>Status</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>

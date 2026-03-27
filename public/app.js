@@ -568,6 +568,7 @@ function setupNavigation() {
             if(target === 'inventory-view') loadInventory();
             if(target === 'pos-view') loadPOS();
             if(target === 'invoices-view') loadInvoices();
+            if(target === 'vouchers-view') loadVouchers();
             if(target === 'customers-view') loadCustomers();
             if(target === 'reports-view') loadReports();
             if(target === 'admin-view') loadAdminUsers();
@@ -1586,9 +1587,6 @@ async function loadInvoices() {
             `;
             tbody.appendChild(tr);
         });
-        
-        // Load vouchers when invoices view is opened
-        loadVouchers();
         
     } catch (err) {
         console.error(err);

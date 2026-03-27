@@ -310,20 +310,30 @@
                                 </div>
                             </div>
                             <div class="customer-details" id="pos-customer-details" style="display: none; flex: 1; padding: 8px 0;">
-                                <div class="form-group">
-                                    <label>Customer Name</label>
-                                    <input type="text" id="pos-customer-name" class="form-control" placeholder="Enter name" value="Walk-in Customer">
+                                <div class="form-group" style="position: relative;">
+                                    <label>Search Customer (Name or Phone)</label>
+                                    <div style="position: relative;">
+                                        <i class='bx bx-search' style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+                                        <input type="text" id="pos-customer-search" class="form-control" style="padding-left: 36px;" placeholder="Search saved customers...">
+                                    </div>
+                                    <div id="pos-customer-suggestions" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; z-index: 100; box-shadow: var(--shadow-lg); max-height: 200px; overflow-y: auto;"></div>
                                 </div>
-                                <div class="form-group">
-                                    <label>WhatsApp / Phone (Optional)</label>
-                                    <input type="tel" id="pos-customer-phone" class="form-control" placeholder="Enter phone number">
-                                </div>
-                                <div class="form-group">
-                                    <label>Customer Type</label>
-                                    <select id="pos-customer-type" class="form-control">
-                                        <option value="Retail">Retail Customer</option>
-                                        <option value="Wholesale">Wholesale Customer</option>
-                                    </select>
+                                <div style="border-top: 1px dashed var(--border); margin: 15px 0; padding-top: 15px;">
+                                    <div class="form-group">
+                                        <label>Customer Name</label>
+                                        <input type="text" id="pos-customer-name" class="form-control" placeholder="Enter name" value="Walk-in Customer">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>WhatsApp / Phone (Optional)</label>
+                                        <input type="tel" id="pos-customer-phone" class="form-control" placeholder="Enter phone number">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Customer Type</label>
+                                        <select id="pos-customer-type" class="form-control">
+                                            <option value="Retail">Retail Customer</option>
+                                            <option value="Wholesale">Wholesale Customer</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                             <div class="bill-summary">

@@ -1055,9 +1055,71 @@ async function loadPOS() {
         const res = await fetchAuth(`${API_BASE}/products?lite=true`);
         products = await res.json();
         renderPOSProducts(products);
+        
+        // Also load customers list for POS search
+        const custRes = await fetchAuth(`${API_BASE}/customers`);
+        customersList = await custRes.json();
+        setupCustomerPOSSearch();
     } catch (err) {
         console.error(err);
     }
+}
+
+function setupCustomerPOSSearch() {
+    const searchInput = document.getElementById('pos-customer-search');
+    const suggestionsBox = document.getElementById('pos-customer-suggestions');
+    
+    if (!searchInput || !suggestionsBox) return;
+
+    searchInput.addEventListener('input', (e) => {
+        const term = e.target.value.toLowerCase().trim();
+        if (!term) {
+            suggestionsBox.style.display = 'none';
+            return;
+        }
+
+        const filtered = customersList.filter(c => 
+            c.name.toLowerCase().includes(term) || 
+            c.phone.includes(term)
+        );
+
+        if (filtered.length > 0) {
+            suggestionsBox.innerHTML = '';
+            filtered.forEach(c => {
+                const div = document.createElement('div');
+                div.style = "padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.2s;";
+                div.innerHTML = `
+                    <div style="font-weight: 600; font-size: 13px;">${c.name}</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">${c.phone} | ${c.type}</div>
+                `;
+                div.onmouseover = () => div.style.background = 'var(--secondary)';
+                div.onmouseout = () => div.style.background = 'transparent';
+                div.onclick = () => {
+                    document.getElementById('pos-customer-name').value = c.name;
+                    document.getElementById('pos-customer-phone').value = c.phone;
+                    document.getElementById('pos-customer-type').value = c.type || 'Retail';
+                    document.getElementById('pos-customer-search').value = '';
+                    suggestionsBox.style.display = 'none';
+                    
+                    // Visual feedback
+                    const nameField = document.getElementById('pos-customer-name');
+                    nameField.style.backgroundColor = 'var(--success-light)';
+                    setTimeout(() => nameField.style.backgroundColor = '', 500);
+                };
+                suggestionsBox.appendChild(div);
+            });
+            suggestionsBox.style.display = 'block';
+        } else {
+            suggestionsBox.style.display = 'none';
+        }
+    });
+
+    // Close suggestions on outside click
+    document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
+            suggestionsBox.style.display = 'none';
+        }
+    });
 }
 
 // Image cache to avoid re-fetching the same image
@@ -1307,6 +1369,7 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
         document.getElementById('pos-customer-name').value = 'Walk-in Customer';
         document.getElementById('pos-customer-phone').value = '';
         document.getElementById('pos-customer-type').value = 'Retail';
+        document.getElementById('pos-customer-search').value = '';
         document.getElementById('pos-payment-method').value = 'Cash';
         document.getElementById('pos-amount-paid').value = '';
         updateBillUI();

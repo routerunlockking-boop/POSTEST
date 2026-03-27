@@ -1834,23 +1834,86 @@ async function loadVouchers() {
         
         vouchers.forEach(voucher => {
             const tr = document.createElement('tr');
+            
+            // Status badge with color coding
             const statusBadge = voucher.is_active ? 
                 '<span class="text-success" style="color:var(--success);font-weight:600;">Active</span>' : 
                 '<span class="text-danger" style="color:var(--danger);font-weight:600;">Inactive</span>';
             
-            const expiryInfo = voucher.expiry_date ? 
-                `<br><small style="color:var(--text-muted);">Expires: ${new Date(voucher.expiry_date).toLocaleDateString()}</small>` : '';
+            // Expiry date with formatting and warning
+            const expiryDate = voucher.expiry_date ? 
+                new Date(voucher.expiry_date).toLocaleDateString() : 
+                '<span style="color:var(--text-muted);">No expiry</span>';
+            
+            const isExpired = voucher.expiry_date && new Date(voucher.expiry_date) < new Date();
+            const expiryDisplay = voucher.expiry_date ? 
+                `<span style="color: ${isExpired ? 'var(--danger)' : 'var(--text-main)'}">${expiryDate}</span>` : 
+                '<span style="color:var(--text-muted);">No expiry</span>';
+            
+            // Usage progress bar
+            const usagePercentage = voucher.usage_limit > 0 ? (voucher.used_count || 0) / voucher.usage_limit * 100 : 0;
+            const usageColor = usagePercentage >= 90 ? 'var(--danger)' : usagePercentage >= 70 ? 'var(--warning)' : 'var(--success)';
+            const usageBar = `
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="flex: 1; background: #e5e7eb; border-radius: 4px; height: 6px; overflow: hidden;">
+                        <div style="width: ${usagePercentage}%; height: 100%; background: ${usageColor}; transition: width 0.3s;"></div>
+                    </div>
+                    <span style="font-size: 12px; font-weight: 600; color: var(--text-main); min-width: 60px;">${voucher.used_count || 0}/${voucher.usage_limit}</span>
+                </div>
+            `;
+            
+            // Discount display with icon
+            const discountIcon = voucher.discount_type === 'percentage' ? '%' : '$';
+            const discountDisplay = voucher.discount_type === 'percentage' ? 
+                `${voucher.discount_value}%` : 
+                formatCurrency(voucher.discount_value);
+            
+            // Description with truncation for long text
+            const description = voucher.description ? 
+                (voucher.description.length > 30 ? voucher.description.substring(0, 30) + '...' : voucher.description) : 
+                '<span style="color: var(--text-muted); font-style: italic;">No description</span>';
             
             tr.innerHTML = `
-                <td><strong>${voucher.code}</strong>${expiryInfo}</td>
-                <td>${voucher.discount_type === 'percentage' ? voucher.discount_value + '%' : formatCurrency(voucher.discount_value)}</td>
-                <td>${voucher.discount_type === 'percentage' ? voucher.discount_value + '%' : formatCurrency(voucher.discount_value)}</td>
-                <td>${voucher.usage_limit}</td>
-                <td>${voucher.used_count || 0}</td>
-                <td>${statusBadge}</td>
                 <td>
-                    <button class="btn btn-outline btn-icon-only edit-voucher-btn" data-id="${voucher.id}" title="Edit Voucher"><i class='bx bx-edit'></i></button>
-                    <button class="btn btn-danger btn-icon-only delete-voucher-btn" data-id="${voucher.id}" title="Delete Voucher"><i class='bx bx-trash'></i></button>
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <strong style="color: var(--primary); font-size: 14px;">${voucher.code}</strong>
+                        <small style="color: var(--text-muted);">ID: ${voucher.id}</small>
+                    </div>
+                </td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <i class='bx ${voucher.discount_type === 'percentage' ? 'bx-percentage' : 'bx-dollar-circle'}' style="color: var(--primary); font-size: 16px;"></i>
+                        <span style="font-weight: 600;">${discountDisplay}</span>
+                    </div>
+                </td>
+                <td>
+                    ${usageBar}
+                </td>
+                <td>
+                    ${voucher.min_bill_amount ? 
+                        `<span style="font-weight: 600;">${formatCurrency(voucher.min_bill_amount)}</span>` : 
+                        '<span style="color: var(--text-muted);">No minimum</span>'}
+                </td>
+                <td>
+                    ${expiryDisplay}
+                </td>
+                <td>
+                    ${statusBadge}
+                </td>
+                <td>
+                    <div style="max-width: 200px;" title="${voucher.description || 'No description'}">
+                        ${description}
+                    </div>
+                </td>
+                <td>
+                    <div style="display: flex; gap: 4px;">
+                        <button class="btn btn-outline btn-icon-only edit-voucher-btn" data-id="${voucher.id}" title="Edit Voucher">
+                            <i class='bx bx-edit'></i>
+                        </button>
+                        <button class="btn btn-danger btn-icon-only delete-voucher-btn" data-id="${voucher.id}" title="Delete Voucher">
+                            <i class='bx bx-trash'></i>
+                        </button>
+                    </div>
                 </td>
             `;
             tbody.appendChild(tr);

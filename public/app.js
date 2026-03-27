@@ -1247,7 +1247,7 @@ function showInvoicePrintout(invoice) {
     const change = amountPaid > 0 ? (amountPaid - total) : 0;
     
     document.getElementById('receipt-amount-paid').textContent = amountPaid.toFixed(2);
-    document.getElementById('receipt-change-amount').textContent = Math.max(0, change).toFixed(2);
+    document.getElementById('receipt-balance-amount').textContent = Math.max(0, change).toFixed(2);
     
     // Automatically open modal and print dialog as per rules
     showModal(invoiceModal);

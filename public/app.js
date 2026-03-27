@@ -206,6 +206,8 @@ let currentProductImageBase64 = null;
 let html5QrCode = null;
 let isScanTorchOn = false;
 let currentScanMode = 'billing'; // 'billing' or 'addProduct'
+let vouchers = [];
+let appliedVoucher = null;
 
 // ==== DOM ELEMENTS ====
 const clockEl = document.getElementById('clock');
@@ -217,6 +219,7 @@ const productModal = document.getElementById('product-modal');
 const invoiceModal = document.getElementById('invoice-modal');
 const adminUserModal = document.getElementById('admin-user-modal');
 const customerModal = document.getElementById('customer-modal');
+const voucherModal = document.getElementById('voucher-modal');
 
 // ==== INITIALIZATION ====
 document.addEventListener('DOMContentLoaded', () => {
@@ -647,6 +650,7 @@ function setupModals() {
     document.getElementById('btn-close-invoice-modal').addEventListener('click', hideModal);
     document.getElementById('btn-close-admin-modal').addEventListener('click', hideModal);
     document.getElementById('btn-close-customer-modal').addEventListener('click', hideModal);
+    document.getElementById('btn-close-voucher-modal').addEventListener('click', hideModal);
     
     // Add product
     document.getElementById('btn-add-product').addEventListener('click', () => openAddProductModal());
@@ -657,6 +661,69 @@ function setupModals() {
         document.getElementById('customer-id').value = '';
         document.getElementById('customer-modal-title').textContent = 'Add Customer';
         showModal(customerModal);
+    });
+
+    // Create voucher
+    document.getElementById('btn-create-voucher').addEventListener('click', () => {
+        document.getElementById('voucher-form').reset();
+        document.getElementById('voucher-id').value = '';
+        generateVoucherCode();
+        showModal(voucherModal);
+    });
+
+    // Generate voucher code
+    document.getElementById('btn-generate-voucher-code').addEventListener('click', generateVoucherCode);
+
+    // Handle voucher form submission
+    document.getElementById('voucher-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('voucher-id').value;
+        const code = document.getElementById('voucher-code').value.trim();
+        const discount_type = document.getElementById('voucher-discount-type').value;
+        const discount_value = parseFloat(document.getElementById('voucher-discount-value').value);
+        const usage_limit = parseInt(document.getElementById('voucher-usage-limit').value);
+        const min_bill_amount = parseFloat(document.getElementById('voucher-min-bill').value) || 0;
+        const expiry_date = document.getElementById('voucher-expiry-date').value;
+        const description = document.getElementById('voucher-description').value.trim();
+        const is_active = document.getElementById('voucher-is-active').checked;
+        
+        const payload = {
+            code,
+            discount_type,
+            discount_value,
+            usage_limit,
+            min_bill_amount,
+            expiry_date,
+            description,
+            is_active
+        };
+        
+        try {
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `${API_BASE}/vouchers/${id}` : `${API_BASE}/vouchers`;
+            
+            await fetchAuth(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
+            hideModal();
+            loadVouchers();
+            showToast('Voucher saved successfully!', 'success');
+        } catch (err) {
+            console.error(err);
+            alert('Error saving voucher');
+        }
+    });
+
+    // Voucher functionality in POS
+    document.getElementById('btn-apply-voucher').addEventListener('click', applyVoucher);
+    document.getElementById('btn-remove-voucher').addEventListener('click', removeVoucher);
+    document.getElementById('pos-voucher-code').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            applyVoucher();
+        }
     });
 
     // Handle Image Selection
@@ -1278,11 +1345,26 @@ function updateBillUI() {
         itemsContainer.appendChild(div);
     });
     
-    document.getElementById('pos-total-amount').textContent = formatCurrency(total);
+    // Calculate voucher discount
+    const voucherDiscount = calculateVoucherDiscount(total);
+    const finalTotal = total - voucherDiscount;
     
-    // Update amount to pay if it's a new bill or if total changes
+    // Update UI elements
+    const subtotalEl = document.getElementById('pos-subtotal-amount');
+    if (subtotalEl) {
+        subtotalEl.textContent = formatCurrency(total);
+    }
+    
+    document.getElementById('pos-total-amount').textContent = formatCurrency(finalTotal);
+    
+    // Update voucher applied info
+    if (appliedVoucher && voucherDiscount > 0) {
+        document.getElementById('applied-voucher-discount').textContent = `-${formatCurrency(voucherDiscount)}`;
+    }
+    
+    // Update amount to pay
     const amountToPayInput = document.getElementById('pos-amount-to-pay');
-    amountToPayInput.value = total.toFixed(2);
+    amountToPayInput.value = finalTotal.toFixed(2);
     
     calculateChange();
 }
@@ -1335,6 +1417,10 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
     const customer_type = document.getElementById('pos-customer-type').value;
     const payment_method = document.getElementById('pos-payment-method').value;
     
+    // Calculate original subtotal for voucher tracking
+    const originalSubtotal = currentBill.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const voucherDiscount = appliedVoucher ? calculateVoucherDiscount(originalSubtotal) : 0;
+    
     const payload = {
         items: currentBill,
         total_amount: total,
@@ -1343,7 +1429,14 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
         customer_name,
         customer_phone,
         customer_type,
-        payment_method
+        payment_method,
+        voucher: appliedVoucher ? {
+            id: appliedVoucher.id,
+            code: appliedVoucher.code,
+            discount_type: appliedVoucher.discount_type,
+            discount_value: appliedVoucher.discount_value,
+            discount_amount: voucherDiscount
+        } : null
     };
     
     try {
@@ -1363,8 +1456,9 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
         // Print
         showInvoicePrintout(data.invoice);
         
-        // Clear bill
+        // Clear bill and reset voucher
         currentBill = [];
+        appliedVoucher = null;
         document.getElementById('pos-cashier-name').value = 'Pamidu';
         document.getElementById('pos-customer-name').value = 'Walk-in Customer';
         document.getElementById('pos-customer-phone').value = '';
@@ -1372,6 +1466,14 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
         document.getElementById('pos-customer-search').value = '';
         document.getElementById('pos-payment-method').value = 'Cash';
         document.getElementById('pos-amount-paid').value = '';
+        
+        // Reset voucher UI
+        document.getElementById('voucher-applied-info').style.display = 'none';
+        document.getElementById('btn-apply-voucher').style.display = 'block';
+        document.getElementById('btn-remove-voucher').style.display = 'none';
+        document.getElementById('pos-voucher-code').value = '';
+        document.getElementById('pos-voucher-code').disabled = false;
+        
         updateBillUI();
         
         // Reset tabs to items
@@ -1478,36 +1580,15 @@ async function loadInvoices() {
                 <td style="font-weight:bold">${formatCurrency(inv.total_amount)}</td>
                 <td style="color: #15803d; font-weight:bold">${formatCurrency(inv.total_profit || 0)}</td>
                 <td>
-                    <button class="btn btn-outline btn-icon-only view-invoice-btn" data-id="${inv.id}"><i class='bx bx-show'></i></button>
-                    <button class="btn btn-primary btn-icon-only print-invoice-btn" data-id="${inv.id}"><i class='bx bx-printer'></i></button>
+                    <button class="btn btn-outline btn-icon-only view-invoice-btn" data-id="${inv.id}" title="View Invoice"><i class='bx bx-receipt'></i></button>
                     ${adminActions}
                 </td>
             `;
             tbody.appendChild(tr);
         });
-
-        document.querySelectorAll('.view-invoice-btn, .print-invoice-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                const id = e.currentTarget.dataset.id;
-                try {
-                    const res = await fetchAuth(`${API_BASE}/invoices/${id}`);
-                    const inv = await res.json();
-                    showInvoicePrintout(inv);
-                } catch(err) { console.error(err); }
-            });
-        });
         
-        document.querySelectorAll('.delete-invoice-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                if(confirm('Are you sure you want to delete this invoice? (This will restock the inventory automatically)')) {
-                    const id = e.currentTarget.dataset.id;
-                    try {
-                        await fetchAuth(`${API_BASE}/invoices/${id}`, { method: 'DELETE' });
-                        loadInvoices();
-                    } catch(err) { console.error(err); }
-                }
-            });
-        });
+        // Load vouchers when invoices view is opened
+        loadVouchers();
         
     } catch (err) {
         console.error(err);
@@ -1734,3 +1815,173 @@ document.querySelector('#admin-users-table tbody').addEventListener('click', asy
         }
     }
 });
+
+// ==== VOUCHER FUNCTIONS ====
+function generateVoucherCode() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < 8; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    document.getElementById('voucher-code').value = code;
+}
+
+async function loadVouchers() {
+    try {
+        const res = await fetchAuth(`${API_BASE}/vouchers`);
+        vouchers = await res.json();
+        
+        const tbody = document.querySelector('#vouchers-table tbody');
+        tbody.innerHTML = '';
+        
+        vouchers.forEach(voucher => {
+            const tr = document.createElement('tr');
+            const statusBadge = voucher.is_active ? 
+                '<span class="text-success" style="color:var(--success);font-weight:600;">Active</span>' : 
+                '<span class="text-danger" style="color:var(--danger);font-weight:600;">Inactive</span>';
+            
+            const expiryInfo = voucher.expiry_date ? 
+                `<br><small style="color:var(--text-muted);">Expires: ${new Date(voucher.expiry_date).toLocaleDateString()}</small>` : '';
+            
+            tr.innerHTML = `
+                <td><strong>${voucher.code}</strong>${expiryInfo}</td>
+                <td>${voucher.discount_type === 'percentage' ? voucher.discount_value + '%' : formatCurrency(voucher.discount_value)}</td>
+                <td>${voucher.discount_type === 'percentage' ? voucher.discount_value + '%' : formatCurrency(voucher.discount_value)}</td>
+                <td>${voucher.usage_limit}</td>
+                <td>${voucher.used_count || 0}</td>
+                <td>${statusBadge}</td>
+                <td>
+                    <button class="btn btn-outline btn-icon-only edit-voucher-btn" data-id="${voucher.id}" title="Edit Voucher"><i class='bx bx-edit'></i></button>
+                    <button class="btn btn-danger btn-icon-only delete-voucher-btn" data-id="${voucher.id}" title="Delete Voucher"><i class='bx bx-trash'></i></button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+        
+        // Add event listeners for voucher actions
+        document.querySelectorAll('.edit-voucher-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const voucherId = e.target.closest('.edit-voucher-btn').dataset.id;
+                editVoucher(voucherId);
+            });
+        });
+        
+        document.querySelectorAll('.delete-voucher-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const voucherId = e.target.closest('.delete-voucher-btn').dataset.id;
+                deleteVoucher(voucherId);
+            });
+        });
+        
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+async function editVoucher(voucherId) {
+    const voucher = vouchers.find(v => v.id == voucherId);
+    if (!voucher) return;
+    
+    document.getElementById('voucher-id').value = voucher.id;
+    document.getElementById('voucher-code').value = voucher.code;
+    document.getElementById('voucher-discount-type').value = voucher.discount_type;
+    document.getElementById('voucher-discount-value').value = voucher.discount_value;
+    document.getElementById('voucher-usage-limit').value = voucher.usage_limit;
+    document.getElementById('voucher-min-bill').value = voucher.min_bill_amount || '';
+    document.getElementById('voucher-expiry-date').value = voucher.expiry_date || '';
+    document.getElementById('voucher-description').value = voucher.description || '';
+    document.getElementById('voucher-is-active').checked = voucher.is_active;
+    
+    showModal(voucherModal);
+}
+
+async function deleteVoucher(voucherId) {
+    if (!confirm('Are you sure you want to delete this voucher?')) return;
+    
+    try {
+        await fetchAuth(`${API_BASE}/vouchers/${voucherId}`, { method: 'DELETE' });
+        loadVouchers();
+        showToast('Voucher deleted successfully!', 'success');
+    } catch (err) {
+        console.error(err);
+        alert('Error deleting voucher');
+    }
+}
+
+async function applyVoucher() {
+    const codeInput = document.getElementById('pos-voucher-code');
+    const code = codeInput.value.trim().toUpperCase();
+    
+    if (!code) {
+        showToast('Please enter a voucher code', 'error');
+        return;
+    }
+    
+    try {
+        const res = await fetchAuth(`${API_BASE}/vouchers/validate/${code}`);
+        const voucher = await res.json();
+        
+        if (!res.ok) {
+            throw new Error(voucher.error || 'Invalid voucher');
+        }
+        
+        // Validate voucher conditions
+        const subtotal = currentBill.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        
+        if (voucher.min_bill_amount && subtotal < voucher.min_bill_amount) {
+            showToast(`Minimum bill amount of ${formatCurrency(voucher.min_bill_amount)} required for this voucher`, 'error');
+            return;
+        }
+        
+        if (voucher.expiry_date && new Date(voucher.expiry_date) < new Date()) {
+            showToast('This voucher has expired', 'error');
+            return;
+        }
+        
+        if (voucher.used_count >= voucher.usage_limit) {
+            showToast('This voucher has reached its usage limit', 'error');
+            return;
+        }
+        
+        // Apply voucher
+        appliedVoucher = voucher;
+        
+        // Update UI
+        document.getElementById('voucher-applied-info').style.display = 'block';
+        document.getElementById('btn-apply-voucher').style.display = 'none';
+        document.getElementById('btn-remove-voucher').style.display = 'block';
+        codeInput.disabled = true;
+        
+        updateBillUI();
+        showToast('Voucher applied successfully!', 'success');
+        
+    } catch (err) {
+        showToast(err.message || 'Invalid voucher code', 'error');
+    }
+}
+
+function removeVoucher() {
+    appliedVoucher = null;
+    
+    // Update UI
+    document.getElementById('voucher-applied-info').style.display = 'none';
+    document.getElementById('btn-apply-voucher').style.display = 'block';
+    document.getElementById('btn-remove-voucher').style.display = 'none';
+    document.getElementById('pos-voucher-code').value = '';
+    document.getElementById('pos-voucher-code').disabled = false;
+    
+    updateBillUI();
+}
+
+function calculateVoucherDiscount(subtotal) {
+    if (!appliedVoucher) return 0;
+    
+    let discount = 0;
+    if (appliedVoucher.discount_type === 'percentage') {
+        discount = subtotal * (appliedVoucher.discount_value / 100);
+    } else {
+        discount = Math.min(appliedVoucher.discount_value, subtotal);
+    }
+    
+    return discount;
+}

@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { connectDB, initializeDatabase, User, Product, Invoice, Customer } = require('./database');
+const { connectDB, initializeDatabase, User, Product, Invoice, Customer, Voucher } = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -400,6 +400,64 @@ app.delete('/api/customers/:id', async (req, res) => {
         const customer = await Customer.findOneAndDelete(queryFilter);
         if (!customer) return res.status(404).json({ error: 'Customer not found' });
         res.json({ message: 'Customer deleted successfully' });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+// ==== VOUCHERS API ====
+
+app.get('/api/vouchers', async (req, res) => {
+    try {
+        const queryFilter = req.user.role === 'admin' ? {} : { user_id: req.user._id };
+        const vouchers = await Voucher.find(queryFilter).sort({ created_at: -1 });
+        res.json(vouchers);
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/vouchers', async (req, res) => {
+    const { code, type, value } = req.body;
+    if (!code || !type || value === undefined) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    try {
+        const existing = await Voucher.findOne({ user_id: req.user._id, code });
+        if (existing) return res.status(400).json({ error: 'Voucher code already exists' });
+        
+        const voucher = await Voucher.create({
+            user_id: req.user._id,
+            code,
+            type,
+            value: parseFloat(value)
+        });
+        res.status(201).json(voucher);
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/vouchers/:id', async (req, res) => {
+    try {
+        const queryFilter = req.user.role === 'admin' ? { _id: req.params.id } : { _id: req.params.id, user_id: req.user._id };
+        const voucher = await Voucher.findOneAndDelete(queryFilter);
+        if (!voucher) return res.status(404).json({ error: 'Voucher not found' });
+        res.json({ message: 'Voucher deleted successfully' });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/api/vouchers/validate/:code', async (req, res) => {
+    try {
+        const voucher = await Voucher.findOne({ 
+            user_id: req.user._id, 
+            code: req.params.code, 
+            is_active: true 
+        });
+        if (!voucher) return res.status(404).json({ error: 'Invalid or inactive voucher code' });
+        res.json(voucher);
     } catch (err) {
         return res.status(500).json({ error: err.message });
     }

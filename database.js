@@ -80,11 +80,21 @@ const CustomerSchema = new mongoose.Schema({
     created_at: { type: Date, default: Date.now }
 });
 
+const VoucherSchema = new mongoose.Schema({
+    user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    code: { type: String, required: true },
+    type: { type: String, enum: ['Fixed', 'Percentage'], default: 'Fixed' },
+    value: { type: Number, required: true },
+    is_active: { type: Boolean, default: true },
+    created_at: { type: Date, default: Date.now }
+});
+
 // -- MODELS --
 const User = mongoose.model('User', UserSchema);
 const Product = mongoose.model('Product', ProductSchema);
 const Invoice = mongoose.model('Invoice', InvoiceSchema);
 const Customer = mongoose.model('Customer', CustomerSchema);
+const Voucher = mongoose.model('Voucher', VoucherSchema);
 
 // Create default admin user
 const initializeDatabase = async () => {
@@ -110,12 +120,9 @@ const initializeDatabase = async () => {
                     is_active: true
                 }
             );
-            // Also clean up the old 'Admin' text if it exists but wasn't caught by the role query
-            // just to be thorough, but we updated by ID anyway
-            console.log('Admin credentials updated for existing admin user.');
         }
     } catch (err) {
-        console.error('Error initializing default user:', err.message);
+        console.error('Error initializing database:', err.message);
     }
 };
 
@@ -125,5 +132,6 @@ module.exports = {
     User,
     Product,
     Invoice,
-    Customer
+    Customer,
+    Voucher
 };

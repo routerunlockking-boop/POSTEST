@@ -345,7 +345,36 @@
                                         <option value="Cash On Delivery">COD</option>
                                     </select>
                                 </div>
+                                
+                                <!-- Voucher Section -->
+                                <div class="voucher-section" style="margin-bottom: 16px; background: #fef3c7; padding: 12px; border-radius: 12px; border: 1px solid #f59e0b;">
+                                    <label style="font-size: 13px; font-weight: 700; color: #d97706; margin-bottom: 8px; display: block;">
+                                        <i class='bx bx-ticket' style="margin-right: 4px;"></i> Apply Voucher
+                                    </label>
+                                    <div style="display: flex; gap: 8px;">
+                                        <input type="text" id="pos-voucher-code" class="form-control" placeholder="Enter voucher code" style="flex: 1; border-color: #f59e0b;">
+                                        <button type="button" id="btn-apply-voucher" class="btn btn-primary" style="background: #f59e0b; border: none; padding: 0 16px;">
+                                            Apply
+                                        </button>
+                                        <button type="button" id="btn-remove-voucher" class="btn btn-outline" style="display: none; padding: 0 16px;">
+                                            Remove
+                                        </button>
+                                    </div>
+                                    <div id="voucher-applied-info" style="display: none; margin-top: 8px; padding: 8px; background: #f0fdf4; border-radius: 8px; border: 1px solid #10b981;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <span style="font-size: 12px; font-weight: 600; color: #10b981;">Voucher Applied:</span>
+                                            <span id="applied-voucher-discount" style="font-size: 12px; font-weight: 700; color: #10b981;">-0.00</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
                                 <div class="payment-details" style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
+                                    <div class="form-group" style="margin-bottom: 8px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                            <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Subtotal</label>
+                                            <span id="pos-subtotal-amount" style="font-size: 14px; font-weight: 600; color: var(--text-main);">0.00</span>
+                                        </div>
+                                    </div>
                                     <div class="form-group" style="margin-bottom: 8px;">
                                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                                             <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Amount to Pay</label>
@@ -440,6 +469,39 @@
                             </button>
                         </div>
                     </div>
+                    
+                    <!-- Voucher Management Section -->
+                    <div class="voucher-section" style="margin-bottom: 20px;">
+                        <div class="view-header" style="border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 20px;">
+                            <h3 style="color: var(--primary); display: flex; align-items: center; gap: 8px;">
+                                <i class='bx bx-ticket'></i> Voucher Management
+                            </h3>
+                            <button class="btn btn-primary" id="btn-create-voucher">
+                                <i class='bx bx-plus'></i> Create Voucher
+                            </button>
+                        </div>
+                        <div class="table-card">
+                            <div class="table-responsive">
+                                <table class="data-table" id="vouchers-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Voucher Code</th>
+                                            <th>Discount Type</th>
+                                            <th>Discount Value</th>
+                                            <th>Usage Limit</th>
+                                            <th>Used</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Populated via JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="table-card">
                         <div class="table-responsive">
                             <table class="data-table" id="invoices-table">
@@ -734,6 +796,60 @@
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-primary btn-block" id="btn-print-receipt">Print Receipt</button>
+                </div>
+            </div>
+
+            <!-- Voucher Creation Modal -->
+            <div class="modal" id="voucher-modal">
+                <div class="modal-header">
+                    <h3>Create Voucher</h3>
+                    <button class="close-btn" id="btn-close-voucher-modal"><i class='bx bx-x'></i></button>
+                </div>
+                <div class="modal-body">
+                    <form id="voucher-form">
+                        <input type="hidden" id="voucher-id">
+                        <div class="form-group">
+                            <label>Voucher Code</label>
+                            <div style="display: flex; gap: 8px;">
+                                <input type="text" id="voucher-code" class="form-control" required placeholder="Enter voucher code or auto-generate">
+                                <button type="button" id="btn-generate-voucher-code" class="btn btn-outline" style="padding: 0 12px; height: 38px; display: flex; align-items: center;" title="Generate Code">
+                                    <i class='bx bx-refresh' style="font-size: 20px;"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Discount Type</label>
+                            <select id="voucher-discount-type" class="form-control" required>
+                                <option value="percentage">Percentage (%)</option>
+                                <option value="fixed">Fixed Amount</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Discount Value</label>
+                            <input type="number" step="0.01" id="voucher-discount-value" class="form-control" required placeholder="Enter discount value">
+                        </div>
+                        <div class="form-group">
+                            <label>Usage Limit</label>
+                            <input type="number" id="voucher-usage-limit" class="form-control" required placeholder="Maximum times this voucher can be used" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label>Minimum Bill Amount (Optional)</label>
+                            <input type="number" step="0.01" id="voucher-min-bill" class="form-control" placeholder="Minimum bill amount to use this voucher">
+                        </div>
+                        <div class="form-group">
+                            <label>Expiry Date (Optional)</label>
+                            <input type="date" id="voucher-expiry-date" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Description (Optional)</label>
+                            <textarea id="voucher-description" class="form-control" rows="3" placeholder="Voucher description or terms"></textarea>
+                        </div>
+                        <div class="form-group" style="display:flex; align-items:center; gap: 10px;">
+                            <input type="checkbox" id="voucher-is-active" style="width:18px;height:18px;" checked>
+                            <label style="margin:0;">Voucher is Active</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Create Voucher</button>
+                    </form>
                 </div>
             </div>
 

@@ -1604,6 +1604,10 @@ function showInvoicePrintout(invoice) {
     // Handle voucher information
     let voucherDiscount = 0;
     if (invoice.voucher) {
+        // Show voucher label
+        document.getElementById('receipt-voucher-label').style.display = 'block';
+        
+        // Show voucher section
         document.getElementById('receipt-voucher-section').style.display = 'block';
         document.getElementById('receipt-voucher-code').textContent = invoice.voucher.code;
         
@@ -1614,8 +1618,15 @@ function showInvoicePrintout(invoice) {
         }
         
         document.getElementById('receipt-voucher-discount').textContent = '-' + voucherDiscount.toFixed(2);
+        
+        // Show reduced total
+        document.getElementById('receipt-reduced-total').style.display = 'block';
+        document.getElementById('receipt-final-total').textContent = total.toFixed(2);
     } else {
+        // Hide voucher sections
+        document.getElementById('receipt-voucher-label').style.display = 'none';
         document.getElementById('receipt-voucher-section').style.display = 'none';
+        document.getElementById('receipt-reduced-total').style.display = 'none';
     }
     
     const total = subtotal - voucherDiscount;

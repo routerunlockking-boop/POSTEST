@@ -133,6 +133,12 @@
                     </a>
                 </li>
                 <li>
+                    <a href="#" class="nav-link" data-target="customers-view">
+                        <i class='bx bx-group icon'></i>
+                        <span class="link-name">Customers</span>
+                    </a>
+                </li>
+                <li>
                     <a href="#" class="nav-link" data-target="reports-view">
                         <i class='bx bx-bar-chart-alt-2 icon'></i>
                         <span class="link-name">Reports</span>
@@ -312,6 +318,13 @@
                                     <label>WhatsApp / Phone (Optional)</label>
                                     <input type="tel" id="pos-customer-phone" class="form-control" placeholder="Enter phone number">
                                 </div>
+                                <div class="form-group">
+                                    <label>Customer Type</label>
+                                    <select id="pos-customer-type" class="form-control">
+                                        <option value="Retail">Retail Customer</option>
+                                        <option value="Wholesale">Wholesale Customer</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="bill-summary">
                                 <div class="form-group" style="margin-bottom: 16px; background: var(--secondary); padding: 12px; border-radius: 12px; border: 1px solid var(--primary);">
@@ -427,6 +440,34 @@
                                         <th>Time</th>
                                         <th>Total Amount</th>
                                         <th>Profit</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Populated via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Customers View -->
+                <section id="customers-view" class="view">
+                    <div class="view-header">
+                        <h2>Customer Management</h2>
+                        <div class="header-actions">
+                            <button class="btn btn-primary" id="btn-add-customer"><i class='bx bx-plus'></i> Add Customer</button>
+                        </div>
+                    </div>
+                    <div class="table-card">
+                        <div class="table-responsive">
+                            <table class="data-table" id="customers-table">
+                                <thead>
+                                    <tr>
+                                        <th>Customer Name</th>
+                                        <th>Phone Number</th>
+                                        <th>Type</th>
+                                        <th>Address</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -585,6 +626,39 @@
                         </div>
                         <button type="submit" class="btn btn-primary btn-block" style="margin-top:20px;">Save
                             User</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Customer Modal -->
+            <div class="modal" id="customer-modal">
+                <div class="modal-header">
+                    <h3 id="customer-modal-title">Add Customer</h3>
+                    <button class="close-btn" id="btn-close-customer-modal"><i class='bx bx-x'></i></button>
+                </div>
+                <div class="modal-body">
+                    <form id="customer-form">
+                        <input type="hidden" id="customer-id">
+                        <div class="form-group">
+                            <label>Customer Name</label>
+                            <input type="text" id="customer-name" class="form-control" required placeholder="e.g. John Doe">
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input type="tel" id="customer-phone" class="form-control" required placeholder="e.g. 0771234567">
+                        </div>
+                        <div class="form-group">
+                            <label>Address</label>
+                            <textarea id="customer-address" class="form-control" placeholder="Optional address"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Customer Type</label>
+                            <select id="customer-type" class="form-control">
+                                <option value="Retail">Retail Customer</option>
+                                <option value="Wholesale">Wholesale Customer</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Save Customer</button>
                     </form>
                 </div>
             </div>

@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { connectDB, initializeDatabase, User, Product, Invoice } = require('./database');
+const { connectDB, initializeDatabase, User, Product, Invoice, Customer } = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -164,9 +164,10 @@ app.delete('/api/admin/users/:id', adminMiddleware, async (req, res) => {
         const user = await User.findByIdAndDelete(userId);
         if (!user) return res.status(404).json({ error: 'User not found' });
         
-        // Also delete associated products and invoices
+        // Also delete associated products, invoices and customers
         await Product.deleteMany({ user_id: userId });
         await Invoice.deleteMany({ user_id: userId });
+        await Customer.deleteMany({ user_id: userId });
         
         res.json({ message: 'User and all associated data deleted successfully' });
     } catch (err) {
@@ -339,6 +340,71 @@ app.delete('/api/products/:id', async (req, res) => {
     }
 });
 
+// ==== CUSTOMERS API ====
+
+app.get('/api/customers', async (req, res) => {
+    try {
+        const queryFilter = req.user.role === 'admin' ? {} : { user_id: req.user._id };
+        const customers = await Customer.find(queryFilter).sort({ name: 1 });
+        const mappedCustomers = customers.map(c => ({
+            id: c._id.toString(),
+            name: c.name,
+            phone: c.phone,
+            address: c.address || '',
+            type: c.type || 'Retail'
+        }));
+        res.json(mappedCustomers);
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/customers', async (req, res) => {
+    const { name, phone, address, type } = req.body;
+    if (!name || !phone) {
+        return res.status(400).json({ error: 'Name and Phone are required' });
+    }
+    try {
+        const customer = await Customer.create({
+            user_id: req.user._id,
+            name,
+            phone,
+            address: address || '',
+            type: type || 'Retail'
+        });
+        res.status(201).json({ id: customer._id.toString(), name, phone, address, type });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/api/customers/:id', async (req, res) => {
+    const { name, phone, address, type } = req.body;
+    try {
+        const queryFilter = req.user.role === 'admin' ? { _id: req.params.id } : { _id: req.params.id, user_id: req.user._id };
+        const customer = await Customer.findOneAndUpdate(
+            queryFilter,
+            { name, phone, address, type },
+            { new: true }
+        );
+        if (!customer) return res.status(404).json({ error: 'Customer not found' });
+        res.json({ message: 'Customer updated successfully' });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/customers/:id', async (req, res) => {
+    try {
+        const queryFilter = req.user.role === 'admin' ? { _id: req.params.id } : { _id: req.params.id, user_id: req.user._id };
+        const customer = await Customer.findOneAndDelete(queryFilter);
+        if (!customer) return res.status(404).json({ error: 'Customer not found' });
+        res.json({ message: 'Customer deleted successfully' });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
 // ==== INVOICES API ====
 
 app.get('/api/invoices', async (req, res) => {
@@ -407,7 +473,7 @@ app.get('/api/invoices/:id', async (req, res) => {
 });
 
 app.post('/api/invoices', async (req, res) => {
-    const { items, total_amount, amount_paid, cashier_name, customer_name, customer_phone, payment_method } = req.body;
+    const { items, total_amount, amount_paid, cashier_name, customer_name, customer_phone, customer_type, payment_method } = req.body;
     
     const parsedTotal = parseFloat(total_amount) || 0;
     const parsedPaid = parseFloat(amount_paid) || 0;
@@ -423,6 +489,15 @@ app.post('/api/invoices', async (req, res) => {
     const invoice_number = 'INV-' + today.getTime().toString().slice(-6);
 
     try {
+        // Automatically save/update customer separately
+        if (customer_name && customer_name !== 'Walk-in Customer' && customer_phone) {
+            await Customer.findOneAndUpdate(
+                { user_id: req.user._id, phone: customer_phone },
+                { name: customer_name, phone: customer_phone, type: customer_type || 'Retail' },
+                { upsert: true, new: true }
+            );
+        }
+
         // Fetch current cost prices for products to calculate profit
         let total_profit = 0;
         const formattedItems = [];

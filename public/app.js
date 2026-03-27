@@ -216,6 +216,7 @@ const modalOverlay = document.getElementById('modal-overlay');
 const productModal = document.getElementById('product-modal');
 const invoiceModal = document.getElementById('invoice-modal');
 const adminUserModal = document.getElementById('admin-user-modal');
+const customerModal = document.getElementById('customer-modal');
 
 // ==== INITIALIZATION ====
 document.addEventListener('DOMContentLoaded', () => {
@@ -564,6 +565,7 @@ function setupNavigation() {
             if(target === 'inventory-view') loadInventory();
             if(target === 'pos-view') loadPOS();
             if(target === 'invoices-view') loadInvoices();
+            if(target === 'customers-view') loadCustomers();
             if(target === 'reports-view') loadReports();
             if(target === 'admin-view') loadAdminUsers();
         });
@@ -644,9 +646,18 @@ function setupModals() {
     document.getElementById('btn-close-modal').addEventListener('click', hideModal);
     document.getElementById('btn-close-invoice-modal').addEventListener('click', hideModal);
     document.getElementById('btn-close-admin-modal').addEventListener('click', hideModal);
+    document.getElementById('btn-close-customer-modal').addEventListener('click', hideModal);
     
     // Add product
     document.getElementById('btn-add-product').addEventListener('click', () => openAddProductModal());
+    
+    // Add customer
+    document.getElementById('btn-add-customer').addEventListener('click', () => {
+        document.getElementById('customer-form').reset();
+        document.getElementById('customer-id').value = '';
+        document.getElementById('customer-modal-title').textContent = 'Add Customer';
+        showModal(customerModal);
+    });
 
     // Handle Image Selection
     document.getElementById('product-image').addEventListener('change', function(e) {
@@ -721,6 +732,34 @@ function setupModals() {
         } catch (err) {
             console.error(err);
             alert('Error saving product');
+        }
+    });
+
+    // Handle Customer Form
+    document.getElementById('customer-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('customer-id').value;
+        const name = document.getElementById('customer-name').value;
+        const phone = document.getElementById('customer-phone').value;
+        const address = document.getElementById('customer-address').value;
+        const type = document.getElementById('customer-type').value;
+        
+        const payload = { name, phone, address, type };
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `${API_BASE}/customers/${id}` : `${API_BASE}/customers`;
+        
+        try {
+            const res = await fetchAuth(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) throw new Error('Failed to save customer');
+            hideModal();
+            loadCustomers();
+        } catch (err) {
+            console.error(err);
+            alert('Error saving customer');
         }
     });
 
@@ -1231,6 +1270,7 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
     const cashier_name = document.getElementById('pos-cashier-name').value || 'System';
     const customer_name = document.getElementById('pos-customer-name').value;
     const customer_phone = document.getElementById('pos-customer-phone').value;
+    const customer_type = document.getElementById('pos-customer-type').value;
     const payment_method = document.getElementById('pos-payment-method').value;
     
     const payload = {
@@ -1240,6 +1280,7 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
         cashier_name,
         customer_name,
         customer_phone,
+        customer_type,
         payment_method
     };
     
@@ -1265,6 +1306,7 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
         document.getElementById('pos-cashier-name').value = 'Pamidu';
         document.getElementById('pos-customer-name').value = 'Walk-in Customer';
         document.getElementById('pos-customer-phone').value = '';
+        document.getElementById('pos-customer-type').value = 'Retail';
         document.getElementById('pos-payment-method').value = 'Cash';
         document.getElementById('pos-amount-paid').value = '';
         updateBillUI();
@@ -1408,6 +1450,68 @@ async function loadInvoices() {
         console.error(err);
     }
 }
+
+// ==== CUSTOMERS ====
+let customersList = [];
+
+async function loadCustomers() {
+    try {
+        const res = await fetchAuth(`${API_BASE}/customers`);
+        customersList = await res.json();
+        renderCustomers(customersList);
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+function renderCustomers(list) {
+    const tbody = document.querySelector('#customers-table tbody');
+    tbody.innerHTML = '';
+    
+    list.forEach(c => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${c.name}</td>
+            <td>${c.phone}</td>
+            <td><span class="badge ${c.type === 'Wholesale' ? 'badge-primary' : 'badge-secondary'}" style="padding:4px 8px; border-radius:4px; font-size:11px; background:${c.type === 'Wholesale' ? 'var(--primary)' : 'var(--secondary)'}; color:${c.type === 'Wholesale' ? 'white' : 'var(--text-main)'}">${c.type}</span></td>
+            <td>${c.address || '-'}</td>
+            <td>
+                <button class="btn btn-outline btn-icon-only edit-customer-btn" data-id="${c.id}"><i class='bx bx-edit'></i></button>
+                <button class="btn btn-danger btn-icon-only delete-customer-btn" data-id="${c.id}"><i class='bx bx-trash'></i></button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// Event Delegation for Customer Actions
+document.querySelector('#customers-table tbody').addEventListener('click', (e) => {
+    const editBtn = e.target.closest('.edit-customer-btn');
+    if (editBtn) {
+        const id = editBtn.dataset.id;
+        const c = customersList.find(cust => cust.id === id);
+        if (c) {
+            document.getElementById('customer-id').value = c.id;
+            document.getElementById('customer-name').value = c.name;
+            document.getElementById('customer-phone').value = c.phone;
+            document.getElementById('customer-address').value = c.address || '';
+            document.getElementById('customer-type').value = c.type || 'Retail';
+            document.getElementById('customer-modal-title').textContent = 'Edit Customer';
+            showModal(customerModal);
+        }
+        return;
+    }
+    
+    const delBtn = e.target.closest('.delete-customer-btn');
+    if (delBtn) {
+        if(confirm('Are you sure you want to delete this customer?')) {
+            const id = delBtn.dataset.id;
+            fetchAuth(`${API_BASE}/customers/${id}`, { method: 'DELETE' })
+                .then(() => loadCustomers())
+                .catch(err => console.error(err));
+        }
+    }
+});
 
 document.getElementById('filter-date').addEventListener('change', () => {
     document.getElementById('filter-month').value = '';

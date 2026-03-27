@@ -1137,7 +1137,12 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
     }
     
     let total = parseFloat(document.getElementById('pos-amount-to-pay').value) || 0;
-    const amountPaid = parseFloat(document.getElementById('pos-amount-paid').value) || 0;
+    let amountPaid = parseFloat(document.getElementById('pos-amount-paid').value);
+    
+    // If amount paid is empty or 0, default to the total amount
+    if (isNaN(amountPaid) || amountPaid <= 0) {
+        amountPaid = total;
+    }
     
     const cashier_name = document.getElementById('pos-cashier-name').value || 'System';
     const customer_name = document.getElementById('pos-customer-name').value;

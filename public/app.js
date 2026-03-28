@@ -1364,8 +1364,8 @@ function updateBillUI() {
     }
 
     currentBill.forEach(item => {
-        const amount = roundToTwo(item.price * item.quantity);
-        total = roundToTwo(total + amount);
+        const amount = item.price * item.quantity;
+        total += amount;
         
         const div = document.createElement('div');
         div.className = 'bill-item';
@@ -1397,16 +1397,8 @@ function updateBillUI() {
     });
     
     // Calculate voucher discount only if voucher is applied
-    const voucherDiscount = appliedVoucher ? roundToTwo(calculateVoucherDiscount(total)) : 0;
-    const finalTotal = roundToTwo(total - voucherDiscount);
-    
-    // Debug logging to track UI calculations
-    console.log('=== UI Calculation Debug ===');
-    console.log('Item Total:', total);
-    console.log('Applied Voucher:', appliedVoucher);
-    console.log('Voucher Discount:', voucherDiscount);
-    console.log('Final Total:', finalTotal);
-    console.log('========================');
+    const voucherDiscount = appliedVoucher ? calculateVoucherDiscount(total) : 0;
+    const finalTotal = total - voucherDiscount;
     
     // Update UI elements
     const subtotalEl = document.getElementById('pos-subtotal-amount');
@@ -1437,25 +1429,24 @@ function updateBillUI() {
 }
 
 function calculateChange() {
+    // Get the raw total value directly from the calculation, not from the formatted text
     const totalText = document.getElementById('pos-total-amount').textContent;
-    const amountToPay = roundToTwo(parseFloat(totalText.replace(/[^0-9.-]/g, '')) || 0);
-    const amountPaid = roundToTwo(parseFloat(document.getElementById('pos-amount-paid').value) || 0);
+    let amountToPay = 0;
     
-    // Calculate balance (amount paid minus total)
-    const balance = roundToTwo(amountPaid - amountToPay);
+    // Parse the total more reliably - remove all non-numeric characters except decimal point
+    const cleanTotal = totalText.replace(/[^0-9.-]/g, '');
+    amountToPay = parseFloat(cleanTotal) || 0;
     
-    // Debug logging to track balance calculation
-    console.log('=== Balance Calculation Debug ===');
-    console.log('Total Text:', totalText);
-    console.log('Amount to Pay:', amountToPay);
-    console.log('Amount Paid:', amountPaid);
-    console.log('Balance:', balance);
-    console.log('================================');
+    // Get amount paid
+    const amountPaid = parseFloat(document.getElementById('pos-amount-paid').value) || 0;
     
-    // Update display elements
+    // Simple balance calculation
+    const balance = amountPaid - amountToPay;
+    
+    // Update display with proper formatting
     document.getElementById('pos-balance-amount').textContent = formatCurrency(balance);
     
-    // Color coding for balance
+    // Color coding
     const balanceEl = document.getElementById('pos-balance-amount');
     if (balance < 0 && amountPaid > 0) {
         balanceEl.style.color = '#ef4444'; // Red for insufficient payment
@@ -1499,15 +1490,6 @@ const payment_method = document.getElementById('pos-payment-method').value;
 // Calculate original subtotal for voucher tracking (with proper rounding)
 const originalSubtotal = roundToTwo(currentBill.reduce((sum, item) => sum + (item.price * item.quantity), 0));
 const voucherDiscount = appliedVoucher ? roundToTwo(calculateVoucherDiscount(originalSubtotal)) : 0;
-
-// Debug logging to track calculations
-console.log('=== Bill Calculation Debug ===');
-console.log('Original Subtotal:', originalSubtotal);
-console.log('Applied Voucher:', appliedVoucher);
-console.log('Voucher Discount:', voucherDiscount);
-console.log('Final Total (from UI):', total);
-console.log('Expected Total:', roundToTwo(originalSubtotal - voucherDiscount));
-console.log('============================');
 
 const payload = {
     items: currentBill,

@@ -1348,9 +1348,9 @@ function updateBillUI() {
     
     if (currentBill.length > 0) {
         const header = document.createElement('div');
-        header.style = "display: flex; justify-content: space-between; padding: 0 12px 8px 12px; border-bottom: 1px solid var(--border); margin-bottom: 12px; font-size: 12px; font-weight: 700; color: var(--text-muted);";
+        header.style = "display: flex; justify-content: space-between; padding: 0 12px 8px 12px; border-bottom: 1px solid var(--border); margin-bottom: 8px; font-size: 12px; font-weight: 700; color: var(--text-muted);";
         header.innerHTML = `
-            <span style="flex: 1;">ITEM</span>
+            <span style="flex: 1; margin-right: 40px;">ITEM</span>
             <span style="width: 80px; text-align: center;">QTY</span>
             <span style="width: 80px; text-align: right;">TOTAL</span>
         `;
@@ -1363,8 +1363,8 @@ function updateBillUI() {
         
         const div = document.createElement('div');
         div.className = 'bill-item';
-        div.style.marginBottom = '16px';
-        div.style.padding = '12px';
+        div.style.marginBottom = '8px';
+        div.style.padding = '10px';
         div.style.border = '1px solid var(--border)';
         div.style.borderRadius = '8px';
         div.style.background = 'var(--background)';

@@ -1400,6 +1400,14 @@ function updateBillUI() {
     const voucherDiscount = appliedVoucher ? roundToTwo(calculateVoucherDiscount(total)) : 0;
     const finalTotal = roundToTwo(total - voucherDiscount);
     
+    // Debug logging to track UI calculations
+    console.log('=== UI Calculation Debug ===');
+    console.log('Item Total:', total);
+    console.log('Applied Voucher:', appliedVoucher);
+    console.log('Voucher Discount:', voucherDiscount);
+    console.log('Final Total:', finalTotal);
+    console.log('========================');
+    
     // Update UI elements
     const subtotalEl = document.getElementById('pos-subtotal-amount');
     if (subtotalEl) {
@@ -1435,6 +1443,14 @@ function calculateChange() {
     
     // Calculate balance (amount paid minus total)
     const balance = roundToTwo(amountPaid - amountToPay);
+    
+    // Debug logging to track balance calculation
+    console.log('=== Balance Calculation Debug ===');
+    console.log('Total Text:', totalText);
+    console.log('Amount to Pay:', amountToPay);
+    console.log('Amount Paid:', amountPaid);
+    console.log('Balance:', balance);
+    console.log('================================');
     
     // Update display elements
     document.getElementById('pos-balance-amount').textContent = formatCurrency(balance);
@@ -1480,9 +1496,18 @@ const customer_phone = document.getElementById('pos-customer-phone').value;
 const customer_type = document.getElementById('pos-customer-type').value;
 const payment_method = document.getElementById('pos-payment-method').value;
 
-// Calculate original subtotal for voucher tracking
-const originalSubtotal = currentBill.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-const voucherDiscount = appliedVoucher ? calculateVoucherDiscount(originalSubtotal) : 0;
+// Calculate original subtotal for voucher tracking (with proper rounding)
+const originalSubtotal = roundToTwo(currentBill.reduce((sum, item) => sum + (item.price * item.quantity), 0));
+const voucherDiscount = appliedVoucher ? roundToTwo(calculateVoucherDiscount(originalSubtotal)) : 0;
+
+// Debug logging to track calculations
+console.log('=== Bill Calculation Debug ===');
+console.log('Original Subtotal:', originalSubtotal);
+console.log('Applied Voucher:', appliedVoucher);
+console.log('Voucher Discount:', voucherDiscount);
+console.log('Final Total (from UI):', total);
+console.log('Expected Total:', roundToTwo(originalSubtotal - voucherDiscount));
+console.log('============================');
 
 const payload = {
     items: currentBill,

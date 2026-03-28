@@ -1636,6 +1636,35 @@ window.testFunction = function() {
     alert('JavaScript is working!');
 };
 
+// Test voucher modal elements
+window.testVoucherModal = function() {
+    console.log('=== TESTING VOUCHER MODAL ELEMENTS ===');
+    
+    const modal = document.getElementById('voucher-modal');
+    const modalOverlay = document.getElementById('modal-overlay');
+    const form = document.getElementById('voucher-form');
+    const title = document.getElementById('voucher-modal-title');
+    const closeBtn = document.getElementById('btn-close-voucher-modal');
+    
+    console.log('voucher-modal exists:', !!modal);
+    console.log('modal-overlay exists:', !!modalOverlay);
+    console.log('voucher-form exists:', !!form);
+    console.log('voucher-modal-title exists:', !!title);
+    console.log('btn-close-voucher-modal exists:', !!closeBtn);
+    
+    if (modal && modalOverlay && form && title && closeBtn) {
+        console.log('All voucher modal elements exist - trying to show modal');
+        modalOverlay.style.display = 'flex';
+        modal.style.display = 'block';
+        title.textContent = 'TEST VOUCHER MODAL';
+        console.log('Test modal should be visible now');
+    } else {
+        console.error('Some voucher modal elements are missing!');
+    }
+    
+    console.log('=== END VOUCHER ELEMENTS TEST ===');
+};
+
 // Navigation function to switch views
 window.navigateToView = function(viewId) {
     console.log('Navigating to view:', viewId);
@@ -1886,7 +1915,9 @@ function selectCustomer(customer) {
 
 // ==== VOUCHER MANAGEMENT FUNCTIONS ====
 function showAddVoucherModal() {
+    console.log('=== VOUCHER MODAL DEBUG ===');
     console.log('showAddVoucherModal called');
+    
     const modal = document.getElementById('voucher-modal');
     const modalOverlay = document.getElementById('modal-overlay');
     console.log('voucher-modal element:', modal);
@@ -1904,15 +1935,20 @@ function showAddVoucherModal() {
         return;
     }
     
+    console.log('Resetting voucher form...');
     document.getElementById('voucher-modal-title').textContent = 'Create Voucher';
     document.getElementById('voucher-form').reset();
     document.getElementById('voucher-id').value = '';
     
+    console.log('Showing modal and overlay...');
     // Show both the overlay and the modal
     modalOverlay.style.display = 'flex';
     modal.style.display = 'block';
     
-    console.log('Voucher modal and overlay should now be visible');
+    console.log('Modal display styles:');
+    console.log('modalOverlay.style.display:', modalOverlay.style.display);
+    console.log('modal.style.display:', modal.style.display);
+    console.log('=== END VOUCHER MODAL DEBUG ===');
 }
 
 function showEditVoucherModal(voucherId) {

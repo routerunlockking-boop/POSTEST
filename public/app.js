@@ -206,6 +206,10 @@ let currentProductImageBase64 = null;
 let html5QrCode = null;
 let isScanTorchOn = false;
 let currentScanMode = 'billing'; // 'billing' or 'addProduct'
+let vouchers = [];
+let appliedVoucher = null;
+let customers = [];
+let selectedCustomer = null;
 
 // ==== DOM ELEMENTS ====
 const clockEl = document.getElementById('clock');
@@ -228,6 +232,8 @@ document.addEventListener('DOMContentLoaded', () => {
     setupModals();
     setupPOSTabs();
     setupBarcodeScanner();
+    setupCustomerSearch();
+    loadCustomers();
 });
 
 function initTheme() {
@@ -644,9 +650,26 @@ function setupModals() {
     document.getElementById('btn-close-modal').addEventListener('click', hideModal);
     document.getElementById('btn-close-invoice-modal').addEventListener('click', hideModal);
     document.getElementById('btn-close-admin-modal').addEventListener('click', hideModal);
+    document.getElementById('btn-close-customer-modal').addEventListener('click', closeCustomerModal);
+    document.getElementById('btn-close-voucher-modal').addEventListener('click', closeVoucherModal);
     
     // Add product
     document.getElementById('btn-add-product').addEventListener('click', () => openAddProductModal());
+    
+    // Customer form submission
+    document.getElementById('customer-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const customerData = {
+            name: document.getElementById('customer-name').value,
+            phone: document.getElementById('customer-phone').value,
+            email: document.getElementById('customer-email').value,
+            address: document.getElementById('customer-address').value
+        };
+        saveCustomer(customerData);
+    });
+    
+    // Customer cancel button
+    document.getElementById('btn-cancel-customer').addEventListener('click', closeCustomerModal);
 
     // Handle Image Selection
     document.getElementById('product-image').addEventListener('change', function(e) {
@@ -1138,11 +1161,16 @@ function updateBillUI() {
     itemsContainer.innerHTML = '';
     let total = 0;
     
+    // Force reset appliedVoucher if it shouldn't exist
+    if (!appliedVoucher || !appliedVoucher.id || !appliedVoucher.code) {
+        appliedVoucher = null;
+    }
+    
     if (currentBill.length > 0) {
         const header = document.createElement('div');
-        header.style = "display: flex; justify-content: space-between; padding: 0 12px 8px 12px; border-bottom: 1px solid var(--border); margin-bottom: 12px; font-size: 12px; font-weight: 700; color: var(--text-muted);";
+        header.style = "display: flex; justify-content: space-between; padding: 0 12px 8px 12px; border-bottom: 1px solid var(--border); margin-bottom: 8px; font-size: 12px; font-weight: 700; color: var(--text-muted);";
         header.innerHTML = `
-            <span style="flex: 1;">ITEM</span>
+            <span style="flex: 1; margin-right: 40px;">ITEM</span>
             <span style="width: 80px; text-align: center;">QTY</span>
             <span style="width: 80px; text-align: right;">TOTAL</span>
         `;
@@ -1567,3 +1595,177 @@ document.querySelector('#admin-users-table tbody').addEventListener('click', asy
         }
     }
 });
+
+// ==== CUSTOMER MANAGEMENT FUNCTIONS ====
+function showAddCustomerModal() {
+    document.getElementById('customer-modal-title').textContent = 'Add Customer';
+    document.getElementById('customer-form').reset();
+    document.getElementById('customer-id').value = '';
+    document.getElementById('customer-modal').style.display = 'block';
+}
+
+function showEditCustomerModal(customerId) {
+    const customer = customers.find(c => c.id == customerId);
+    if (!customer) return;
+    
+    document.getElementById('customer-modal-title').textContent = 'Edit Customer';
+    document.getElementById('customer-id').value = customer.id;
+    document.getElementById('customer-name').value = customer.name;
+    document.getElementById('customer-phone').value = customer.phone;
+    document.getElementById('customer-email').value = customer.email || '';
+    document.getElementById('customer-address').value = customer.address || '';
+    document.getElementById('customer-modal').style.display = 'block';
+}
+
+function deleteCustomer(customerId) {
+    if (!confirm('Are you sure you want to delete this customer?')) return;
+    
+    customers = customers.filter(c => c.id != customerId);
+    saveCustomersToStorage();
+    loadCustomers();
+    showToast('Customer deleted successfully!', 'success');
+}
+
+function saveCustomer(customerData) {
+    const customerId = document.getElementById('customer-id').value;
+    
+    if (customerId) {
+        // Edit existing customer
+        const customerIndex = customers.findIndex(c => c.id == customerId);
+        if (customerIndex !== -1) {
+            customers[customerIndex] = {
+                ...customers[customerIndex],
+                ...customerData,
+                updated_at: new Date().toISOString()
+            };
+        }
+    } else {
+        // Add new customer
+        const newCustomer = {
+            id: 'CUST' + Date.now(),
+            ...customerData,
+            created_at: new Date().toISOString()
+        };
+        customers.push(newCustomer);
+    }
+    
+    saveCustomersToStorage();
+    loadCustomers();
+    closeCustomerModal();
+    showToast(customerId ? 'Customer updated successfully!' : 'Customer added successfully!', 'success');
+}
+
+function closeCustomerModal() {
+    document.getElementById('customer-modal').style.display = 'none';
+    document.getElementById('customer-form').reset();
+}
+
+function saveCustomersToStorage() {
+    localStorage.setItem('pos_customers', JSON.stringify(customers));
+}
+
+function loadCustomers() {
+    const savedCustomers = localStorage.getItem('pos_customers');
+    if (savedCustomers) {
+        customers = JSON.parse(savedCustomers);
+    }
+    
+    const tbody = document.getElementById('customers-table-body');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    customers.forEach(customer => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${customer.id}</td>
+            <td>${customer.name}</td>
+            <td>${customer.phone}</td>
+            <td>${customer.email || '-'}</td>
+            <td>${customer.address || '-'}</td>
+            <td>${new Date(customer.created_at).toLocaleDateString()}</td>
+            <td>
+                <button class="btn btn-outline btn-icon-only edit-customer-btn" data-id="${customer.id}" title="Edit Customer">
+                    <i class='bx bx-edit'></i>
+                </button>
+                <button class="btn btn-danger btn-icon-only delete-customer-btn" data-id="${customer.id}" title="Delete Customer">
+                    <i class='bx bx-trash'></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+    
+    // Add event listeners
+    document.querySelectorAll('.edit-customer-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const customerId = e.target.closest('.edit-customer-btn').dataset.id;
+            showEditCustomerModal(customerId);
+        });
+    });
+    
+    document.querySelectorAll('.delete-customer-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const customerId = e.target.closest('.delete-customer-btn').dataset.id;
+            deleteCustomer(customerId);
+        });
+    });
+}
+
+// ==== CUSTOMER SEARCH FUNCTIONALITY ====
+function setupCustomerSearch() {
+    const searchInput = document.getElementById('pos-customer-search');
+    const searchResults = document.getElementById('customer-search-results');
+    
+    if (!searchInput || !searchResults) return;
+    
+    searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        
+        if (query.length < 2) {
+            searchResults.style.display = 'none';
+            return;
+        }
+        
+        const filteredCustomers = customers.filter(customer => 
+            customer.name.toLowerCase().includes(query) || 
+            customer.phone.includes(query)
+        );
+        
+        searchResults.innerHTML = '';
+        
+        if (filteredCustomers.length === 0) {
+            searchResults.innerHTML = '<div style="padding: 10px; color: var(--text-muted);">No customers found</div>';
+        } else {
+            filteredCustomers.forEach(customer => {
+                const div = document.createElement('div');
+                div.style.cssText = 'padding: 10px; cursor: pointer; border-bottom: 1px solid var(--border);';
+                div.innerHTML = `
+                    <div style="font-weight: 600;">${customer.name}</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">${customer.phone}</div>
+                `;
+                div.addEventListener('click', () => selectCustomer(customer));
+                searchResults.appendChild(div);
+            });
+        }
+        
+        searchResults.style.display = 'block';
+    });
+    
+    // Hide results when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+            searchResults.style.display = 'none';
+        }
+    });
+}
+
+function selectCustomer(customer) {
+    selectedCustomer = customer;
+    document.getElementById('pos-customer-name').value = customer.name;
+    document.getElementById('pos-customer-phone').value = customer.phone;
+    document.getElementById('pos-customer-search').value = '';
+    document.getElementById('customer-search-results').style.display = 'none';
+    
+    showToast(`Customer selected: ${customer.name}`, 'success');
+}

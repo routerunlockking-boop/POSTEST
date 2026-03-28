@@ -1447,14 +1447,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-document.getElementById('btn-submit-bill').addEventListener('click', async () => {
-    if (currentBill.length === 0) {
-        alert('Bill is empty!');
-        return;
-    }
-    
-    let total = parseFloat(document.getElementById('pos-amount-to-pay').value) || 0;
-    let amountPaid = parseFloat(document.getElementById('pos-amount-paid').value);
+    document.getElementById('btn-submit-bill').addEventListener('click', async () => {
+        if (currentBill.length === 0) {
+            alert('Bill is empty!');
+            return;
+        }
+        
+        const totalText = document.getElementById('pos-total-amount').textContent;
+        let total = parseFloat(totalText.replace(/[^0-9.-]/g, '')) || 0;
+        let amountPaid = parseFloat(document.getElementById('pos-amount-paid').value);
     
     // If amount paid is empty or 0, default to the total amount
     if (isNaN(amountPaid) || amountPaid <= 0) {
@@ -1600,41 +1601,23 @@ function showInvoicePrintout(invoice) {
         tbody.appendChild(tr);
     });
     
-    // Handle voucher information
-    let voucherDiscount = 0;
-    if (invoice.voucher) {
-        // Show voucher label
-        document.getElementById('receipt-voucher-label').style.display = 'block';
-        
-        // Show voucher section
-        document.getElementById('receipt-voucher-section').style.display = 'block';
-        document.getElementById('receipt-voucher-code').textContent = invoice.voucher.code;
-        
-        if (invoice.voucher.discount_type === 'percentage') {
-            voucherDiscount = subtotal * (invoice.voucher.discount_value / 100);
+        // Handle voucher information
+        let voucherDiscount = 0;
+        if (invoice.voucher) {
+            if (invoice.voucher.discount_type === 'percentage') {
+                voucherDiscount = subtotal * (invoice.voucher.discount_value / 100);
+            } else {
+                voucherDiscount = invoice.voucher.discount_amount || invoice.voucher.discount_value;
+            }
+            
+            document.getElementById('receipt-subtotal-row').style.display = 'flex';
+            document.getElementById('receipt-discount-row').style.display = 'flex';
+            document.getElementById('receipt-subtotal-amount').textContent = subtotal.toFixed(2);
+            document.getElementById('receipt-simple-discount').textContent = '-' + voucherDiscount.toFixed(2);
         } else {
-            voucherDiscount = invoice.voucher.discount_amount;
+            document.getElementById('receipt-subtotal-row').style.display = 'none';
+            document.getElementById('receipt-discount-row').style.display = 'none';
         }
-        
-        document.getElementById('receipt-voucher-discount').textContent = '-' + voucherDiscount.toFixed(2);
-        
-        // Calculate remaining uses
-        const totalUses = invoice.voucher.usage_limit || 0;
-        const usedCount = (invoice.voucher.used_count || 0) + 1; // +1 for this use
-        const remainingUses = Math.max(0, totalUses - usedCount);
-        
-        // Show remaining uses
-        document.getElementById('receipt-voucher-remaining').textContent = `${remainingUses}/${totalUses}`;
-        
-        // Show reduced total
-        document.getElementById('receipt-reduced-total').style.display = 'block';
-        document.getElementById('receipt-final-total').textContent = (subtotal - voucherDiscount).toFixed(2);
-    } else {
-        // Hide voucher sections
-        document.getElementById('receipt-voucher-label').style.display = 'none';
-        document.getElementById('receipt-voucher-section').style.display = 'none';
-        document.getElementById('receipt-reduced-total').style.display = 'none';
-    }
     
     const total = subtotal - voucherDiscount;
     document.getElementById('receipt-total-amount').textContent = total.toFixed(2);

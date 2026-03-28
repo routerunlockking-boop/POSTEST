@@ -1504,19 +1504,13 @@ try {
         throw new Error(errData.error || 'Failed to create invoice');
     }
 
-    const invoice = await res.json();
-    console.log('Invoice created:', invoice);
+    const data = await res.json();
+    const invoiceData = data.invoice;
+    console.log('Invoice created:', invoiceData);
 
-    // Clear bill
-    currentBill = [];
-    appliedVoucher = null;
-    updateBillUI();
-
-    // Show invoice printout
-    showInvoicePrintout(invoice);
-
-    // Update voucher usage count if voucher was applied
+    // Update voucher usage count if voucher was applied BEFORE resetting appliedVoucher
     if (appliedVoucher) {
+        invoiceData.voucher = appliedVoucher; // Pass to printout
         try {
             // Try API first
             const voucherRes = await fetchAuth(`${API_BASE}/vouchers/${appliedVoucher.id}/use`, { method: 'POST' });
@@ -1533,6 +1527,14 @@ try {
             }
         }
     }
+
+    // Show invoice printout
+    showInvoicePrintout(invoiceData);
+
+    // Clear bill
+    currentBill = [];
+    appliedVoucher = null;
+    updateBillUI();
 
     showToast('Bill submitted successfully!', 'success');
 
@@ -1552,6 +1554,10 @@ try {
     document.getElementById('btn-remove-voucher').style.display = 'none';
     document.getElementById('pos-voucher-code').value = '';
     document.getElementById('pos-voucher-code').disabled = false;
+    
+    // Reset tabs and reload products
+    if (document.getElementById('tab-btn-items')) document.getElementById('tab-btn-items').click();
+    fetchAuth(`${API_BASE}/products?lite=true`).then(r => r.json()).then(p => products = p).catch(() => {});
 
 } catch (err) {
     console.error('Error submitting bill:', err);

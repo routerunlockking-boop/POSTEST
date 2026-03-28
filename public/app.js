@@ -549,7 +549,7 @@ function setupPOSTabs() {
 
 function updateClock() {
     const now = new Date();
-    clockEl.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' - ' + now.toLocaleDateString();
+    clockEl.textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) + ' - ' + now.toLocaleDateString('en-US');
 }
 
 function setupNavigation() {

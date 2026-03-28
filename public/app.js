@@ -1422,42 +1422,31 @@ function calculateChange() {
     const totalText = document.getElementById('pos-total-amount').textContent;
     const amountToPay = parseFloat(totalText.replace(/[^0-9.-]/g, '')) || 0;
     const amountPaid = parseFloat(document.getElementById('pos-amount-paid').value) || 0;
-    const customerDiscount = parseFloat(document.getElementById('pos-customer-discount').value) || 0;
     
-    // Calculate initial change (amount paid minus total)
-    const initialChange = amountPaid - amountToPay;
-    
-    // Calculate final change (initial change minus customer discount)
-    const finalChange = initialChange - customerDiscount;
+    // Calculate balance (amount paid minus total)
+    const balance = amountPaid - amountToPay;
     
     // Update display elements
-    document.getElementById('pos-initial-change').textContent = formatCurrency(initialChange);
-    document.getElementById('pos-customer-discount-display').textContent = formatCurrency(customerDiscount);
-    document.getElementById('pos-final-change').textContent = formatCurrency(finalChange);
+    document.getElementById('pos-balance-amount').textContent = formatCurrency(balance);
     
-    // Color coding for final change
-    const finalChangeEl = document.getElementById('pos-final-change');
-    if (finalChange < 0 && amountPaid > 0) {
-        finalChangeEl.style.color = '#ef4444'; // Red for insufficient payment
-    } else if (finalChange >= 0) {
-        finalChangeEl.style.color = '#10b981'; // Green for positive change
+    // Color coding for balance
+    const balanceEl = document.getElementById('pos-balance-amount');
+    if (balance < 0 && amountPaid > 0) {
+        balanceEl.style.color = '#ef4444'; // Red for insufficient payment
+    } else if (balance >= 0) {
+        balanceEl.style.color = '#10b981'; // Green for positive balance
     } else {
-        finalChangeEl.style.color = 'var(--text-main)';
+        balanceEl.style.color = 'var(--text-main)';
     }
 }
 
 // Add event listeners for payment calculation
 document.addEventListener('DOMContentLoaded', () => {
-const amountPaidInput = document.getElementById('pos-amount-paid');
-const customerDiscountInput = document.getElementById('pos-customer-discount');
-
-if (amountPaidInput) {
-    amountPaidInput.addEventListener('input', calculateChange);
-}
-
-if (customerDiscountInput) {
-    customerDiscountInput.addEventListener('input', calculateChange);
-}
+    const amountPaidInput = document.getElementById('pos-amount-paid');
+    
+    if (amountPaidInput) {
+        amountPaidInput.addEventListener('input', calculateChange);
+    }
 });
 
 document.getElementById('btn-submit-bill').addEventListener('click', async () => {
@@ -1555,7 +1544,7 @@ try {
     document.getElementById('pos-customer-search').value = '';
     document.getElementById('pos-payment-method').value = 'Cash';
     document.getElementById('pos-amount-paid').value = '';
-    document.getElementById('pos-customer-discount').value = '';
+    document.getElementById('pos-balance-amount').textContent = '0.00';
     
     // Reset voucher UI
     document.getElementById('voucher-applied-info').style.display = 'none';

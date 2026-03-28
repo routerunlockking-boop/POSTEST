@@ -1363,23 +1363,28 @@ function updateBillUI() {
         
         const div = document.createElement('div');
         div.className = 'bill-item';
+        div.style.marginBottom = '16px';
+        div.style.padding = '12px';
+        div.style.border = '1px solid var(--border)';
+        div.style.borderRadius = '8px';
+        div.style.background = 'var(--background)';
         div.innerHTML = `
             <div class="bill-item-details">
-                <h4>${item.name}</h4>
-                <div style="display:flex; align-items:center; gap:8px; margin-top:4px;">
+                <h4 style="margin: 0 0 8px 0; font-size: 15px; font-weight: 600; color: var(--text-main);">${item.name}</h4>
+                <div style="display:flex; align-items:center; gap:12px; margin-top:8px;">
                     <input type="number" step="0.01" value="${item.price}" 
                            onchange="updateBillPrice('${item.id}', this.value)" 
-                           style="width:70px; padding:2px 4px; font-size:12px; border:1px solid var(--border); border-radius:4px;"> 
-                    <span style="font-size:12px; color:var(--text-muted)">@ ${item.price}</span>
+                           style="width:80px; padding:6px 8px; font-size:13px; border:1px solid var(--border); border-radius:4px; font-weight: 500;"> 
+                    <span style="font-size:13px; color:var(--text-muted); font-weight: 500;">@ ${formatCurrency(item.price)}</span>
                 </div>
             </div>
-            <div class="bill-item-actions" style="display: flex; align-items: center; gap: 15px;">
-                <div class="qty-control" style="width: 80px; justify-content: center;">
-                    <button class="qty-btn" onclick="updateBillQuantity('${item.id}', -1)">-</button>
-                    <span style="font-weight: 600;">${item.quantity}</span>
-                    <button class="qty-btn" onclick="updateBillQuantity('${item.id}', 1)">+</button>
+            <div class="bill-item-actions" style="display: flex; align-items: center; gap: 20px; margin-top: 12px;">
+                <div class="qty-control" style="display: flex; align-items: center; gap: 8px; background: var(--secondary); padding: 4px; border-radius: 6px; border: 1px solid var(--border);">
+                    <button class="qty-btn" onclick="updateBillQuantity('${item.id}', -1)" style="width: 24px; height: 24px; font-size: 14px; padding: 0; border: none; background: var(--primary); color: white; border-radius: 4px; cursor: pointer;">-</button>
+                    <span style="font-weight: 600; font-size: 14px; min-width: 20px; text-align: center;">${item.quantity}</span>
+                    <button class="qty-btn" onclick="updateBillQuantity('${item.id}', 1)" style="width: 24px; height: 24px; font-size: 14px; padding: 0; border: none; background: var(--primary); color: white; border-radius: 4px; cursor: pointer;">+</button>
                 </div>
-                <div class="item-total" style="width: 80px; text-align: right; font-weight: 700; color: var(--text-main);">${formatCurrency(amount)}</div>
+                <div class="item-total" style="font-size: 16px; font-weight: 700; color: var(--primary); min-width: 80px; text-align: right;">${formatCurrency(amount)}</div>
             </div>
         `;
         itemsContainer.appendChild(div);
@@ -1405,23 +1410,17 @@ function updateBillUI() {
         voucherDiscountRow.style.display = 'none';
     }
     
-    document.getElementById('pos-amount-to-pay').value = finalTotal.toFixed(2);
     document.getElementById('pos-total-amount').textContent = formatCurrency(finalTotal);
     
     // Update voucher applied info
     if (appliedVoucher && voucherDiscount > 0) {
         document.getElementById('applied-voucher-discount').textContent = `-${formatCurrency(voucherDiscount)}`;
     }
-    
-    // Update amount to pay
-    const amountToPayInput = document.getElementById('pos-amount-to-pay');
-    amountToPayInput.value = finalTotal.toFixed(2);
-    
-    calculateChange();
 }
 
 function calculateChange() {
-    const amountToPay = parseFloat(document.getElementById('pos-amount-to-pay').value) || 0;
+    const totalText = document.getElementById('pos-total-amount').textContent;
+    const amountToPay = parseFloat(totalText.replace(/[^0-9.-]/g, '')) || 0;
     const amountPaid = parseFloat(document.getElementById('pos-amount-paid').value) || 0;
     const change = amountPaid - amountToPay;
     

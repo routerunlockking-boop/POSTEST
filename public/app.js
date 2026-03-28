@@ -1352,10 +1352,20 @@ function updateBillUI() {
     itemsContainer.innerHTML = '';
     let total = 0;
     
-    // Force reset appliedVoucher if no valid voucher exists
-    if (appliedVoucher && !appliedVoucher.id && !appliedVoucher.code) {
+    // DEBUG: Log current voucher state
+    console.log('=== VOUCHER DEBUG ===');
+    console.log('appliedVoucher before reset:', appliedVoucher);
+    console.log('Type of appliedVoucher:', typeof appliedVoucher);
+    console.log('appliedVoucher keys:', appliedVoucher ? Object.keys(appliedVoucher) : 'null');
+    
+    // Force reset appliedVoucher if it shouldn't exist
+    if (!appliedVoucher || !appliedVoucher.id || !appliedVoucher.code) {
         appliedVoucher = null;
+        console.log('Voucher reset to null');
     }
+    
+    console.log('appliedVoucher after reset:', appliedVoucher);
+    console.log('===================');
     
     if (currentBill.length > 0) {
         const header = document.createElement('div');
@@ -1472,6 +1482,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (amountPaidInput) {
         amountPaidInput.addEventListener('input', calculateChange);
     }
+    
+    // Emergency voucher reset on page load
+    console.log('Page loaded - performing emergency voucher reset');
+    emergencyResetVoucher();
 });
 
 document.getElementById('btn-submit-bill').addEventListener('click', async () => {
@@ -2285,6 +2299,28 @@ function removeVoucher() {
     document.getElementById('pos-voucher-code').disabled = false;
     
     updateBillUI();
+}
+
+// Add emergency voucher reset function
+function emergencyResetVoucher() {
+    console.log('Emergency voucher reset called');
+    appliedVoucher = null;
+    
+    // Clear all voucher-related UI elements
+    document.getElementById('voucher-applied-info').style.display = 'none';
+    document.getElementById('btn-apply-voucher').style.display = 'block';
+    document.getElementById('btn-remove-voucher').style.display = 'none';
+    document.getElementById('pos-voucher-code').value = '';
+    document.getElementById('pos-voucher-code').disabled = false;
+    
+    // Hide voucher discount rows
+    const voucherDiscountRow = document.getElementById('pos-voucher-discount-row');
+    if (voucherDiscountRow) {
+        voucherDiscountRow.style.display = 'none';
+    }
+    
+    updateBillUI();
+    console.log('Emergency voucher reset completed');
 }
 
 function calculateVoucherDiscount(subtotal) {

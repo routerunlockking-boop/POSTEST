@@ -1268,45 +1268,19 @@ function calculateChange() {
 
 // ==== INTERACTIVE BILL SECTIONS ====
 function setupInteractiveBillSections() {
-    // Payment Method Section
-    const paymentSection = document.querySelector('.payment-section');
-    const voucherSection = document.querySelector('.voucher-section');
-    const paymentDetailsSection = document.querySelector('.payment-details');
-    
-    if (!paymentSection || !voucherSection || !paymentDetailsSection) return;
-    
-    // Payment Method Interactive
-    paymentSection.addEventListener('click', function(e) {
-        if (e.target.closest('.payment-section') && !e.target.closest('select')) {
-            togglePaymentMethodExpanded();
-        }
-    });
-    
     // Voucher Section Interactive
-    voucherSection.addEventListener('click', function(e) {
-        if (e.target.closest('.voucher-section') && !e.target.closest('input') && !e.target.closest('button')) {
-            toggleVoucherExpanded();
-        }
-    });
+    const voucherSection = document.querySelector('.voucher-section');
     
-    // Add expand/collapse indicators
-    addSectionIndicators();
-}
-
-function togglePaymentMethodExpanded() {
-    const paymentSection = document.querySelector('.payment-section');
-    const isExpanded = paymentSection.classList.contains('expanded');
-    
-    if (isExpanded) {
-        paymentSection.classList.remove('expanded');
-        paymentSection.style.maxHeight = '80px';
-    } else {
-        paymentSection.classList.add('expanded');
-        paymentSection.style.maxHeight = '200px';
-        
-        // Add additional payment options when expanded
-        showExpandedPaymentOptions();
+    if (voucherSection) {
+        voucherSection.addEventListener('click', function(e) {
+            if (e.target.closest('.voucher-section') && !e.target.closest('input') && !e.target.closest('button')) {
+                toggleVoucherExpanded();
+            }
+        });
     }
+    
+    // Add expand indicator for voucher section only
+    addVoucherSectionIndicator();
 }
 
 function toggleVoucherExpanded() {
@@ -1325,90 +1299,13 @@ function toggleVoucherExpanded() {
     }
 }
 
-function showExpandedPaymentOptions() {
-    const paymentSection = document.querySelector('.payment-section');
-    const existingOptions = paymentSection.querySelector('.expanded-options');
-    
-    if (existingOptions) {
-        existingOptions.remove();
-    }
-    
-    const expandedOptions = document.createElement('div');
-    expandedOptions.className = 'expanded-options';
-    expandedOptions.style.cssText = `
-        margin-top: 12px;
-        padding-top: 12px;
-        border-top: 1px solid var(--border);
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    `;
-    
-    expandedOptions.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: #f8fafc; border-radius: 8px;">
-            <i class='bx bx-mobile-alt' style="font-size: 14px; color: #059669;"></i>
-            <span style="font-size: 12px; color: #059669; font-weight: 600;">Mobile Payment</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: #fef3c7; border-radius: 8px;">
-            <i class='bx bx-credit-card' style="font-size: 14px; color: #dc2626;"></i>
-            <span style="font-size: 12px; color: #dc2626; font-weight: 600;">Card Payment</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: #f0fdf4; border-radius: 8px;">
-            <i class='bx bx-building' style="font-size: 14px; color: #7c3aed;"></i>
-            <span style="font-size: 12px; color: #7c3aed; font-weight: 600;">Bank Transfer</span>
-        </div>
-    `;
-    
-    paymentSection.appendChild(expandedOptions);
-}
-
-function showExpandedVoucherOptions() {
-    const voucherSection = document.querySelector('.voucher-section');
-    const existingOptions = voucherSection.querySelector('.expanded-options');
-    
-    if (existingOptions) {
-        existingOptions.remove();
-    }
-    
-    const expandedOptions = document.createElement('div');
-    expandedOptions.className = 'expanded-options';
-    expandedOptions.style.cssText = `
-        margin-top: 12px;
-        padding-top: 12px;
-        border-top: 1px solid var(--border);
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    `;
-    
-    expandedOptions.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: #f8fafc; border-radius: 8px;">
-            <i class='bx bx-gift' style="font-size: 14px; color: #059669;"></i>
-            <span style="font-size: 12px; color: #059669; font-weight: 600;">Gift Voucher</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: #fef3c7; border-radius: 8px;">
-            <i class='bx bx-percentage' style="font-size: 14px; color: #f59e0b;"></i>
-            <span style="font-size: 12px; color: #f59e0b; font-weight: 600;">Loyalty Points</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: #eff6ff; border-radius: 8px;">
-            <i class='bx bx-time-five' style="font-size: 14px; color: #3b82f6;"></i>
-            <span style="font-size: 12px; color: #3b82f6; font-weight: 600;">Time-based Discount</span>
-        </div>
-    `;
-    
-    voucherSection.appendChild(expandedOptions);
-}
-
-function addSectionIndicators() {
-    const paymentSection = document.querySelector('.payment-section');
+function addVoucherSectionIndicator() {
     const voucherSection = document.querySelector('.voucher-section');
     
-    // Add expand indicators
-    [paymentSection, voucherSection].forEach(section => {
-        if (section && !section.querySelector('.expand-indicator')) {
-            const indicator = document.createElement('div');
-            indicator.className = 'expand-indicator';
-            indicator.style.cssText = `
+    if (voucherSection && !voucherSection.querySelector('.expand-indicator')) {
+        const indicator = document.createElement('div');
+        indicator.className = 'expand-indicator';
+        indicator.style.cssText = `
                 position: absolute;
                 top: 8px;
                 right: 12px;
@@ -1417,22 +1314,17 @@ function addSectionIndicators() {
                 cursor: pointer;
                 transition: transform 0.2s;
             `;
-            indicator.innerHTML = '<i class="bx bx-chevron-down"></i>';
-            
-            section.style.position = 'relative';
-            section.appendChild(indicator);
-            
-            // Add click handler to indicator
-            indicator.addEventListener('click', function(e) {
-                e.stopPropagation();
-                if (section.classList.contains('payment-section')) {
-                    togglePaymentMethodExpanded();
-                } else if (section.classList.contains('voucher-section')) {
-                    toggleVoucherExpanded();
-                }
-            });
-        }
-    });
+        indicator.innerHTML = '<i class="bx bx-chevron-down"></i>';
+        
+        voucherSection.style.position = 'relative';
+        voucherSection.appendChild(indicator);
+        
+        // Add click handler to indicator
+        indicator.addEventListener('click', function(e) {
+            e.stopPropagation();
+            toggleVoucherExpanded();
+        });
+    }
 }
 
 // Add event listeners for voucher apply/remove buttons

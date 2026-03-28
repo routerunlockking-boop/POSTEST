@@ -648,11 +648,30 @@ function openAddProductModal(barcode = '') {
 }
 
 function setupModals() {
+    console.log('setupModals called');
+    
+    // Check if all modal elements exist
+    const customerModal = document.getElementById('customer-modal');
+    const voucherModal = document.getElementById('voucher-modal');
+    console.log('customer-modal exists:', !!customerModal);
+    console.log('voucher-modal exists:', !!voucherModal);
+    
     document.getElementById('btn-close-modal').addEventListener('click', hideModal);
     document.getElementById('btn-close-invoice-modal').addEventListener('click', hideModal);
     document.getElementById('btn-close-admin-modal').addEventListener('click', hideModal);
-    document.getElementById('btn-close-customer-modal').addEventListener('click', closeCustomerModal);
-    document.getElementById('btn-close-voucher-modal').addEventListener('click', closeVoucherModal);
+    
+    // Check if close buttons exist
+    const closeCustomerBtn = document.getElementById('btn-close-customer-modal');
+    const closeVoucherBtn = document.getElementById('btn-close-voucher-modal');
+    console.log('btn-close-customer-modal exists:', !!closeCustomerBtn);
+    console.log('btn-close-voucher-modal exists:', !!closeVoucherBtn);
+    
+    if (closeCustomerBtn) {
+        closeCustomerBtn.addEventListener('click', closeCustomerModal);
+    }
+    if (closeVoucherBtn) {
+        closeVoucherBtn.addEventListener('click', closeVoucherModal);
+    }
     
     // Add product
     document.getElementById('btn-add-product').addEventListener('click', () => openAddProductModal());
@@ -1611,11 +1630,28 @@ document.querySelector('#admin-users-table tbody').addEventListener('click', asy
 });
 
 // ==== CUSTOMER MANAGEMENT FUNCTIONS ====
+// Test function to verify JavaScript is working
+window.testFunction = function() {
+    console.log('Test function called - JavaScript is working!');
+    alert('JavaScript is working!');
+};
+
 function showAddCustomerModal() {
+    console.log('showAddCustomerModal called');
+    const modal = document.getElementById('customer-modal');
+    console.log('customer-modal element:', modal);
+    
+    if (!modal) {
+        console.error('customer-modal not found in DOM');
+        alert('Error: customer-modal not found in DOM');
+        return;
+    }
+    
     document.getElementById('customer-modal-title').textContent = 'Add Customer';
     document.getElementById('customer-form').reset();
     document.getElementById('customer-id').value = '';
-    document.getElementById('customer-modal').style.display = 'block';
+    modal.style.display = 'block';
+    console.log('Customer modal should now be visible');
 }
 
 function showEditCustomerModal(customerId) {
@@ -1786,10 +1822,20 @@ function selectCustomer(customer) {
 
 // ==== VOUCHER MANAGEMENT FUNCTIONS ====
 function showAddVoucherModal() {
+    console.log('showAddVoucherModal called');
+    const modal = document.getElementById('voucher-modal');
+    console.log('voucher-modal element:', modal);
+    
+    if (!modal) {
+        console.error('voucher-modal not found in DOM');
+        return;
+    }
+    
     document.getElementById('voucher-modal-title').textContent = 'Create Voucher';
     document.getElementById('voucher-form').reset();
     document.getElementById('voucher-id').value = '';
-    document.getElementById('voucher-modal').style.display = 'block';
+    modal.style.display = 'block';
+    console.log('Voucher modal should now be visible');
 }
 
 function showEditVoucherModal(voucherId) {

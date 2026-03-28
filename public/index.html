@@ -185,7 +185,7 @@
             </header>
 
             <!-- Views Container -->
-            <div class="view-container">
+            <div class="views-container">
                 <!-- Dashboard View -->
                 <section id="dashboard-view" class="view active">
                     <div class="dashboard-grid">
@@ -343,65 +343,68 @@
                                 </div>
                             </div>
                             <div class="bill-summary">
-                                <!-- Single Row Payment Controls -->
-                                <div style="display: flex; gap: 12px; margin-bottom: 16px; background: var(--secondary); padding: 12px; border-radius: 12px; border: 1px solid var(--primary);">
-                                    <!-- Payment Method -->
+                                <!-- Payment Method Section -->
+                                <div class="payment-section" style="margin-bottom: 16px; background: var(--secondary); padding: 12px; border-radius: 12px; border: 1px solid var(--primary);">
                                     <div style="display: flex; align-items: center; gap: 8px;">
                                         <i class='bx bx-credit-card' style="font-size: 16px; color: var(--primary);"></i>
-                                        <select id="pos-payment-method" class="form-control" style="padding: 6px 8px; border: 1px solid var(--primary); font-weight: 600; background: transparent; border: none; box-shadow: none; min-width: 120px;">
-                                            <option value="Cash">Cash</option>
-                                            <option value="Bank Payment">Bank payment</option>
-                                            <option value="Cash On Delivery">COD</option>
-                                            <option value="Podi Karanna Kotuwak Wage Hadanna">Podi Karanna Kotuwak Wage Hadanna</option>
-                                        </select>
+                                        <label style="font-size: 14px; font-weight: 700; color: var(--primary); margin: 0;">Payment Method</label>
                                     </div>
-                                    
-                                    <!-- Voucher -->
-                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                    <select id="pos-payment-method" class="form-control" style="padding: 10px; cursor: pointer; border-color: var(--primary); font-weight: 600; background: transparent; border: none; box-shadow: none;">
+                                        <option value="Cash">Cash</option>
+                                        <option value="Bank Payment">Bank payment</option>
+                                        <option value="Cash On Delivery">COD</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Voucher Section -->
+                                <div class="voucher-section" style="margin-bottom: 16px; background: #f0fdf4; padding: 16px; border-radius: 12px; border: 1px solid #10b981;">
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                                         <i class='bx bx-purchase-tag-alt' style="font-size: 16px; color: #10b981;"></i>
-                                        <input type="text" id="pos-voucher-code" class="form-control" placeholder="Enter voucher code..." style="flex: 1; border: 1px solid var(--primary); font-weight: 600; padding: 6px 8px; background: transparent; min-width: 120px;">
-                                        <button type="button" id="btn-apply-voucher" class="btn btn-primary" style="padding: 6px 12px; white-space: nowrap; height: 32px;">
-                                            <i class='bx bx-check' style="font-size: 12px;"></i> Apply
+                                        <label style="font-size: 13px; font-weight: 700; color: #10b981; margin: 0;">Voucher Code</label>
+                                    </div>
+                                    <div style="display: flex; gap: 8px;">
+                                        <input type="text" id="pos-voucher-code" class="form-control" placeholder="Enter voucher code..." style="flex: 1; border-color: #10b981; font-weight: 600;">
+                                        <button type="button" id="btn-apply-voucher" class="btn btn-primary" style="padding: 10px 16px; white-space: nowrap;">
+                                            <i class='bx bx-check' style="font-size: 14px;"></i> Apply
                                         </button>
+                                        <button type="button" id="btn-remove-voucher" class="btn btn-danger" style="padding: 10px 16px; white-space: nowrap; display: none;">
+                                            <i class='bx bx-x' style="font-size: 14px;"></i> Remove
+                                        </button>
+                                    </div>
+                                    <div id="voucher-applied-info" style="display: none; margin-top: 8px; padding: 8px; background: #dcfce7; border-radius: 6px; font-size: 12px;">
+                                        <span style="color: #166534; font-weight: 600;">
+                                            <i class='bx bx-purchase-tag-alt' style="margin-right: 4px;"></i>
+                                            <span id="applied-voucher-code"></span>
+                                        </span>
                                     </div>
                                 </div>
                                 
-                                <!-- Payment Details -->
-                                <div style="display: flex; gap: 12px;">
-                                    <!-- Amount to Pay -->
-                                    <div style="flex: 1;">
-                                        <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Amount to Pay</label>
-                                        <input type="number" id="pos-amount-to-pay" class="form-control" step="0.01" readonly style="font-weight: 700; color: var(--text-main); border: none; background: transparent; padding: 0; text-align: right; width: 100px; height: auto; pointer-events: none;">
-                                    </div>
-                                    
-                                    <!-- Amount Paid & Change -->
-                                    <div style="flex: 1;">
-                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                                            <i class='bx bx-wallet' style="font-size: 16px; color: #10b981;"></i>
-                                            <label style="font-size: 12px; font-weight: 600; color: #10b981; margin: 0;">Amount Paid</label>
+                                <!-- Payment Details Section -->
+                                <div class="payment-details" style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
+                                    <div class="form-group" style="margin-bottom: 8px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                            <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Amount to Pay</label>
+                                            <input type="number" id="pos-amount-to-pay" class="form-control" step="0.01" readonly style="font-weight: 700; color: var(--text-main); border: none; background: transparent; padding: 0; text-align: right; width: 120px; height: auto; pointer-events: none;">
                                         </div>
-                                        <input type="number" id="pos-amount-paid" class="form-control" step="0.01" placeholder="Enter amount paid" style="border: 1px solid var(--primary); font-weight: 600; padding: 6px 8px; background: transparent; min-width: 120px;">
                                     </div>
+                                    <div class="form-group" style="margin-bottom: 12px; background: #f0fdf4; padding: 12px; border-radius: 12px; border: 1px solid #10b981;">
+                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                            <i class='bx bx-wallet' style="font-size: 16px; color: #10b981;"></i>
+                                            <label style="font-size: 13px; font-weight: 700; color: #10b981; margin: 0;">Amount Paid</label>
+                                        </div>
+                                        <input type="number" id="pos-amount-paid" class="form-control" step="0.01" placeholder="Enter amount paid" style="border-color: #10b981; font-weight: 600;">
                                     </div>
-                                    
-                                    <!-- Change Display -->
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 14px; font-weight: 600; color: var(--text-main);">
+                                    <div class="summary-row" style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; font-weight: 600; color: var(--text-main);">
                                         <span>CHANGE</span>
                                         <span id="pos-change-amount">0.00</span>
                                     </div>
-                                    
-                                    <!-- Total & Submit -->
-                                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <i class='bx bx-calculator' style="font-size: 20px; color: #10b981;"></i>
-                                            <span style="font-size: 16px; font-weight: 700; color: var(--text-main);">TOTAL</span>
-                                        </div>
-                                        <div style="display: flex; align-items: center;">
-                                            <button class="btn btn-success btn-block btn-lg" id="btn-submit-bill" style="background: #10b981; border: none; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); font-weight: 700; padding: 12px 16px;">
-                                                <i class='bx bx-printer' style="margin-right: 8px;"></i> Submit Bill & Print
-                                            </button>
-                                        </div>
+                                    <div class="summary-row total">
+                                        <span>TOTAL</span>
+                                        <span id="pos-total-amount">0.00</span>
                                     </div>
+                                    <button class="btn btn-success btn-block btn-lg" id="btn-submit-bill" style="background: #10b981; border: none; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); font-weight: 700; padding: 16px;">
+                                        <i class='bx bx-printer' style="margin-right: 8px;"></i> Submit Bill & Print
+                                    </button>
                                 </div>
                             </div>
                         </div>

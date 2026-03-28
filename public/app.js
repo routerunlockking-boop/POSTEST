@@ -162,14 +162,6 @@ document.getElementById('btn-logout').addEventListener('click', () => {
 });
 
 function checkAuth() {
-    // Temporarily bypass authentication for testing
-    authToken = 'test-token';
-    currentBusiness = 'Test Business';
-    currentRole = 'user';
-    localStorage.setItem('pos_token', authToken);
-    localStorage.setItem('pos_business', currentBusiness);
-    localStorage.setItem('pos_role', currentRole);
-    
     if (authToken) {
         authOverlay.classList.remove('active');
         document.getElementById('business-name-display').textContent = currentBusiness;
@@ -231,14 +223,6 @@ const adminUserModal = document.getElementById('admin-user-modal');
 
 // ==== INITIALIZATION ====
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM Content Loaded');
-    
-    // Test navigation elements immediately
-    const testNavLinks = document.querySelectorAll('.nav-link');
-    const testViews = document.querySelectorAll('.view');
-    console.log('Immediate test - navLinks:', testNavLinks.length);
-    console.log('Immediate test - views:', testViews.length);
-    
     initTheme();
     checkAuth();
     updateClock();
@@ -565,34 +549,19 @@ function setupPOSTabs() {
 
 function updateClock() {
     const now = new Date();
-    clockEl.textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) + ' - ' + now.toLocaleDateString('en-US');
+    clockEl.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' - ' + now.toLocaleDateString();
 }
 
 function setupNavigation() {
-    console.log('Setting up navigation...');
-    console.log('navLinks found:', navLinks.length);
-    console.log('views found:', views.length);
-    
-    navLinks.forEach((link, index) => {
-        console.log(`Setting up link ${index}:`, link.getAttribute('data-target'));
+    navLinks.forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
-            console.log('Clicked nav link:', link.getAttribute('data-target'));
-            
             navLinks.forEach(l => l.classList.remove('active'));
             link.classList.add('active');
             
             const target = link.getAttribute('data-target');
-            const targetView = document.getElementById(target);
-            console.log('Target view:', targetView);
-            
             views.forEach(view => view.classList.remove('active'));
-            if (targetView) {
-                targetView.classList.add('active');
-                console.log('Added active class to:', target);
-            } else {
-                console.error('View not found:', target);
-            }
+            document.getElementById(target).classList.add('active');
             
             pageTitle.textContent = link.querySelector('.link-name').textContent;
             currentTab = target;
@@ -604,8 +573,6 @@ function setupNavigation() {
             if(target === 'invoices-view') loadInvoices();
             if(target === 'reports-view') loadReports();
             if(target === 'admin-view') loadAdminUsers();
-            if(target === 'customers-view') loadCustomers();
-            if(target === 'vouchers-view') loadVouchers();
         });
     });
     

@@ -206,8 +206,6 @@ let currentProductImageBase64 = null;
 let html5QrCode = null;
 let isScanTorchOn = false;
 let currentScanMode = 'billing'; // 'billing' or 'addProduct'
-let vouchers = [];
-let appliedVoucher = null;
 
 // ==== DOM ELEMENTS ====
 const clockEl = document.getElementById('clock');
@@ -218,8 +216,6 @@ const modalOverlay = document.getElementById('modal-overlay');
 const productModal = document.getElementById('product-modal');
 const invoiceModal = document.getElementById('invoice-modal');
 const adminUserModal = document.getElementById('admin-user-modal');
-const customerModal = document.getElementById('customer-modal');
-const voucherModal = document.getElementById('voucher-modal');
 
 // ==== INITIALIZATION ====
 document.addEventListener('DOMContentLoaded', () => {
@@ -568,8 +564,6 @@ function setupNavigation() {
             if(target === 'inventory-view') loadInventory();
             if(target === 'pos-view') loadPOS();
             if(target === 'invoices-view') loadInvoices();
-            if(target === 'vouchers-view') loadVouchers();
-            if(target === 'customers-view') loadCustomers();
             if(target === 'reports-view') loadReports();
             if(target === 'admin-view') loadAdminUsers();
         });
@@ -650,121 +644,9 @@ function setupModals() {
     document.getElementById('btn-close-modal').addEventListener('click', hideModal);
     document.getElementById('btn-close-invoice-modal').addEventListener('click', hideModal);
     document.getElementById('btn-close-admin-modal').addEventListener('click', hideModal);
-    document.getElementById('btn-close-customer-modal').addEventListener('click', hideModal);
-    document.getElementById('btn-close-voucher-modal').addEventListener('click', hideModal);
     
     // Add product
     document.getElementById('btn-add-product').addEventListener('click', () => openAddProductModal());
-    
-    // Add customer
-    document.getElementById('btn-add-customer').addEventListener('click', () => {
-        document.getElementById('customer-form').reset();
-        document.getElementById('customer-id').value = '';
-        document.getElementById('customer-modal-title').textContent = 'Add Customer';
-        showModal(customerModal);
-    });
-
-    // Create voucher
-    document.getElementById('btn-create-voucher').addEventListener('click', () => {
-        document.getElementById('voucher-form').reset();
-        document.getElementById('voucher-id').value = '';
-        
-        // Update modal title for creating
-        const modalTitle = voucherModal.querySelector('.modal-header h3');
-        modalTitle.textContent = 'Create Voucher';
-        
-        generateVoucherCode();
-        showModal(voucherModal);
-    });
-
-    // Generate voucher code
-    document.getElementById('btn-generate-voucher-code').addEventListener('click', generateVoucherCode);
-
-    // Handle voucher form submission
-    document.getElementById('voucher-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        console.log('Voucher form submitted');
-        
-        const id = document.getElementById('voucher-id').value;
-        const code = document.getElementById('voucher-code').value.trim();
-        const discount_type = document.getElementById('voucher-discount-type').value;
-        const discount_value = parseFloat(document.getElementById('voucher-discount-value').value);
-        const usage_limit = parseInt(document.getElementById('voucher-usage-limit').value);
-        const min_bill_amount = parseFloat(document.getElementById('voucher-min-bill').value) || 0;
-        const expiry_date = document.getElementById('voucher-expiry-date').value;
-        const description = document.getElementById('voucher-description').value.trim();
-        const is_active = document.getElementById('voucher-is-active').checked;
-        
-        console.log('Voucher data:', { code, discount_type, discount_value, usage_limit });
-        
-        // Validation
-        if (!code) {
-            showToast('Please enter a voucher code', 'error');
-            return;
-        }
-        if (!discount_value || discount_value <= 0) {
-            showToast('Please enter a valid discount value', 'error');
-            return;
-        }
-        if (!usage_limit || usage_limit <= 0) {
-            showToast('Please enter a valid usage limit', 'error');
-            return;
-        }
-        
-        const payload = {
-            id: id || Date.now().toString(),
-            code,
-            discount_type,
-            discount_value,
-            usage_limit,
-            min_bill_amount,
-            expiry_date,
-            description,
-            is_active,
-            used_count: 0,
-            created_at: new Date().toISOString()
-        };
-        
-        console.log('Saving voucher:', payload);
-        
-        // Always use local storage for now to ensure it works
-        try {
-            let savedVouchers = JSON.parse(localStorage.getItem('pos_vouchers') || '[]');
-            console.log('Current vouchers:', savedVouchers);
-            
-            if (id) {
-                // Update existing voucher
-                const index = savedVouchers.findIndex(v => v.id == id);
-                if (index !== -1) {
-                    savedVouchers[index] = { ...savedVouchers[index], ...payload };
-                    console.log('Updated voucher at index:', index);
-                }
-            } else {
-                // Add new voucher
-                savedVouchers.push(payload);
-                console.log('Added new voucher');
-            }
-            
-            localStorage.setItem('pos_vouchers', JSON.stringify(savedVouchers));
-            console.log('Vouchers saved to localStorage');
-            
-            hideModal();
-            loadVouchers();
-            showToast('Voucher saved successfully!', 'success');
-        } catch (err) {
-            console.error('Error saving voucher:', err);
-            alert('Error saving voucher: ' + err.message);
-        }
-    });
-
-    // Voucher functionality in POS
-    document.getElementById('btn-apply-voucher').addEventListener('click', applyVoucher);
-    document.getElementById('btn-remove-voucher').addEventListener('click', removeVoucher);
-    document.getElementById('pos-voucher-code').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            applyVoucher();
-        }
-    });
 
     // Handle Image Selection
     document.getElementById('product-image').addEventListener('change', function(e) {
@@ -842,34 +724,6 @@ function setupModals() {
         }
     });
 
-    // Handle Customer Form
-    document.getElementById('customer-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const id = document.getElementById('customer-id').value;
-        const name = document.getElementById('customer-name').value;
-        const phone = document.getElementById('customer-phone').value;
-        const address = document.getElementById('customer-address').value;
-        const type = document.getElementById('customer-type').value;
-        
-        const payload = { name, phone, address, type };
-        const method = id ? 'PUT' : 'POST';
-        const url = id ? `${API_BASE}/customers/${id}` : `${API_BASE}/customers`;
-        
-        try {
-            const res = await fetchAuth(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            if (!res.ok) throw new Error('Failed to save customer');
-            hideModal();
-            loadCustomers();
-        } catch (err) {
-            console.error(err);
-            alert('Error saving customer');
-        }
-    });
-
     // Print Receipt logic
     document.getElementById('btn-print-receipt').addEventListener('click', () => {
         window.print();
@@ -924,13 +778,7 @@ function hideModal() {
 
 // ==== UTILS ====
 function formatCurrency(amount) {
-    // Round to 2 decimal places to avoid floating point precision issues
-    const roundedAmount = Math.round((amount + Number.EPSILON) * 100) / 100;
-    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'LKR' }).format(roundedAmount).replace('LKR', 'Rs.');
-}
-
-function roundToTwo(num) {
-    return Math.round((num + Number.EPSILON) * 100) / 100;
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'LKR' }).format(amount).replace('LKR', 'Rs.');
 }
 
 function exportToCSV(filename, rows) {
@@ -1168,71 +1016,9 @@ async function loadPOS() {
         const res = await fetchAuth(`${API_BASE}/products?lite=true`);
         products = await res.json();
         renderPOSProducts(products);
-        
-        // Also load customers list for POS search
-        const custRes = await fetchAuth(`${API_BASE}/customers`);
-        customersList = await custRes.json();
-        setupCustomerPOSSearch();
     } catch (err) {
         console.error(err);
     }
-}
-
-function setupCustomerPOSSearch() {
-    const searchInput = document.getElementById('pos-customer-search');
-    const suggestionsBox = document.getElementById('pos-customer-suggestions');
-    
-    if (!searchInput || !suggestionsBox) return;
-
-    searchInput.addEventListener('input', (e) => {
-        const term = e.target.value.toLowerCase().trim();
-        if (!term) {
-            suggestionsBox.style.display = 'none';
-            return;
-        }
-
-        const filtered = customersList.filter(c => 
-            c.name.toLowerCase().includes(term) || 
-            c.phone.includes(term)
-        );
-
-        if (filtered.length > 0) {
-            suggestionsBox.innerHTML = '';
-            filtered.forEach(c => {
-                const div = document.createElement('div');
-                div.style = "padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.2s;";
-                div.innerHTML = `
-                    <div style="font-weight: 600; font-size: 13px;">${c.name}</div>
-                    <div style="font-size: 11px; color: var(--text-muted);">${c.phone} | ${c.type}</div>
-                `;
-                div.onmouseover = () => div.style.background = 'var(--secondary)';
-                div.onmouseout = () => div.style.background = 'transparent';
-                div.onclick = () => {
-                    document.getElementById('pos-customer-name').value = c.name;
-                    document.getElementById('pos-customer-phone').value = c.phone;
-                    document.getElementById('pos-customer-type').value = c.type || 'Retail';
-                    document.getElementById('pos-customer-search').value = '';
-                    suggestionsBox.style.display = 'none';
-                    
-                    // Visual feedback
-                    const nameField = document.getElementById('pos-customer-name');
-                    nameField.style.backgroundColor = 'var(--success-light)';
-                    setTimeout(() => nameField.style.backgroundColor = '', 500);
-                };
-                suggestionsBox.appendChild(div);
-            });
-            suggestionsBox.style.display = 'block';
-        } else {
-            suggestionsBox.style.display = 'none';
-        }
-    });
-
-    // Close suggestions on outside click
-    document.addEventListener('click', (e) => {
-        if (!searchInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
-            suggestionsBox.style.display = 'none';
-        }
-    });
 }
 
 // Image cache to avoid re-fetching the same image
@@ -1352,26 +1138,11 @@ function updateBillUI() {
     itemsContainer.innerHTML = '';
     let total = 0;
     
-    // DEBUG: Log current voucher state
-    console.log('=== VOUCHER DEBUG ===');
-    console.log('appliedVoucher before reset:', appliedVoucher);
-    console.log('Type of appliedVoucher:', typeof appliedVoucher);
-    console.log('appliedVoucher keys:', appliedVoucher ? Object.keys(appliedVoucher) : 'null');
-    
-    // Force reset appliedVoucher if it shouldn't exist
-    if (!appliedVoucher || !appliedVoucher.id || !appliedVoucher.code) {
-        appliedVoucher = null;
-        console.log('Voucher reset to null');
-    }
-    
-    console.log('appliedVoucher after reset:', appliedVoucher);
-    console.log('===================');
-    
     if (currentBill.length > 0) {
         const header = document.createElement('div');
-        header.style = "display: flex; justify-content: space-between; padding: 0 12px 8px 12px; border-bottom: 1px solid var(--border); margin-bottom: 8px; font-size: 12px; font-weight: 700; color: var(--text-muted);";
+        header.style = "display: flex; justify-content: space-between; padding: 0 12px 8px 12px; border-bottom: 1px solid var(--border); margin-bottom: 12px; font-size: 12px; font-weight: 700; color: var(--text-muted);";
         header.innerHTML = `
-            <span style="flex: 1; margin-right: 40px;">ITEM</span>
+            <span style="flex: 1;">ITEM</span>
             <span style="width: 80px; text-align: center;">QTY</span>
             <span style="width: 80px; text-align: right;">TOTAL</span>
         `;
@@ -1384,224 +1155,130 @@ function updateBillUI() {
         
         const div = document.createElement('div');
         div.className = 'bill-item';
-        div.style.marginBottom = '8px';
-        div.style.padding = '10px';
-        div.style.border = '1px solid var(--border)';
-        div.style.borderRadius = '8px';
-        div.style.background = 'var(--background)';
         div.innerHTML = `
             <div class="bill-item-details">
-                <h4 style="margin: 0 0 8px 0; font-size: 15px; font-weight: 600; color: var(--text-main);">${item.name}</h4>
-                <div style="display:flex; align-items:center; gap:12px; margin-top:8px;">
+                <h4>${item.name}</h4>
+                <div style="display:flex; align-items:center; gap:8px; margin-top:4px;">
                     <input type="number" step="0.01" value="${item.price}" 
                            onchange="updateBillPrice('${item.id}', this.value)" 
-                           style="width:80px; padding:6px 8px; font-size:13px; border:1px solid var(--border); border-radius:4px; font-weight: 500;"> 
-                    <span style="font-size:13px; color:var(--text-muted); font-weight: 500;">@ ${formatCurrency(item.price)}</span>
+                           style="width:70px; padding:2px 4px; font-size:12px; border:1px solid var(--border); border-radius:4px;"> 
+                    <span style="font-size:12px; color:var(--text-muted)">@ ${item.price}</span>
                 </div>
             </div>
-            <div class="bill-item-actions" style="display: flex; align-items: center; gap: 20px; margin-top: 12px;">
-                <div class="qty-control" style="display: flex; align-items: center; gap: 8px; background: var(--secondary); padding: 4px; border-radius: 6px; border: 1px solid var(--border);">
-                    <button class="qty-btn" onclick="updateBillQuantity('${item.id}', -1)" style="width: 24px; height: 24px; font-size: 14px; padding: 0; border: none; background: var(--primary); color: white; border-radius: 4px; cursor: pointer;">-</button>
-                    <span style="font-weight: 600; font-size: 14px; min-width: 20px; text-align: center;">${item.quantity}</span>
-                    <button class="qty-btn" onclick="updateBillQuantity('${item.id}', 1)" style="width: 24px; height: 24px; font-size: 14px; padding: 0; border: none; background: var(--primary); color: white; border-radius: 4px; cursor: pointer;">+</button>
+            <div class="bill-item-actions" style="display: flex; align-items: center; gap: 15px;">
+                <div class="qty-control" style="width: 80px; justify-content: center;">
+                    <button class="qty-btn" onclick="updateBillQuantity('${item.id}', -1)">-</button>
+                    <span style="font-weight: 600;">${item.quantity}</span>
+                    <button class="qty-btn" onclick="updateBillQuantity('${item.id}', 1)">+</button>
                 </div>
-                <div class="item-total" style="font-size: 16px; font-weight: 700; color: var(--primary); min-width: 80px; text-align: right;">${formatCurrency(amount)}</div>
+                <div class="item-total" style="width: 80px; text-align: right; font-weight: 700; color: var(--text-main);">${formatCurrency(amount)}</div>
             </div>
         `;
         itemsContainer.appendChild(div);
     });
     
-    // Calculate voucher discount only if voucher is applied AND valid
-    let voucherDiscount = 0;
-    if (appliedVoucher && appliedVoucher.id && appliedVoucher.code) {
-        voucherDiscount = calculateVoucherDiscount(total);
-    }
-    const finalTotal = total - voucherDiscount;
+    document.getElementById('pos-total-amount').textContent = formatCurrency(total);
     
-    // Update UI elements
-    const subtotalEl = document.getElementById('pos-subtotal-amount');
-    if (subtotalEl) {
-        subtotalEl.textContent = formatCurrency(total);
-    }
+    // Update amount to pay if it's a new bill or if total changes
+    const amountToPayInput = document.getElementById('pos-amount-to-pay');
+    amountToPayInput.value = total.toFixed(2);
     
-    // Show voucher discount row only if voucher is applied AND valid AND has discount
-    const voucherDiscountRow = document.getElementById('pos-voucher-discount-row');
-    const voucherDiscountAmount = document.getElementById('pos-voucher-discount-amount');
-    if (appliedVoucher && appliedVoucher.id && appliedVoucher.code && voucherDiscount > 0) {
-        voucherDiscountRow.style.display = 'flex';
-        voucherDiscountAmount.textContent = `-${formatCurrency(voucherDiscount)}`;
-    } else {
-        voucherDiscountRow.style.display = 'none';
-    }
-    
-    // Always update total amount (with or without voucher)
-    document.getElementById('pos-total-amount').textContent = formatCurrency(finalTotal);
-    
-    // Update voucher applied info
-    if (appliedVoucher && appliedVoucher.id && appliedVoucher.code && voucherDiscount > 0) {
-        document.getElementById('applied-voucher-discount').textContent = `-${formatCurrency(voucherDiscount)}`;
-    }
-    
-    // Auto-update balance whenever bill items change (e.g. quantity updates)
     calculateChange();
 }
 
 function calculateChange() {
-    // Get the raw total value directly from the calculation, not from the formatted text
-    const totalText = document.getElementById('pos-total-amount').textContent;
-    let amountToPay = 0;
-    
-    // Parse the total more reliably - remove all non-numeric characters except decimal point
-    const cleanTotal = totalText.replace(/[^0-9.-]/g, '');
-    amountToPay = parseFloat(cleanTotal) || 0;
-    
-    // Get amount paid
+    const amountToPay = parseFloat(document.getElementById('pos-amount-to-pay').value) || 0;
     const amountPaid = parseFloat(document.getElementById('pos-amount-paid').value) || 0;
+    const change = amountPaid - amountToPay;
     
-    // Simple balance calculation
-    const balance = amountPaid - amountToPay;
+    const changeEl = document.getElementById('pos-change-amount');
+    changeEl.textContent = formatCurrency(Math.max(0, change));
     
-    // Update display with proper formatting
-    document.getElementById('pos-balance-amount').textContent = formatCurrency(balance);
-    
-    // Color coding
-    const balanceEl = document.getElementById('pos-balance-amount');
-    if (balance < 0 && amountPaid > 0) {
-        balanceEl.style.color = '#ef4444'; // Red for insufficient payment
-    } else if (balance >= 0) {
-        balanceEl.style.color = '#10b981'; // Green for positive balance
+    if (change < 0 && amountPaid > 0) {
+        changeEl.style.color = '#ef4444'; // Red for insufficient payment
     } else {
-        balanceEl.style.color = 'var(--text-main)';
+        changeEl.style.color = 'var(--text-main)';
     }
 }
 
 // Add event listeners for payment calculation
 document.addEventListener('DOMContentLoaded', () => {
     const amountPaidInput = document.getElementById('pos-amount-paid');
+    const amountToPayInput = document.getElementById('pos-amount-to-pay');
     
     if (amountPaidInput) {
         amountPaidInput.addEventListener('input', calculateChange);
     }
-    
-    // Emergency voucher reset on page load
-    console.log('Page loaded - performing emergency voucher reset');
-    emergencyResetVoucher();
+    if (amountToPayInput) {
+        amountToPayInput.addEventListener('input', calculateChange);
+    }
 });
 
 document.getElementById('btn-submit-bill').addEventListener('click', async () => {
-if (currentBill.length === 0) {
-    alert('Bill is empty!');
-    return;
-}
-
-const totalText = document.getElementById('pos-total-amount').textContent;
-let total = parseFloat(totalText.replace(/[^0-9.-]/g, '')) || 0;
-let amountPaid = parseFloat(document.getElementById('pos-amount-paid').value);
-
-// If amount paid is empty or 0, default to the total amount
-if (isNaN(amountPaid) || amountPaid <= 0) {
-    amountPaid = total;
-}
-
-const cashier_name = document.getElementById('pos-cashier-name').value || 'System';
-const customer_name = document.getElementById('pos-customer-name').value;
-const customer_phone = document.getElementById('pos-customer-phone').value;
-const customer_type = document.getElementById('pos-customer-type').value;
-const payment_method = document.getElementById('pos-payment-method').value;
-
-// Calculate original subtotal for voucher tracking (with proper rounding)
-const originalSubtotal = roundToTwo(currentBill.reduce((sum, item) => sum + (item.price * item.quantity), 0));
-const voucherDiscount = (appliedVoucher && appliedVoucher.id && appliedVoucher.code) ? roundToTwo(calculateVoucherDiscount(originalSubtotal)) : 0;
-
-const payload = {
-    items: currentBill,
-    total_amount: total,
-    amount_paid: amountPaid,
-    cashier_name,
-    customer_name,
-    customer_phone,
-    customer_type,
-    payment_method,
-    voucher: (appliedVoucher && appliedVoucher.id && appliedVoucher.code) ? {
-        id: appliedVoucher.id,
-        code: appliedVoucher.code,
-        discount_type: appliedVoucher.discount_type,
-        discount_value: appliedVoucher.discount_value,
-        discount_amount: voucherDiscount
-    } : null
-};
-
-try {
-    const res = await fetchAuth(`${API_BASE}/invoices`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    });
-
-    if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || 'Failed to create invoice');
+    if (currentBill.length === 0) {
+        alert('Bill is empty!');
+        return;
     }
-
-    const data = await res.json();
-    const invoiceData = data.invoice;
-    console.log('Invoice created:', invoiceData);
-
-    // Update voucher usage count if voucher was applied BEFORE resetting appliedVoucher
-    if (appliedVoucher) {
-        invoiceData.voucher = appliedVoucher; // Pass to printout
-        try {
-            // Try API first
-            const voucherRes = await fetchAuth(`${API_BASE}/vouchers/${appliedVoucher.id}/use`, { method: 'POST' });
-            if (!voucherRes.ok) {
-                throw new Error('API not available');
-            }
-        } catch (err) {
-            // Fallback to local storage
-            let savedVouchers = JSON.parse(localStorage.getItem('pos_vouchers') || '[]');
-            const voucherIndex = savedVouchers.findIndex(v => v.id === appliedVoucher.id);
-            if (voucherIndex !== -1) {
-                savedVouchers[voucherIndex].used_count = (savedVouchers[voucherIndex].used_count || 0) + 1;
-                localStorage.setItem('pos_vouchers', JSON.stringify(savedVouchers));
-            }
+    
+    let total = parseFloat(document.getElementById('pos-amount-to-pay').value) || 0;
+    let amountPaid = parseFloat(document.getElementById('pos-amount-paid').value);
+    
+    // If amount paid is empty or 0, default to the total amount
+    if (isNaN(amountPaid) || amountPaid <= 0) {
+        amountPaid = total;
+    }
+    
+    const cashier_name = document.getElementById('pos-cashier-name').value || 'System';
+    const customer_name = document.getElementById('pos-customer-name').value;
+    const customer_phone = document.getElementById('pos-customer-phone').value;
+    const payment_method = document.getElementById('pos-payment-method').value;
+    
+    const payload = {
+        items: currentBill,
+        total_amount: total,
+        amount_paid: amountPaid,
+        cashier_name,
+        customer_name,
+        customer_phone,
+        payment_method
+    };
+    
+    try {
+        const res = await fetchAuth(`${API_BASE}/invoices`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        
+        if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.error || 'Failed to create invoice');
         }
+        
+        const data = await res.json();
+        
+        // Print
+        showInvoicePrintout(data.invoice);
+        
+        // Clear bill
+        currentBill = [];
+        document.getElementById('pos-cashier-name').value = 'Pamidu';
+        document.getElementById('pos-customer-name').value = 'Walk-in Customer';
+        document.getElementById('pos-customer-phone').value = '';
+        document.getElementById('pos-payment-method').value = 'Cash';
+        document.getElementById('pos-amount-paid').value = '';
+        updateBillUI();
+        
+        // Reset tabs to items
+        document.getElementById('tab-btn-items').click();
+        
+        // Reload products cache (lite)
+        fetchAuth(`${API_BASE}/products?lite=true`).then(r => r.json()).then(p => products = p);
+        
+    } catch (err) {
+        console.error(err);
+        alert('Error saving bill: ' + err.message);
     }
-
-    // Show invoice printout
-    showInvoicePrintout(invoiceData);
-
-    // Clear bill
-    currentBill = [];
-    appliedVoucher = null;
-    updateBillUI();
-
-    showToast('Bill submitted successfully!', 'success');
-
-    // Reset form fields
-    document.getElementById('pos-cashier-name').value = 'Pamidu';
-    document.getElementById('pos-customer-name').value = 'Walk-in Customer';
-    document.getElementById('pos-customer-phone').value = '';
-    document.getElementById('pos-customer-type').value = 'Retail';
-    document.getElementById('pos-customer-search').value = '';
-    document.getElementById('pos-payment-method').value = 'Cash';
-    document.getElementById('pos-amount-paid').value = '';
-    document.getElementById('pos-balance-amount').textContent = '0.00';
-    
-    // Reset voucher UI
-    document.getElementById('voucher-applied-info').style.display = 'none';
-    document.getElementById('btn-apply-voucher').style.display = 'block';
-    document.getElementById('btn-remove-voucher').style.display = 'none';
-    document.getElementById('pos-voucher-code').value = '';
-    document.getElementById('pos-voucher-code').disabled = false;
-    
-    // Reset tabs and reload products
-    if (document.getElementById('tab-btn-items')) document.getElementById('tab-btn-items').click();
-    fetchAuth(`${API_BASE}/products?lite=true`).then(r => r.json()).then(p => products = p).catch(() => {});
-
-} catch (err) {
-    console.error('Error submitting bill:', err);
-    alert('Error submitting bill: ' + err.message);
-}
 });
 
 function showInvoicePrintout(invoice) {
@@ -1633,10 +1310,10 @@ function showInvoicePrintout(invoice) {
     const tbody = document.querySelector('#receipt-items tbody');
     tbody.innerHTML = '';
     
-    let subtotal = 0;
+    let total = 0;
     invoice.items.forEach(item => {
         const amt = item.price * item.quantity;
-        subtotal += amt;
+        total += amt;
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${item.product_name || item.name}</td>
@@ -1646,31 +1323,6 @@ function showInvoicePrintout(invoice) {
         `;
         tbody.appendChild(tr);
     });
-    
-        // Handle voucher information
-        let voucherDiscount = 0;
-        let total = typeof invoice.total_amount === 'number' ? invoice.total_amount : subtotal;
-
-        if (invoice.voucher) {
-            if (invoice.voucher.discount_type === 'percentage') {
-                voucherDiscount = subtotal * (invoice.voucher.discount_value / 100);
-            } else {
-                voucherDiscount = invoice.voucher.discount_amount || invoice.voucher.discount_value || 0;
-            }
-            
-            document.getElementById('receipt-subtotal-row').style.display = 'flex';
-            document.getElementById('receipt-discount-row').style.display = 'flex';
-            document.getElementById('receipt-discount-row').children[0].textContent = `Voucher (${invoice.voucher.code || 'Discount'}):`;
-            document.getElementById('receipt-subtotal-amount').textContent = subtotal.toFixed(2);
-            document.getElementById('receipt-simple-discount').textContent = '-' + voucherDiscount.toFixed(2);
-            
-            total = invoice.total_amount !== undefined ? invoice.total_amount : (subtotal - voucherDiscount);
-        } else {
-            // Only hide voucher discount rows when no voucher is applied
-            document.getElementById('receipt-subtotal-row').style.display = 'none';
-            document.getElementById('receipt-discount-row').style.display = 'none';
-            total = subtotal;
-        }
     
     document.getElementById('receipt-total-amount').textContent = total.toFixed(2);
     
@@ -1720,58 +1372,34 @@ async function loadInvoices() {
                 <td>${inv.time}</td>
                 <td style="font-weight:bold">${formatCurrency(inv.total_amount)}</td>
                 <td style="color: #15803d; font-weight:bold">${formatCurrency(inv.total_profit || 0)}</td>
-                <td style="text-align: center;">
-                    ${inv.voucher ? 
-                        `<div style="font-size: 11px; font-weight: 600; color: #0284c7; line-height: 1.2;"><i class='bx bx-ticket' title="Voucher: ${inv.voucher.code}"></i> ${inv.voucher.code}<br><span style="color: #059669;">-${formatCurrency(inv.voucher.discount_amount || inv.voucher.discount_value || 0)}</span></div>` : 
-                        '<span style="color: var(--text-muted); font-size: 12px;">-</span>'
-                    }
-                </td>
                 <td>
-                    <button class="btn btn-outline btn-icon-only view-invoice-btn" data-id="${inv.id}" title="View Invoice"><i class='bx bx-receipt'></i></button>
-                    <button class="btn btn-primary btn-icon-only print-invoice-btn" data-id="${inv.id}" title="Print Invoice"><i class='bx bx-printer'></i></button>
+                    <button class="btn btn-outline btn-icon-only view-invoice-btn" data-id="${inv.id}"><i class='bx bx-show'></i></button>
+                    <button class="btn btn-primary btn-icon-only print-invoice-btn" data-id="${inv.id}"><i class='bx bx-printer'></i></button>
                     ${adminActions}
                 </td>
             `;
             tbody.appendChild(tr);
         });
-        
-        // Add event listeners for invoice actions
-        document.querySelectorAll('.view-invoice-btn').forEach(btn => {
+
+        document.querySelectorAll('.view-invoice-btn, .print-invoice-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
-                const id = e.target.closest('.view-invoice-btn').dataset.id;
+                const id = e.currentTarget.dataset.id;
                 try {
                     const res = await fetchAuth(`${API_BASE}/invoices/${id}`);
                     const inv = await res.json();
                     showInvoicePrintout(inv);
-                } catch(err) { 
-                    console.error(err); 
-                }
-            });
-        });
-        
-        document.querySelectorAll('.print-invoice-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                const id = e.target.closest('.print-invoice-btn').dataset.id;
-                try {
-                    const res = await fetchAuth(`${API_BASE}/invoices/${id}`);
-                    const inv = await res.json();
-                    showInvoicePrintout(inv);
-                } catch(err) { 
-                    console.error(err); 
-                }
+                } catch(err) { console.error(err); }
             });
         });
         
         document.querySelectorAll('.delete-invoice-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 if(confirm('Are you sure you want to delete this invoice? (This will restock the inventory automatically)')) {
-                    const id = e.target.closest('.delete-invoice-btn').dataset.id;
+                    const id = e.currentTarget.dataset.id;
                     try {
                         await fetchAuth(`${API_BASE}/invoices/${id}`, { method: 'DELETE' });
                         loadInvoices();
-                    } catch(err) { 
-                        console.error(err); 
-                    }
+                    } catch(err) { console.error(err); }
                 }
             });
         });
@@ -1780,68 +1408,6 @@ async function loadInvoices() {
         console.error(err);
     }
 }
-
-// ==== CUSTOMERS ====
-let customersList = [];
-
-async function loadCustomers() {
-    try {
-        const res = await fetchAuth(`${API_BASE}/customers`);
-        customersList = await res.json();
-        renderCustomers(customersList);
-    } catch (err) {
-        console.error(err);
-    }
-}
-
-function renderCustomers(list) {
-    const tbody = document.querySelector('#customers-table tbody');
-    tbody.innerHTML = '';
-    
-    list.forEach(c => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${c.name}</td>
-            <td>${c.phone}</td>
-            <td><span class="badge ${c.type === 'Wholesale' ? 'badge-primary' : 'badge-secondary'}" style="padding:4px 8px; border-radius:4px; font-size:11px; background:${c.type === 'Wholesale' ? 'var(--primary)' : 'var(--secondary)'}; color:${c.type === 'Wholesale' ? 'white' : 'var(--text-main)'}">${c.type}</span></td>
-            <td>${c.address || '-'}</td>
-            <td>
-                <button class="btn btn-outline btn-icon-only edit-customer-btn" data-id="${c.id}"><i class='bx bx-edit'></i></button>
-                <button class="btn btn-danger btn-icon-only delete-customer-btn" data-id="${c.id}"><i class='bx bx-trash'></i></button>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
-
-// Event Delegation for Customer Actions
-document.querySelector('#customers-table tbody').addEventListener('click', (e) => {
-    const editBtn = e.target.closest('.edit-customer-btn');
-    if (editBtn) {
-        const id = editBtn.dataset.id;
-        const c = customersList.find(cust => cust.id === id);
-        if (c) {
-            document.getElementById('customer-id').value = c.id;
-            document.getElementById('customer-name').value = c.name;
-            document.getElementById('customer-phone').value = c.phone;
-            document.getElementById('customer-address').value = c.address || '';
-            document.getElementById('customer-type').value = c.type || 'Retail';
-            document.getElementById('customer-modal-title').textContent = 'Edit Customer';
-            showModal(customerModal);
-        }
-        return;
-    }
-    
-    const delBtn = e.target.closest('.delete-customer-btn');
-    if (delBtn) {
-        if(confirm('Are you sure you want to delete this customer?')) {
-            const id = delBtn.dataset.id;
-            fetchAuth(`${API_BASE}/customers/${id}`, { method: 'DELETE' })
-                .then(() => loadCustomers())
-                .catch(err => console.error(err));
-        }
-    }
-});
 
 document.getElementById('filter-date').addEventListener('change', () => {
     document.getElementById('filter-month').value = '';
@@ -2001,337 +1567,3 @@ document.querySelector('#admin-users-table tbody').addEventListener('click', asy
         }
     }
 });
-
-// ==== VOUCHER FUNCTIONS ====
-function generateVoucherCode() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let code = '';
-    for (let i = 0; i < 8; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    document.getElementById('voucher-code').value = code;
-}
-
-async function loadVouchers() {
-    console.log('Loading vouchers...');
-    
-    // Always use local storage for now
-    vouchers = JSON.parse(localStorage.getItem('pos_vouchers') || '[]');
-    console.log('Loaded vouchers:', vouchers);
-    
-    const tbody = document.querySelector('#vouchers-table tbody');
-    tbody.innerHTML = '';
-    
-    if (vouchers.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted);">No vouchers created yet. Click "Create Voucher" to get started.</td></tr>';
-        return;
-    }
-    
-    vouchers.forEach(voucher => {
-        const tr = document.createElement('tr');
-        
-        // Status badge with color coding
-        const statusBadge = voucher.is_active ? 
-            '<span class="text-success" style="color:var(--success);font-weight:600;">Active</span>' : 
-            '<span class="text-danger" style="color:var(--danger);font-weight:600;">Inactive</span>';
-        
-        // Expiry date with formatting and warning
-        const expiryDate = voucher.expiry_date ? 
-            new Date(voucher.expiry_date).toLocaleDateString() : 
-            '<span style="color:var(--text-muted);">No expiry</span>';
-        
-        const isExpired = voucher.expiry_date && new Date(voucher.expiry_date) < new Date();
-        const expiryDisplay = voucher.expiry_date ? 
-            `<span style="color: ${isExpired ? 'var(--danger)' : 'var(--text-main)'}">${expiryDate}</span>` : 
-            '<span style="color:var(--text-muted);">No expiry</span>';
-        
-        // Usage progress bar
-        const usagePercentage = voucher.usage_limit > 0 ? (voucher.used_count || 0) / voucher.usage_limit * 100 : 0;
-        const usageColor = usagePercentage >= 90 ? 'var(--danger)' : usagePercentage >= 70 ? 'var(--warning)' : 'var(--success)';
-        const usageBar = `
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <div style="flex: 1; background: #e5e7eb; border-radius: 4px; height: 6px; overflow: hidden;">
-                    <div style="width: ${usagePercentage}%; height: 100%; background: ${usageColor}; transition: width 0.3s;"></div>
-                </div>
-                <span style="font-size: 12px; font-weight: 600; color: var(--text-main); min-width: 60px;">${voucher.used_count || 0}/${voucher.usage_limit}</span>
-            </div>
-        `;
-        
-        // Discount display with icon
-        const discountDisplay = voucher.discount_type === 'percentage' ? 
-            `${voucher.discount_value}%` : 
-            formatCurrency(voucher.discount_value);
-        
-        // Description with truncation for long text
-        const description = voucher.description ? 
-            (voucher.description.length > 30 ? voucher.description.substring(0, 30) + '...' : voucher.description) : 
-            '<span style="color: var(--text-muted); font-style: italic;">No description</span>';
-        
-        // Add action buttons based on user role
-        let voucherActions = '';
-        if (currentRole === 'admin') {
-            voucherActions = `
-                <button class="btn btn-outline btn-icon-only edit-voucher-btn" data-id="${voucher.id}" title="Edit Voucher">
-                    <i class='bx bx-edit'></i>
-                </button>
-                <button class="btn btn-danger btn-icon-only delete-voucher-btn" data-id="${voucher.id}" title="Delete Voucher">
-                    <i class='bx bx-trash'></i>
-                </button>
-            `;
-        } else {
-            voucherActions = `
-                <button class="btn btn-outline btn-icon-only view-voucher-btn" data-id="${voucher.id}" title="View Voucher Details">
-                    <i class='bx bx-show'></i>
-                </button>
-            `;
-        }
-        
-        tr.innerHTML = `
-            <td>
-                <div style="display: flex; flex-direction: column; gap: 4px;">
-                    <strong style="color: var(--primary); font-size: 14px;">${voucher.code}</strong>
-                    <small style="color: var(--text-muted);">ID: ${voucher.id}</small>
-                </div>
-            </td>
-            <td>
-                <div style="display: flex; align-items: center; gap: 6px;">
-                    <i class='bx ${voucher.discount_type === 'percentage' ? 'bx-percentage' : 'bx-dollar-circle'}' style="color: var(--primary); font-size: 16px;"></i>
-                    <span style="font-weight: 600;">${discountDisplay}</span>
-                </div>
-            </td>
-            <td>
-                ${usageBar}
-            </td>
-            <td>
-                ${voucher.min_bill_amount ? 
-                    `<span style="font-weight: 600;">${formatCurrency(voucher.min_bill_amount)}</span>` : 
-                    '<span style="color: var(--text-muted);">No minimum</span>'}
-            </td>
-            <td>
-                ${expiryDisplay}
-            </td>
-            <td>
-                ${statusBadge}
-            </td>
-            <td>
-                <div style="max-width: 200px;" title="${voucher.description || 'No description'}">
-                    ${description}
-                </div>
-            </td>
-            <td>
-                <div style="display: flex; gap: 4px;">
-                    ${voucherActions}
-                </div>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-    
-    console.log('Vouchers displayed in table');
-    
-    // Add event listeners for voucher actions
-    document.querySelectorAll('.edit-voucher-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const voucherId = e.target.closest('.edit-voucher-btn').dataset.id;
-            console.log('Edit voucher clicked:', voucherId);
-            editVoucher(voucherId);
-        });
-    });
-    
-    document.querySelectorAll('.view-voucher-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const voucherId = e.target.closest('.view-voucher-btn').dataset.id;
-            console.log('View voucher clicked:', voucherId);
-            viewVoucher(voucherId);
-        });
-    });
-    
-    document.querySelectorAll('.delete-voucher-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const voucherId = e.target.closest('.delete-voucher-btn').dataset.id;
-            console.log('Delete voucher clicked:', voucherId);
-            deleteVoucher(voucherId);
-        });
-    });
-}
-
-function viewVoucher(voucherId) {
-    const voucher = vouchers.find(v => v.id == voucherId);
-    if (!voucher) return;
-    
-    // Create a simple alert to show voucher details
-    const details = `
-Voucher Details:
-================
-Code: ${voucher.code}
-Discount: ${voucher.discount_type === 'percentage' ? voucher.discount_value + '%' : formatCurrency(voucher.discount_value)}
-Usage: ${voucher.used_count || 0}/${voucher.usage_limit}
-Min Bill: ${voucher.min_bill_amount ? formatCurrency(voucher.min_bill_amount) : 'No minimum'}
-Expiry: ${voucher.expiry_date ? new Date(voucher.expiry_date).toLocaleDateString() : 'No expiry'}
-Status: ${voucher.is_active ? 'Active' : 'Inactive'}
-Description: ${voucher.description || 'No description'}
-================
-    `;
-    
-    alert(details);
-}
-
-async function editVoucher(voucherId) {
-    const voucher = vouchers.find(v => v.id == voucherId);
-    if (!voucher) return;
-    
-    // Update modal title for editing
-    const modalTitle = voucherModal.querySelector('.modal-header h3');
-    modalTitle.textContent = 'Edit Voucher';
-    
-    document.getElementById('voucher-id').value = voucher.id;
-    document.getElementById('voucher-code').value = voucher.code;
-    document.getElementById('voucher-discount-type').value = voucher.discount_type;
-    document.getElementById('voucher-discount-value').value = voucher.discount_value;
-    document.getElementById('voucher-usage-limit').value = voucher.usage_limit;
-    document.getElementById('voucher-min-bill').value = voucher.min_bill_amount || '';
-    document.getElementById('voucher-expiry-date').value = voucher.expiry_date || '';
-    document.getElementById('voucher-description').value = voucher.description || '';
-    document.getElementById('voucher-is-active').checked = voucher.is_active;
-    
-    showModal(voucherModal);
-}
-
-async function deleteVoucher(voucherId) {
-    if (!confirm('Are you sure you want to delete this voucher?')) return;
-    
-    console.log('Deleting voucher:', voucherId);
-    
-    try {
-        // Always use local storage for now
-        let savedVouchers = JSON.parse(localStorage.getItem('pos_vouchers') || '[]');
-        console.log('Vouchers before deletion:', savedVouchers);
-        
-        savedVouchers = savedVouchers.filter(v => v.id != voucherId);
-        console.log('Vouchers after deletion:', savedVouchers);
-        
-        localStorage.setItem('pos_vouchers', JSON.stringify(savedVouchers));
-        console.log('Voucher deleted from localStorage');
-        
-        loadVouchers();
-        showToast('Voucher deleted successfully!', 'success');
-    } catch (err) {
-        console.error('Error deleting voucher:', err);
-        alert('Error deleting voucher: ' + err.message);
-    }
-}
-
-async function applyVoucher() {
-    const codeInput = document.getElementById('pos-voucher-code');
-    const code = codeInput.value.trim().toUpperCase();
-    
-    if (!code) {
-        showToast('Please enter a voucher code', 'error');
-        return;
-    }
-    
-    let voucher = null;
-    
-    try {
-        // Try API first
-        const res = await fetchAuth(`${API_BASE}/vouchers/validate/${code}`);
-        if (res.ok) {
-            voucher = await res.json();
-        } else {
-            throw new Error('API not available');
-        }
-    } catch (err) {
-        console.log('Using local storage for voucher validation');
-        // Fallback to local storage
-        const savedVouchers = JSON.parse(localStorage.getItem('pos_vouchers') || '[]');
-        voucher = savedVouchers.find(v => v.code.toUpperCase() === code);
-        
-        if (!voucher) {
-            showToast('Invalid voucher code', 'error');
-            return;
-        }
-    }
-    
-    // Validate voucher conditions
-    const subtotal = currentBill.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    
-    if (!voucher.is_active) {
-        showToast('This voucher is not active', 'error');
-        return;
-    }
-    
-    if (voucher.min_bill_amount && subtotal < voucher.min_bill_amount) {
-        showToast(`Minimum bill amount of ${formatCurrency(voucher.min_bill_amount)} required for this voucher`, 'error');
-        return;
-    }
-    
-    if (voucher.expiry_date && new Date(voucher.expiry_date) < new Date()) {
-        showToast('This voucher has expired', 'error');
-        return;
-    }
-    
-    if ((voucher.used_count || 0) >= voucher.usage_limit) {
-        showToast('This voucher has reached its usage limit', 'error');
-        return;
-    }
-    
-    // Apply voucher
-    appliedVoucher = voucher;
-    
-    // Update UI
-    document.getElementById('voucher-applied-info').style.display = 'block';
-    document.getElementById('btn-apply-voucher').style.display = 'none';
-    document.getElementById('btn-remove-voucher').style.display = 'block';
-    codeInput.disabled = true;
-    
-    updateBillUI();
-    showToast('Voucher applied successfully!', 'success');
-}
-
-function removeVoucher() {
-    appliedVoucher = null;
-    
-    // Update UI
-    document.getElementById('voucher-applied-info').style.display = 'none';
-    document.getElementById('btn-apply-voucher').style.display = 'block';
-    document.getElementById('btn-remove-voucher').style.display = 'none';
-    document.getElementById('pos-voucher-code').value = '';
-    document.getElementById('pos-voucher-code').disabled = false;
-    
-    updateBillUI();
-}
-
-// Add emergency voucher reset function
-function emergencyResetVoucher() {
-    console.log('Emergency voucher reset called');
-    appliedVoucher = null;
-    
-    // Clear all voucher-related UI elements
-    document.getElementById('voucher-applied-info').style.display = 'none';
-    document.getElementById('btn-apply-voucher').style.display = 'block';
-    document.getElementById('btn-remove-voucher').style.display = 'none';
-    document.getElementById('pos-voucher-code').value = '';
-    document.getElementById('pos-voucher-code').disabled = false;
-    
-    // Hide voucher discount rows
-    const voucherDiscountRow = document.getElementById('pos-voucher-discount-row');
-    if (voucherDiscountRow) {
-        voucherDiscountRow.style.display = 'none';
-    }
-    
-    updateBillUI();
-    console.log('Emergency voucher reset completed');
-}
-
-function calculateVoucherDiscount(subtotal) {
-    if (!appliedVoucher) return 0;
-    
-    let discount = 0;
-    if (appliedVoucher.discount_type === 'percentage') {
-        discount = roundToTwo(subtotal * (appliedVoucher.discount_value / 100));
-    } else {
-        discount = roundToTwo(Math.min(appliedVoucher.discount_value, subtotal));
-    }
-    
-    return discount;
-}

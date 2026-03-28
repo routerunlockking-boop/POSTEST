@@ -10,8 +10,6 @@
     <!-- Boxicons for modern icons -->
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="/style.css">
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>">
 </head>
 
 <body>
@@ -132,18 +130,6 @@
                     <a href="#" class="nav-link" data-target="invoices-view">
                         <i class='bx bx-receipt icon'></i>
                         <span class="link-name">Invoices</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" class="nav-link" data-target="vouchers-view">
-                        <i class='bx bx-purchase-tag-alt icon'></i>
-                        <span class="link-name">Vouchers</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" class="nav-link" data-target="customers-view">
-                        <i class='bx bx-group icon'></i>
-                        <span class="link-name">Customers</span>
                     </a>
                 </li>
                 <li>
@@ -318,88 +304,38 @@
                                 </div>
                             </div>
                             <div class="customer-details" id="pos-customer-details" style="display: none; flex: 1; padding: 8px 0;">
-                                <div class="form-group" style="position: relative;">
-                                    <label>Search Customer (Name or Phone)</label>
-                                    <div style="position: relative;">
-                                        <i class='bx bx-search' style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
-                                        <input type="text" id="pos-customer-search" class="form-control" style="padding-left: 36px;" placeholder="Search saved customers...">
-                                    </div>
-                                    <div id="pos-customer-suggestions" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; z-index: 100; box-shadow: var(--shadow-lg); max-height: 200px; overflow-y: auto;"></div>
+                                <div class="form-group">
+                                    <label>Customer Name</label>
+                                    <input type="text" id="pos-customer-name" class="form-control" placeholder="Enter name" value="Walk-in Customer">
                                 </div>
-                                <div style="border-top: 1px dashed var(--border); margin: 15px 0; padding-top: 15px;">
-                                    <div class="form-group">
-                                        <label>Customer Name</label>
-                                        <input type="text" id="pos-customer-name" class="form-control" placeholder="Enter name" value="Walk-in Customer">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>WhatsApp / Phone (Optional)</label>
-                                        <input type="tel" id="pos-customer-phone" class="form-control" placeholder="Enter phone number">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Customer Type</label>
-                                        <select id="pos-customer-type" class="form-control">
-                                            <option value="Retail">Retail Customer</option>
-                                            <option value="Wholesale">Wholesale Customer</option>
-                                        </select>
-                                    </div>
+                                <div class="form-group">
+                                    <label>WhatsApp / Phone (Optional)</label>
+                                    <input type="tel" id="pos-customer-phone" class="form-control" placeholder="Enter phone number">
                                 </div>
                             </div>
                             <div class="bill-summary">
-                                <!-- Payment Method and Voucher in two boxes -->
-                                <div style="display: flex; gap: 12px; margin-bottom: 16px;">
-                                    <!-- Payment Method Box -->
-                                    <div class="form-group" style="flex: 1; background: var(--secondary); padding: 8px; border-radius: 8px; border: 1px solid var(--primary);">
-                                        <label style="font-size: 11px; font-weight: 700; color: var(--primary); margin-bottom: 4px; display: block;">Payment</label>
-                                        <select id="pos-payment-method" class="form-control" style="padding: 6px; cursor: pointer; border-color: var(--primary); font-weight: 600; font-size: 13px;">
-                                            <option value="Cash">Cash</option>
-                                            <option value="Bank Payment">Bank</option>
-                                            <option value="Cash On Delivery">COD</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <!-- Voucher Box -->
-                                    <div class="voucher-section" style="flex: 1; background: #fef3c7; padding: 8px; border-radius: 8px; border: 1px solid #f59e0b;">
-                                        <label style="font-size: 11px; font-weight: 700; color: #d97706; margin-bottom: 4px; display: block;">
-                                            <i class='bx bx-ticket' style="margin-right: 2px; font-size: 10px;"></i> Voucher
-                                        </label>
-                                        <div style="display: flex; gap: 4px;">
-                                            <input type="text" id="pos-voucher-code" class="form-control" placeholder="Code" style="flex: 1; border-color: #f59e0b; padding: 6px; font-size: 12px;">
-                                            <button type="button" id="btn-apply-voucher" class="btn btn-primary" style="background: #f59e0b; border: none; padding: 0 8px; font-size: 11px;">
-                                                Apply
-                                            </button>
-                                            <button type="button" id="btn-remove-voucher" class="btn btn-outline" style="display: none; padding: 0 8px; font-size: 11px;">
-                                                Remove
-                                            </button>
-                                        </div>
-                                        <div id="voucher-applied-info" style="display: none; margin-top: 4px; padding: 4px; background: #f0fdf4; border-radius: 4px; border: 1px solid #10b981;">
-                                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                                <span style="font-size: 10px; font-weight: 600; color: #10b981;">Applied:</span>
-                                                <span id="applied-voucher-discount" style="font-size: 10px; font-weight: 700; color: #10b981;">-0.00</span>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div class="form-group" style="margin-bottom: 16px; background: var(--secondary); padding: 12px; border-radius: 12px; border: 1px solid var(--primary);">
+                                    <label style="font-size: 13px; font-weight: 700; color: var(--primary); margin-bottom: 8px; display: block;">Payment Method</label>
+                                    <select id="pos-payment-method" class="form-control" style="padding: 10px; cursor: pointer; border-color: var(--primary); font-weight: 600;">
+                                        <option value="Cash">Cash</option>
+                                        <option value="Bank Payment">Bank payment</option>
+                                        <option value="Cash On Delivery">COD</option>
+                                    </select>
                                 </div>
-                                
-                                <div class="payment-details" style="margin-top:16px; border-top: 1px solid var(--border); padding-top: 16px;">
+                                <div class="payment-details" style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
                                     <div class="form-group" style="margin-bottom: 8px;">
                                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                            <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Subtotal</label>
-                                            <span id="pos-subtotal-amount" style="font-size: 14px; font-weight: 600; color: var(--text-main);">0.00</span>
-                                        </div>
-                                        <div id="pos-voucher-discount-row" style="display: none; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                            <label style="font-size: 12px; font-weight: 600; color: #059669;">
-                                                <i class='bx bx-ticket' style="margin-right: 4px;"></i>Voucher Discount
-                                            </label>
-                                            <span id="pos-voucher-discount-amount" style="font-size: 14px; font-weight: 600; color: #059669;">-0.00</span>
+                                            <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Amount to Pay</label>
+                                            <input type="number" id="pos-amount-to-pay" class="form-control" step="0.01" readonly style="font-weight: 700; color: var(--text-main); border: none; background: transparent; padding: 0; text-align: right; width: 100px; height: auto; pointer-events: none;">
                                         </div>
                                     </div>
                                     <div class="form-group" style="margin-bottom: 12px; background: #f0fdf4; padding: 12px; border-radius: 12px; border: 1px solid #10b981;">
                                         <label style="font-size: 13px; font-weight: 700; color: #10b981; margin-bottom: 8px; display: block;">Amount Paid</label>
                                         <input type="number" id="pos-amount-paid" class="form-control" step="0.01" placeholder="Enter amount paid" style="border-color: #10b981; font-weight: 600;">
                                     </div>
-                                    <div class="summary-row" style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 16px; font-weight: 700; color: var(--primary);">
-                                        <span>BALANCE</span>
-                                        <span id="pos-balance-amount">0.00</span>
+                                    <div class="summary-row" style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; font-weight: 600; color: var(--text-main);">
+                                        <span>CHANGE</span>
+                                        <span id="pos-change-amount">0.00</span>
                                     </div>
                                 </div>
                                 <div class="summary-row total">
@@ -481,7 +417,6 @@
                             </button>
                         </div>
                     </div>
-                    
                     <div class="table-card">
                         <div class="table-responsive">
                             <table class="data-table" id="invoices-table">
@@ -492,68 +427,6 @@
                                         <th>Time</th>
                                         <th>Total Amount</th>
                                         <th>Profit</th>
-                                        <th>Voucher</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Populated via JS -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Customers View -->
-                <section id="customers-view" class="view">
-                    <div class="view-header">
-                        <h2>Customer Management</h2>
-                        <div class="header-actions">
-                            <button class="btn btn-primary" id="btn-add-customer"><i class='bx bx-plus'></i> Add Customer</button>
-                        </div>
-                    </div>
-                    <div class="table-card">
-                        <div class="table-responsive">
-                            <table class="data-table" id="customers-table">
-                                <thead>
-                                    <tr>
-                                        <th>Customer Name</th>
-                                        <th>Phone Number</th>
-                                        <th>Type</th>
-                                        <th>Address</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Populated via JS -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Vouchers View -->
-                <section id="vouchers-view" class="view">
-                    <div class="view-header">
-                        <h2>Voucher Management</h2>
-                        <div class="header-actions">
-                            <button class="btn btn-primary" id="btn-create-voucher">
-                                <i class='bx bx-plus'></i> Create Voucher
-                            </button>
-                        </div>
-                    </div>
-                    <div class="table-card">
-                        <div class="table-responsive">
-                            <table class="data-table" id="vouchers-table">
-                                <thead>
-                                    <tr>
-                                        <th>Voucher Code</th>
-                                        <th>Discount</th>
-                                        <th>Usage</th>
-                                        <th>Min. Bill</th>
-                                        <th>Expiry Date</th>
-                                        <th>Status</th>
-                                        <th>Description</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -716,39 +589,6 @@
                 </div>
             </div>
 
-            <!-- Customer Modal -->
-            <div class="modal" id="customer-modal">
-                <div class="modal-header">
-                    <h3 id="customer-modal-title">Add Customer</h3>
-                    <button class="close-btn" id="btn-close-customer-modal"><i class='bx bx-x'></i></button>
-                </div>
-                <div class="modal-body">
-                    <form id="customer-form">
-                        <input type="hidden" id="customer-id">
-                        <div class="form-group">
-                            <label>Customer Name</label>
-                            <input type="text" id="customer-name" class="form-control" required placeholder="e.g. John Doe">
-                        </div>
-                        <div class="form-group">
-                            <label>Phone Number</label>
-                            <input type="tel" id="customer-phone" class="form-control" required placeholder="e.g. 0771234567">
-                        </div>
-                        <div class="form-group">
-                            <label>Address</label>
-                            <textarea id="customer-address" class="form-control" placeholder="Optional address"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Customer Type</label>
-                            <select id="customer-type" class="form-control">
-                                <option value="Retail">Retail Customer</option>
-                                <option value="Wholesale">Wholesale Customer</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-block">Save Customer</button>
-                    </form>
-                </div>
-            </div>
-
             <!-- Print/Invoice Details Modal -->
             <div class="modal" id="invoice-modal">
                 <div class="modal-header">
@@ -786,14 +626,6 @@
                             </tbody>
                         </table>
                         <p>----------------------------</p>
-                        <div class="receipt-total" id="receipt-subtotal-row" style="display:none; font-weight: normal; font-size: 14px; margin-block: 5px;">
-                            <span>Subtotal:</span>
-                            <span id="receipt-subtotal-amount"></span>
-                        </div>
-                        <div class="receipt-total" id="receipt-discount-row" style="display:none; font-weight: normal; font-size: 14px; margin-block: 5px;">
-                            <span>Voucher Discount:</span>
-                            <span id="receipt-simple-discount"></span>
-                        </div>
                         <div class="receipt-total">
                             <span>TOTAL:</span>
                             <span id="receipt-total-amount"></span>
@@ -818,60 +650,6 @@
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-primary btn-block" id="btn-print-receipt">Print Receipt</button>
-                </div>
-            </div>
-
-            <!-- Voucher Creation Modal -->
-            <div class="modal" id="voucher-modal">
-                <div class="modal-header">
-                    <h3>Create Voucher</h3>
-                    <button class="close-btn" id="btn-close-voucher-modal"><i class='bx bx-x'></i></button>
-                </div>
-                <div class="modal-body">
-                    <form id="voucher-form">
-                        <input type="hidden" id="voucher-id">
-                        <div class="form-group">
-                            <label>Voucher Code</label>
-                            <div style="display: flex; gap: 8px;">
-                                <input type="text" id="voucher-code" class="form-control" required placeholder="Enter voucher code or auto-generate">
-                                <button type="button" id="btn-generate-voucher-code" class="btn btn-outline" style="padding: 0 12px; height: 38px; display: flex; align-items: center;" title="Generate Code">
-                                    <i class='bx bx-refresh' style="font-size: 20px;"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Discount Type</label>
-                            <select id="voucher-discount-type" class="form-control" required>
-                                <option value="percentage">Percentage (%)</option>
-                                <option value="fixed">Fixed Amount</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Discount Value</label>
-                            <input type="number" step="0.01" id="voucher-discount-value" class="form-control" required placeholder="Enter discount value">
-                        </div>
-                        <div class="form-group">
-                            <label>Usage Limit</label>
-                            <input type="number" id="voucher-usage-limit" class="form-control" required placeholder="Maximum times this voucher can be used" min="1">
-                        </div>
-                        <div class="form-group">
-                            <label>Minimum Bill Amount (Optional)</label>
-                            <input type="number" step="0.01" id="voucher-min-bill" class="form-control" placeholder="Minimum bill amount to use this voucher">
-                        </div>
-                        <div class="form-group">
-                            <label>Expiry Date (Optional)</label>
-                            <input type="date" id="voucher-expiry-date" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <label>Description (Optional)</label>
-                            <textarea id="voucher-description" class="form-control" rows="3" placeholder="Voucher description or terms"></textarea>
-                        </div>
-                        <div class="form-group" style="display:flex; align-items:center; gap: 10px;">
-                            <input type="checkbox" id="voucher-is-active" style="width:18px;height:18px;" checked>
-                            <label style="margin:0;">Voucher is Active</label>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-block">Create Voucher</button>
-                    </form>
                 </div>
             </div>
 

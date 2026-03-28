@@ -68,6 +68,7 @@ const InvoiceSchema = new mongoose.Schema({
     total_amount: { type: Number, default: 0.0 },
     amount_paid: { type: Number, default: 0.0 },
     total_profit: { type: Number, default: 0.0 },
+    voucher: { type: Object, default: null },
     items: [InvoiceItemSchema]
 });
 

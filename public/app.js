@@ -1618,23 +1618,35 @@ function showInvoicePrintout(invoice) {
     
         // Handle voucher information
         let voucherDiscount = 0;
+        let total = typeof invoice.total_amount === 'number' ? invoice.total_amount : subtotal;
+
         if (invoice.voucher) {
             if (invoice.voucher.discount_type === 'percentage') {
                 voucherDiscount = subtotal * (invoice.voucher.discount_value / 100);
             } else {
-                voucherDiscount = invoice.voucher.discount_amount || invoice.voucher.discount_value;
+                voucherDiscount = invoice.voucher.discount_amount || invoice.voucher.discount_value || 0;
             }
             
             document.getElementById('receipt-subtotal-row').style.display = 'flex';
             document.getElementById('receipt-discount-row').style.display = 'flex';
+            document.getElementById('receipt-discount-row').children[0].textContent = `Voucher (${invoice.voucher.code || 'Discount'}):`;
+            document.getElementById('receipt-subtotal-amount').textContent = subtotal.toFixed(2);
+            document.getElementById('receipt-simple-discount').textContent = '-' + voucherDiscount.toFixed(2);
+            
+            total = invoice.total_amount !== undefined ? invoice.total_amount : (subtotal - voucherDiscount);
+        } else if (invoice.total_amount !== undefined && (subtotal - invoice.total_amount) > 0.01) {
+            voucherDiscount = subtotal - invoice.total_amount;
+            document.getElementById('receipt-subtotal-row').style.display = 'flex';
+            document.getElementById('receipt-discount-row').style.display = 'flex';
+            document.getElementById('receipt-discount-row').children[0].textContent = `Voucher Discount:`;
             document.getElementById('receipt-subtotal-amount').textContent = subtotal.toFixed(2);
             document.getElementById('receipt-simple-discount').textContent = '-' + voucherDiscount.toFixed(2);
         } else {
             document.getElementById('receipt-subtotal-row').style.display = 'none';
             document.getElementById('receipt-discount-row').style.display = 'none';
+            total = subtotal;
         }
     
-    const total = subtotal - voucherDiscount;
     document.getElementById('receipt-total-amount').textContent = total.toFixed(2);
     
     // Payment details for receipt
@@ -1685,7 +1697,7 @@ async function loadInvoices() {
                 <td style="color: #15803d; font-weight:bold">${formatCurrency(inv.total_profit || 0)}</td>
                 <td style="text-align: center;">
                     ${inv.voucher ? 
-                        `<i class='bx bx-ticket' style="color: #0284c7; font-size: 16px;" title="Voucher: ${inv.voucher.code}"></i>` : 
+                        `<div style="font-size: 11px; font-weight: 600; color: #0284c7; line-height: 1.2;"><i class='bx bx-ticket' title="Voucher: ${inv.voucher.code}"></i> ${inv.voucher.code}<br><span style="color: #059669;">-${formatCurrency(inv.voucher.discount_amount || inv.voucher.discount_value || 0)}</span></div>` : 
                         '<span style="color: var(--text-muted); font-size: 12px;">-</span>'
                     }
                 </td>

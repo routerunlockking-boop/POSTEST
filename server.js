@@ -491,6 +491,7 @@ app.get('/api/invoices', async (req, res) => {
             time: inv.time,
             total_amount: inv.total_amount,
             total_profit: inv.total_profit || 0,
+            voucher: inv.voucher || null,
             owner_name: inv.user_id ? inv.user_id.business_name : 'Unknown'
         }));
         
@@ -515,6 +516,7 @@ app.get('/api/invoices/:id', async (req, res) => {
             date: invoice.date,
             time: invoice.time,
             total_amount: invoice.total_amount,
+            voucher: invoice.voucher || null,
             owner_name: invoice.user_id ? invoice.user_id.business_name : 'Unknown',
             items: invoice.items.map(item => ({
                 id: item._id ? item._id.toString() : null,
@@ -531,7 +533,7 @@ app.get('/api/invoices/:id', async (req, res) => {
 });
 
 app.post('/api/invoices', async (req, res) => {
-    const { items, total_amount, amount_paid, cashier_name, customer_name, customer_phone, customer_type, payment_method } = req.body;
+    const { items, total_amount, amount_paid, cashier_name, customer_name, customer_phone, customer_type, payment_method, voucher } = req.body;
     
     const parsedTotal = parseFloat(total_amount) || 0;
     const parsedPaid = parseFloat(amount_paid) || 0;
@@ -589,6 +591,7 @@ app.post('/api/invoices', async (req, res) => {
             total_amount: parsedTotal,
             amount_paid: parsedPaid,
             total_profit,
+            voucher: voucher || null,
             items: formattedItems
         });
         
@@ -615,6 +618,7 @@ app.post('/api/invoices', async (req, res) => {
                 total_amount: parsedTotal,
                 amount_paid: parsedPaid,
                 owner_name: req.user.business_name,
+                voucher: voucher || null,
                 items: formattedItems
             }
         });

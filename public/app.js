@@ -1352,6 +1352,11 @@ function updateBillUI() {
     itemsContainer.innerHTML = '';
     let total = 0;
     
+    // Force reset appliedVoucher if no valid voucher exists
+    if (appliedVoucher && !appliedVoucher.id && !appliedVoucher.code) {
+        appliedVoucher = null;
+    }
+    
     if (currentBill.length > 0) {
         const header = document.createElement('div');
         header.style = "display: flex; justify-content: space-between; padding: 0 12px 8px 12px; border-bottom: 1px solid var(--border); margin-bottom: 8px; font-size: 12px; font-weight: 700; color: var(--text-muted);";
@@ -1396,8 +1401,11 @@ function updateBillUI() {
         itemsContainer.appendChild(div);
     });
     
-    // Calculate voucher discount only if voucher is applied
-    const voucherDiscount = appliedVoucher ? calculateVoucherDiscount(total) : 0;
+    // Calculate voucher discount only if voucher is applied AND valid
+    let voucherDiscount = 0;
+    if (appliedVoucher && appliedVoucher.id && appliedVoucher.code) {
+        voucherDiscount = calculateVoucherDiscount(total);
+    }
     const finalTotal = total - voucherDiscount;
     
     // Update UI elements
@@ -1406,10 +1414,10 @@ function updateBillUI() {
         subtotalEl.textContent = formatCurrency(total);
     }
     
-    // Show voucher discount row only if voucher is applied AND has discount
+    // Show voucher discount row only if voucher is applied AND valid AND has discount
     const voucherDiscountRow = document.getElementById('pos-voucher-discount-row');
     const voucherDiscountAmount = document.getElementById('pos-voucher-discount-amount');
-    if (appliedVoucher && voucherDiscount > 0) {
+    if (appliedVoucher && appliedVoucher.id && appliedVoucher.code && voucherDiscount > 0) {
         voucherDiscountRow.style.display = 'flex';
         voucherDiscountAmount.textContent = `-${formatCurrency(voucherDiscount)}`;
     } else {
@@ -1420,7 +1428,7 @@ function updateBillUI() {
     document.getElementById('pos-total-amount').textContent = formatCurrency(finalTotal);
     
     // Update voucher applied info
-    if (appliedVoucher && voucherDiscount > 0) {
+    if (appliedVoucher && appliedVoucher.id && appliedVoucher.code && voucherDiscount > 0) {
         document.getElementById('applied-voucher-discount').textContent = `-${formatCurrency(voucherDiscount)}`;
     }
     
@@ -1489,7 +1497,7 @@ const payment_method = document.getElementById('pos-payment-method').value;
 
 // Calculate original subtotal for voucher tracking (with proper rounding)
 const originalSubtotal = roundToTwo(currentBill.reduce((sum, item) => sum + (item.price * item.quantity), 0));
-const voucherDiscount = appliedVoucher ? roundToTwo(calculateVoucherDiscount(originalSubtotal)) : 0;
+const voucherDiscount = (appliedVoucher && appliedVoucher.id && appliedVoucher.code) ? roundToTwo(calculateVoucherDiscount(originalSubtotal)) : 0;
 
 const payload = {
     items: currentBill,
@@ -1500,7 +1508,7 @@ const payload = {
     customer_phone,
     customer_type,
     payment_method,
-    voucher: appliedVoucher ? {
+    voucher: (appliedVoucher && appliedVoucher.id && appliedVoucher.code) ? {
         id: appliedVoucher.id,
         code: appliedVoucher.code,
         discount_type: appliedVoucher.discount_type,

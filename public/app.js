@@ -1422,140 +1422,152 @@ function calculateChange() {
     const totalText = document.getElementById('pos-total-amount').textContent;
     const amountToPay = parseFloat(totalText.replace(/[^0-9.-]/g, '')) || 0;
     const amountPaid = parseFloat(document.getElementById('pos-amount-paid').value) || 0;
-    const change = amountPaid - amountToPay;
+    const customerDiscount = parseFloat(document.getElementById('pos-customer-discount').value) || 0;
     
-    const changeEl = document.getElementById('pos-change-amount');
-    changeEl.textContent = formatCurrency(Math.max(0, change));
+    // Calculate initial change (amount paid minus total)
+    const initialChange = amountPaid - amountToPay;
     
-    if (change < 0 && amountPaid > 0) {
-        changeEl.style.color = '#ef4444'; // Red for insufficient payment
+    // Calculate final change (initial change minus customer discount)
+    const finalChange = initialChange - customerDiscount;
+    
+    // Update display elements
+    document.getElementById('pos-initial-change').textContent = formatCurrency(initialChange);
+    document.getElementById('pos-customer-discount-display').textContent = formatCurrency(customerDiscount);
+    document.getElementById('pos-final-change').textContent = formatCurrency(finalChange);
+    
+    // Color coding for final change
+    const finalChangeEl = document.getElementById('pos-final-change');
+    if (finalChange < 0 && amountPaid > 0) {
+        finalChangeEl.style.color = '#ef4444'; // Red for insufficient payment
+    } else if (finalChange >= 0) {
+        finalChangeEl.style.color = '#10b981'; // Green for positive change
     } else {
-        changeEl.style.color = 'var(--text-main)';
+        finalChangeEl.style.color = 'var(--text-main)';
     }
 }
 
 // Add event listeners for payment calculation
 document.addEventListener('DOMContentLoaded', () => {
-    const amountPaidInput = document.getElementById('pos-amount-paid');
-    const amountToPayInput = document.getElementById('pos-amount-to-pay');
-    
-    if (amountPaidInput) {
-        amountPaidInput.addEventListener('input', calculateChange);
-    }
-    if (amountToPayInput) {
-        amountToPayInput.addEventListener('input', calculateChange);
-    }
+const amountPaidInput = document.getElementById('pos-amount-paid');
+const customerDiscountInput = document.getElementById('pos-customer-discount');
+
+if (amountPaidInput) {
+    amountPaidInput.addEventListener('input', calculateChange);
+}
+
+if (customerDiscountInput) {
+    customerDiscountInput.addEventListener('input', calculateChange);
+}
 });
 
-    document.getElementById('btn-submit-bill').addEventListener('click', async () => {
-        if (currentBill.length === 0) {
-            alert('Bill is empty!');
-            return;
-        }
-        
-        const totalText = document.getElementById('pos-total-amount').textContent;
-        let total = parseFloat(totalText.replace(/[^0-9.-]/g, '')) || 0;
-        let amountPaid = parseFloat(document.getElementById('pos-amount-paid').value);
-    
-    // If amount paid is empty or 0, default to the total amount
-    if (isNaN(amountPaid) || amountPaid <= 0) {
-        amountPaid = total;
+document.getElementById('btn-submit-bill').addEventListener('click', async () => {
+if (currentBill.length === 0) {
+    alert('Bill is empty!');
+    return;
+}
+
+const totalText = document.getElementById('pos-total-amount').textContent;
+let total = parseFloat(totalText.replace(/[^0-9.-]/g, '')) || 0;
+let amountPaid = parseFloat(document.getElementById('pos-amount-paid').value);
+
+// If amount paid is empty or 0, default to the total amount
+if (isNaN(amountPaid) || amountPaid <= 0) {
+    amountPaid = total;
+}
+
+const cashier_name = document.getElementById('pos-cashier-name').value || 'System';
+const customer_name = document.getElementById('pos-customer-name').value;
+const customer_phone = document.getElementById('pos-customer-phone').value;
+const customer_type = document.getElementById('pos-customer-type').value;
+const payment_method = document.getElementById('pos-payment-method').value;
+
+// Calculate original subtotal for voucher tracking
+const originalSubtotal = currentBill.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+const voucherDiscount = appliedVoucher ? calculateVoucherDiscount(originalSubtotal) : 0;
+
+const payload = {
+    items: currentBill,
+    total_amount: total,
+    amount_paid: amountPaid,
+    cashier_name,
+    customer_name,
+    customer_phone,
+    customer_type,
+    payment_method,
+    voucher: appliedVoucher ? {
+        id: appliedVoucher.id,
+        code: appliedVoucher.code,
+        discount_type: appliedVoucher.discount_type,
+        discount_value: appliedVoucher.discount_value,
+        discount_amount: voucherDiscount
+    } : null
+};
+
+try {
+    const res = await fetchAuth(`${API_BASE}/invoices`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to create invoice');
     }
-    
-    const cashier_name = document.getElementById('pos-cashier-name').value || 'System';
-    const customer_name = document.getElementById('pos-customer-name').value;
-    const customer_phone = document.getElementById('pos-customer-phone').value;
-    const customer_type = document.getElementById('pos-customer-type').value;
-    const payment_method = document.getElementById('pos-payment-method').value;
-    
-    // Calculate original subtotal for voucher tracking
-    const originalSubtotal = currentBill.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const voucherDiscount = appliedVoucher ? calculateVoucherDiscount(originalSubtotal) : 0;
-    
-    const payload = {
-        items: currentBill,
-        total_amount: total,
-        amount_paid: amountPaid,
-        cashier_name,
-        customer_name,
-        customer_phone,
-        customer_type,
-        payment_method,
-        voucher: appliedVoucher ? {
-            id: appliedVoucher.id,
-            code: appliedVoucher.code,
-            discount_type: appliedVoucher.discount_type,
-            discount_value: appliedVoucher.discount_value,
-            discount_amount: voucherDiscount
-        } : null
-    };
-    
-    try {
-        const res = await fetchAuth(`${API_BASE}/invoices`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        
-        if (!res.ok) {
-            const errData = await res.json();
-            throw new Error(errData.error || 'Failed to create invoice');
-        }
-        
-        const data = await res.json();
-        
-        // Update voucher usage count if voucher was applied
-        if (appliedVoucher) {
-            try {
-                // Try API first
-                const voucherRes = await fetchAuth(`${API_BASE}/vouchers/${appliedVoucher.id}/use`, { method: 'POST' });
-                if (!voucherRes.ok) {
-                    throw new Error('API not available');
-                }
-            } catch (err) {
-                // Fallback to local storage
-                let savedVouchers = JSON.parse(localStorage.getItem('pos_vouchers') || '[]');
-                const voucherIndex = savedVouchers.findIndex(v => v.id === appliedVoucher.id);
-                if (voucherIndex !== -1) {
-                    savedVouchers[voucherIndex].used_count = (savedVouchers[voucherIndex].used_count || 0) + 1;
-                    localStorage.setItem('pos_vouchers', JSON.stringify(savedVouchers));
-                }
+
+    const invoice = await res.json();
+    console.log('Invoice created:', invoice);
+
+    // Clear bill
+    currentBill = [];
+    appliedVoucher = null;
+    updateBillUI();
+
+    // Show invoice printout
+    showInvoicePrintout(invoice);
+
+    // Update voucher usage count if voucher was applied
+    if (appliedVoucher) {
+        try {
+            // Try API first
+            const voucherRes = await fetchAuth(`${API_BASE}/vouchers/${appliedVoucher.id}/use`, { method: 'POST' });
+            if (!voucherRes.ok) {
+                throw new Error('API not available');
+            }
+        } catch (err) {
+            // Fallback to local storage
+            let savedVouchers = JSON.parse(localStorage.getItem('pos_vouchers') || '[]');
+            const voucherIndex = savedVouchers.findIndex(v => v.id === appliedVoucher.id);
+            if (voucherIndex !== -1) {
+                savedVouchers[voucherIndex].used_count = (savedVouchers[voucherIndex].used_count || 0) + 1;
+                localStorage.setItem('pos_vouchers', JSON.stringify(savedVouchers));
             }
         }
-        
-        // Print
-        showInvoicePrintout(data.invoice);
-        
-        // Clear bill and reset voucher
-        currentBill = [];
-        appliedVoucher = null;
-        document.getElementById('pos-cashier-name').value = 'Pamidu';
-        document.getElementById('pos-customer-name').value = 'Walk-in Customer';
-        document.getElementById('pos-customer-phone').value = '';
-        document.getElementById('pos-customer-type').value = 'Retail';
-        document.getElementById('pos-customer-search').value = '';
-        document.getElementById('pos-payment-method').value = 'Cash';
-        document.getElementById('pos-amount-paid').value = '';
-        
-        // Reset voucher UI
-        document.getElementById('voucher-applied-info').style.display = 'none';
-        document.getElementById('btn-apply-voucher').style.display = 'block';
-        document.getElementById('btn-remove-voucher').style.display = 'none';
-        document.getElementById('pos-voucher-code').value = '';
-        document.getElementById('pos-voucher-code').disabled = false;
-        
-        updateBillUI();
-        
-        // Reset tabs to items
-        document.getElementById('tab-btn-items').click();
-        
-        // Reload products cache (lite)
-        fetchAuth(`${API_BASE}/products?lite=true`).then(r => r.json()).then(p => products = p);
-        
-    } catch (err) {
-        console.error(err);
-        alert('Error saving bill: ' + err.message);
     }
+
+    showToast('Bill submitted successfully!', 'success');
+
+    // Reset form fields
+    document.getElementById('pos-cashier-name').value = 'Pamidu';
+    document.getElementById('pos-customer-name').value = 'Walk-in Customer';
+    document.getElementById('pos-customer-phone').value = '';
+    document.getElementById('pos-customer-type').value = 'Retail';
+    document.getElementById('pos-customer-search').value = '';
+    document.getElementById('pos-payment-method').value = 'Cash';
+    document.getElementById('pos-amount-paid').value = '';
+    document.getElementById('pos-customer-discount').value = '';
+    
+    // Reset voucher UI
+    document.getElementById('voucher-applied-info').style.display = 'none';
+    document.getElementById('btn-apply-voucher').style.display = 'block';
+    document.getElementById('btn-remove-voucher').style.display = 'none';
+    document.getElementById('pos-voucher-code').value = '';
+    document.getElementById('pos-voucher-code').disabled = false;
+
+} catch (err) {
+    console.error('Error submitting bill:', err);
+    alert('Error submitting bill: ' + err.message);
+}
 });
 
 function showInvoicePrintout(invoice) {

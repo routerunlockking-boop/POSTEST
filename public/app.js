@@ -234,6 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupBarcodeScanner();
     setupCustomerSearch();
     loadCustomers();
+    loadVouchers();
 });
 
 function initTheme() {
@@ -670,6 +671,23 @@ function setupModals() {
     
     // Customer cancel button
     document.getElementById('btn-cancel-customer').addEventListener('click', closeCustomerModal);
+    
+    // Voucher form submission
+    document.getElementById('voucher-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const voucherData = {
+            code: document.getElementById('voucher-code').value.toUpperCase(),
+            discount_type: document.getElementById('voucher-discount-type').value,
+            discount_value: parseFloat(document.getElementById('voucher-discount-value').value),
+            expiry_date: document.getElementById('voucher-expiry-date').value,
+            usage_limit: parseInt(document.getElementById('voucher-usage-limit').value) || null,
+            status: document.getElementById('voucher-status').value
+        };
+        saveVoucher(voucherData);
+    });
+    
+    // Voucher cancel button
+    document.getElementById('btn-cancel-voucher').addEventListener('click', closeVoucherModal);
 
     // Handle Image Selection
     document.getElementById('product-image').addEventListener('change', function(e) {
@@ -1232,13 +1250,9 @@ function calculateChange() {
 // Add event listeners for payment calculation
 document.addEventListener('DOMContentLoaded', () => {
     const amountPaidInput = document.getElementById('pos-amount-paid');
-    const amountToPayInput = document.getElementById('pos-amount-to-pay');
     
     if (amountPaidInput) {
         amountPaidInput.addEventListener('input', calculateChange);
-    }
-    if (amountToPayInput) {
-        amountToPayInput.addEventListener('input', calculateChange);
     }
 });
 
@@ -1768,4 +1782,124 @@ function selectCustomer(customer) {
     document.getElementById('customer-search-results').style.display = 'none';
     
     showToast(`Customer selected: ${customer.name}`, 'success');
+}
+
+// ==== VOUCHER MANAGEMENT FUNCTIONS ====
+function showAddVoucherModal() {
+    document.getElementById('voucher-modal-title').textContent = 'Create Voucher';
+    document.getElementById('voucher-form').reset();
+    document.getElementById('voucher-id').value = '';
+    document.getElementById('voucher-modal').style.display = 'block';
+}
+
+function showEditVoucherModal(voucherId) {
+    const voucher = vouchers.find(v => v.id == voucherId);
+    if (!voucher) return;
+    
+    document.getElementById('voucher-modal-title').textContent = 'Edit Voucher';
+    document.getElementById('voucher-id').value = voucher.id;
+    document.getElementById('voucher-code').value = voucher.code;
+    document.getElementById('voucher-discount-type').value = voucher.discount_type;
+    document.getElementById('voucher-discount-value').value = voucher.discount_value;
+    document.getElementById('voucher-expiry-date').value = voucher.expiry_date || '';
+    document.getElementById('voucher-usage-limit').value = voucher.usage_limit || '';
+    document.getElementById('voucher-status').value = voucher.status || 'active';
+    document.getElementById('voucher-modal').style.display = 'block';
+}
+
+function deleteVoucher(voucherId) {
+    if (!confirm('Are you sure you want to delete this voucher?')) return;
+    
+    vouchers = vouchers.filter(v => v.id != voucherId);
+    saveVouchersToStorage();
+    loadVouchers();
+    showToast('Voucher deleted successfully!', 'success');
+}
+
+function saveVoucher(voucherData) {
+    const voucherId = document.getElementById('voucher-id').value;
+    
+    if (voucherId) {
+        // Edit existing voucher
+        const voucherIndex = vouchers.findIndex(v => v.id == voucherId);
+        if (voucherIndex !== -1) {
+            vouchers[voucherIndex] = {
+                ...vouchers[voucherIndex],
+                ...voucherData,
+                updated_at: new Date().toISOString()
+            };
+        }
+    } else {
+        // Add new voucher
+        const newVoucher = {
+            id: 'VOUCH' + Date.now(),
+            ...voucherData,
+            used_count: 0,
+            created_at: new Date().toISOString()
+        };
+        vouchers.push(newVoucher);
+    }
+    
+    saveVouchersToStorage();
+    loadVouchers();
+    closeVoucherModal();
+    showToast(voucherId ? 'Voucher updated successfully!' : 'Voucher created successfully!', 'success');
+}
+
+function closeVoucherModal() {
+    document.getElementById('voucher-modal').style.display = 'none';
+    document.getElementById('voucher-form').reset();
+}
+
+function saveVouchersToStorage() {
+    localStorage.setItem('pos_vouchers', JSON.stringify(vouchers));
+}
+
+function loadVouchers() {
+    const savedVouchers = localStorage.getItem('pos_vouchers');
+    if (savedVouchers) {
+        vouchers = JSON.parse(savedVouchers);
+    }
+    
+    const tbody = document.getElementById('vouchers-table-body');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    vouchers.forEach(voucher => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${voucher.code}</td>
+            <td>${voucher.discount_type === 'percentage' ? voucher.discount_value + '%' : 'Rs. ' + voucher.discount_value}</td>
+            <td>${voucher.discount_type === 'percentage' ? voucher.discount_value + '%' : formatCurrency(voucher.discount_value)}</td>
+            <td>${voucher.usage_limit || 'Unlimited'}</td>
+            <td>${voucher.used_count || 0}</td>
+            <td>${voucher.expiry_date ? new Date(voucher.expiry_date).toLocaleDateString() : 'No expiry'}</td>
+            <td><span style="padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; background: ${voucher.status === 'active' ? '#10b981' : '#6b7280'}; color: white;">${voucher.status}</span></td>
+            <td>
+                <button class="btn btn-outline btn-icon-only edit-voucher-btn" data-id="${voucher.id}" title="Edit Voucher">
+                    <i class='bx bx-edit'></i>
+                </button>
+                <button class="btn btn-danger btn-icon-only delete-voucher-btn" data-id="${voucher.id}" title="Delete Voucher">
+                    <i class='bx bx-trash'></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+    
+    // Add event listeners
+    document.querySelectorAll('.edit-voucher-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const voucherId = e.target.closest('.edit-voucher-btn').dataset.id;
+            showEditVoucherModal(voucherId);
+        });
+    });
+    
+    document.querySelectorAll('.delete-voucher-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const voucherId = e.target.closest('.delete-voucher-btn').dataset.id;
+            deleteVoucher(voucherId);
+        });
+    });
 }

@@ -924,7 +924,13 @@ function hideModal() {
 
 // ==== UTILS ====
 function formatCurrency(amount) {
-    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'LKR' }).format(amount).replace('LKR', 'Rs.');
+    // Round to 2 decimal places to avoid floating point precision issues
+    const roundedAmount = Math.round((amount + Number.EPSILON) * 100) / 100;
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'LKR' }).format(roundedAmount).replace('LKR', 'Rs.');
+}
+
+function roundToTwo(num) {
+    return Math.round((num + Number.EPSILON) * 100) / 100;
 }
 
 function exportToCSV(filename, rows) {
@@ -1358,8 +1364,8 @@ function updateBillUI() {
     }
 
     currentBill.forEach(item => {
-        const amount = item.price * item.quantity;
-        total += amount;
+        const amount = roundToTwo(item.price * item.quantity);
+        total = roundToTwo(total + amount);
         
         const div = document.createElement('div');
         div.className = 'bill-item';
@@ -1390,9 +1396,9 @@ function updateBillUI() {
         itemsContainer.appendChild(div);
     });
     
-    // Calculate voucher discount
-    const voucherDiscount = calculateVoucherDiscount(total);
-    const finalTotal = total - voucherDiscount;
+    // Calculate voucher discount only if voucher is applied
+    const voucherDiscount = appliedVoucher ? roundToTwo(calculateVoucherDiscount(total)) : 0;
+    const finalTotal = roundToTwo(total - voucherDiscount);
     
     // Update UI elements
     const subtotalEl = document.getElementById('pos-subtotal-amount');
@@ -1400,7 +1406,7 @@ function updateBillUI() {
         subtotalEl.textContent = formatCurrency(total);
     }
     
-    // Show voucher discount row if voucher is applied
+    // Show voucher discount row only if voucher is applied AND has discount
     const voucherDiscountRow = document.getElementById('pos-voucher-discount-row');
     const voucherDiscountAmount = document.getElementById('pos-voucher-discount-amount');
     if (appliedVoucher && voucherDiscount > 0) {
@@ -1410,7 +1416,7 @@ function updateBillUI() {
         voucherDiscountRow.style.display = 'none';
     }
     
-    // Always update the total amount (with or without voucher)
+    // Always update total amount (with or without voucher)
     document.getElementById('pos-total-amount').textContent = formatCurrency(finalTotal);
     
     // Update voucher applied info
@@ -1418,34 +1424,29 @@ function updateBillUI() {
         document.getElementById('applied-voucher-discount').textContent = `-${formatCurrency(voucherDiscount)}`;
     }
     
-    // Auto-update balance whenever the bill items change (e.g. quantity updates)
+    // Auto-update balance whenever bill items change (e.g. quantity updates)
     calculateChange();
 }
 
 function calculateChange() {
     const totalText = document.getElementById('pos-total-amount').textContent;
-    const amountToPay = parseFloat(totalText.replace(/[^0-9.-]/g, '')) || 0;
-    const amountPaidInput = document.getElementById('pos-amount-paid').value;
+    const amountToPay = roundToTwo(parseFloat(totalText.replace(/[^0-9.-]/g, '')) || 0);
+    const amountPaid = roundToTwo(parseFloat(document.getElementById('pos-amount-paid').value) || 0);
+    
+    // Calculate balance (amount paid minus total)
+    const balance = roundToTwo(amountPaid - amountToPay);
+    
+    // Update display elements
+    document.getElementById('pos-balance-amount').textContent = formatCurrency(balance);
+    
+    // Color coding for balance
     const balanceEl = document.getElementById('pos-balance-amount');
-    
-    // If no amount has been typed yet, reset balance state to 0.00
-    if (!amountPaidInput || amountPaidInput.trim() === '') {
-        balanceEl.textContent = formatCurrency(0);
-        balanceEl.style.color = 'var(--text-main)';
-        return;
-    }
-    
-    const amountPaid = parseFloat(amountPaidInput) || 0;
-    const balance = amountPaid - amountToPay;
-    
-    balanceEl.textContent = formatCurrency(balance);
-    
-    if (balance < 0) {
+    if (balance < 0 && amountPaid > 0) {
         balanceEl.style.color = '#ef4444'; // Red for insufficient payment
-    } else if (balance > 0) {
-        balanceEl.style.color = '#10b981'; // Green for positive balance (change to give)
+    } else if (balance >= 0) {
+        balanceEl.style.color = '#10b981'; // Green for positive balance
     } else {
-        balanceEl.style.color = 'var(--text-main)'; // Default if exactly 0
+        balanceEl.style.color = 'var(--text-main)';
     }
 }
 
@@ -2276,9 +2277,9 @@ function calculateVoucherDiscount(subtotal) {
     
     let discount = 0;
     if (appliedVoucher.discount_type === 'percentage') {
-        discount = subtotal * (appliedVoucher.discount_value / 100);
+        discount = roundToTwo(subtotal * (appliedVoucher.discount_value / 100));
     } else {
-        discount = Math.min(appliedVoucher.discount_value, subtotal);
+        discount = roundToTwo(Math.min(appliedVoucher.discount_value, subtotal));
     }
     
     return discount;

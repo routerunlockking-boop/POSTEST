@@ -1639,7 +1639,9 @@ window.testFunction = function() {
 function showAddCustomerModal() {
     console.log('showAddCustomerModal called');
     const modal = document.getElementById('customer-modal');
+    const modalOverlay = document.getElementById('modal-overlay');
     console.log('customer-modal element:', modal);
+    console.log('modal-overlay element:', modalOverlay);
     
     if (!modal) {
         console.error('customer-modal not found in DOM');
@@ -1647,11 +1649,21 @@ function showAddCustomerModal() {
         return;
     }
     
+    if (!modalOverlay) {
+        console.error('modal-overlay not found in DOM');
+        alert('Error: modal-overlay not found in DOM');
+        return;
+    }
+    
     document.getElementById('customer-modal-title').textContent = 'Add Customer';
     document.getElementById('customer-form').reset();
     document.getElementById('customer-id').value = '';
+    
+    // Show both the overlay and the modal
+    modalOverlay.style.display = 'flex';
     modal.style.display = 'block';
-    console.log('Customer modal should now be visible');
+    
+    console.log('Customer modal and overlay should now be visible');
 }
 
 function showEditCustomerModal(customerId) {
@@ -1706,7 +1718,16 @@ function saveCustomer(customerData) {
 }
 
 function closeCustomerModal() {
-    document.getElementById('customer-modal').style.display = 'none';
+    const modalOverlay = document.getElementById('modal-overlay');
+    const modal = document.getElementById('customer-modal');
+    
+    if (modalOverlay) {
+        modalOverlay.style.display = 'none';
+    }
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    
     document.getElementById('customer-form').reset();
 }
 
@@ -1824,18 +1845,31 @@ function selectCustomer(customer) {
 function showAddVoucherModal() {
     console.log('showAddVoucherModal called');
     const modal = document.getElementById('voucher-modal');
+    const modalOverlay = document.getElementById('modal-overlay');
     console.log('voucher-modal element:', modal);
+    console.log('modal-overlay element:', modalOverlay);
     
     if (!modal) {
         console.error('voucher-modal not found in DOM');
+        alert('Error: voucher-modal not found in DOM');
+        return;
+    }
+    
+    if (!modalOverlay) {
+        console.error('modal-overlay not found in DOM');
+        alert('Error: modal-overlay not found in DOM');
         return;
     }
     
     document.getElementById('voucher-modal-title').textContent = 'Create Voucher';
     document.getElementById('voucher-form').reset();
     document.getElementById('voucher-id').value = '';
+    
+    // Show both the overlay and the modal
+    modalOverlay.style.display = 'flex';
     modal.style.display = 'block';
-    console.log('Voucher modal should now be visible');
+    
+    console.log('Voucher modal and overlay should now be visible');
 }
 
 function showEditVoucherModal(voucherId) {
@@ -1893,7 +1927,16 @@ function saveVoucher(voucherData) {
 }
 
 function closeVoucherModal() {
-    document.getElementById('voucher-modal').style.display = 'none';
+    const modalOverlay = document.getElementById('modal-overlay');
+    const modal = document.getElementById('voucher-modal');
+    
+    if (modalOverlay) {
+        modalOverlay.style.display = 'none';
+    }
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    
     document.getElementById('voucher-form').reset();
 }
 

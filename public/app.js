@@ -1067,26 +1067,60 @@ document.getElementById('btn-export-inventory').addEventListener('click', () => 
 
 // ==== POS (NEW BILL) ====
 async function loadPOS() {
+    console.log('Loading POS...');
     currentBill = [];
     updateBillUI();
     document.getElementById('pos-search-input').value = '';
     
     try {
+        console.log('Fetching products from API...');
         // Fetch 'lite' products (without images) for faster loading
         const res = await fetchAuth(`${API_BASE}/products?lite=true`);
+        console.log('API response status:', res.status);
+        
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        
         products = await res.json();
+        console.log('Products loaded:', products.length);
+        console.log('First product:', products[0]);
+        
         renderPOSProducts(products);
+        console.log('Products rendered');
     } catch (err) {
-        console.error(err);
+        console.error('Error loading POS products:', err);
+        // Fallback: try to load from localStorage
+        const savedProducts = localStorage.getItem('pos_products');
+        if (savedProducts) {
+            products = JSON.parse(savedProducts);
+            console.log('Loaded products from localStorage:', products.length);
+            renderPOSProducts(products);
+        } else {
+            // Show empty state
+            const grid = document.getElementById('pos-products-grid');
+            grid.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">No products available. Please add products in the Inventory section.</div>';
+        }
     }
 }
-
-// Image cache to avoid re-fetching the same image
 const imageCache = new Map();
 
 function renderPOSProducts(productArray) {
+    console.log('Rendering POS products:', productArray.length);
     const grid = document.getElementById('pos-products-grid');
+    console.log('Grid element found:', !!grid);
+    
+    if (!grid) {
+        console.error('pos-products-grid element not found!');
+        return;
+    }
+    
     grid.innerHTML = '';
+    
+    if (!productArray || productArray.length === 0) {
+        grid.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">No products available. Please add products in the Inventory section.</div>';
+        return;
+    }
     
     // Intersection Observer for lazy loading images
     const imageObserver = new IntersectionObserver((entries, observer) => {
@@ -1135,8 +1169,10 @@ function renderPOSProducts(productArray) {
         grid.appendChild(div);
         
         // Start observing this card for image lazy loading
-        imageObserver.observe(div);
+        imageObserver.observe(card);
     });
+    
+    console.log('Products rendered successfully');
 }
 
 document.getElementById('pos-search-input').addEventListener('input', (e) => {

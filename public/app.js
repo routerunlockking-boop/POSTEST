@@ -1635,14 +1635,8 @@ function showInvoicePrintout(invoice) {
             document.getElementById('receipt-simple-discount').textContent = '-' + voucherDiscount.toFixed(2);
             
             total = invoice.total_amount !== undefined ? invoice.total_amount : (subtotal - voucherDiscount);
-        } else if (invoice.total_amount !== undefined && (subtotal - invoice.total_amount) > 0.01) {
-            voucherDiscount = subtotal - invoice.total_amount;
-            document.getElementById('receipt-subtotal-row').style.display = 'flex';
-            document.getElementById('receipt-discount-row').style.display = 'flex';
-            document.getElementById('receipt-discount-row').children[0].textContent = `Voucher Discount:`;
-            document.getElementById('receipt-subtotal-amount').textContent = subtotal.toFixed(2);
-            document.getElementById('receipt-simple-discount').textContent = '-' + voucherDiscount.toFixed(2);
         } else {
+            // Only hide voucher discount rows when no voucher is applied
             document.getElementById('receipt-subtotal-row').style.display = 'none';
             document.getElementById('receipt-discount-row').style.display = 'none';
             total = subtotal;

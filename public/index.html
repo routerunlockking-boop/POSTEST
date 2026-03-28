@@ -343,33 +343,37 @@
                                 </div>
                             </div>
                             <div class="bill-summary">
-                                <div class="form-group" style="margin-bottom: 16px; background: var(--secondary); padding: 12px; border-radius: 12px; border: 1px solid var(--primary);">
-                                    <label style="font-size: 13px; font-weight: 700; color: var(--primary); margin-bottom: 8px; display: block;">Payment Method</label>
-                                    <select id="pos-payment-method" class="form-control" style="padding: 10px; cursor: pointer; border-color: var(--primary); font-weight: 600;">
-                                        <option value="Cash">Cash</option>
-                                        <option value="Bank Payment">Bank payment</option>
-                                        <option value="Cash On Delivery">COD</option>
-                                    </select>
-                                </div>
-                                
-                                <!-- Voucher Section -->
-                                <div class="voucher-section" style="margin-bottom: 16px; background: #fef3c7; padding: 12px; border-radius: 12px; border: 1px solid #f59e0b;">
-                                    <label style="font-size: 13px; font-weight: 700; color: #d97706; margin-bottom: 8px; display: block;">
-                                        <i class='bx bx-ticket' style="margin-right: 4px;"></i> Apply Voucher
-                                    </label>
-                                    <div style="display: flex; gap: 8px;">
-                                        <input type="text" id="pos-voucher-code" class="form-control" placeholder="Enter voucher code" style="flex: 1; border-color: #f59e0b;">
-                                        <button type="button" id="btn-apply-voucher" class="btn btn-primary" style="background: #f59e0b; border: none; padding: 0 16px;">
-                                            Apply
-                                        </button>
-                                        <button type="button" id="btn-remove-voucher" class="btn btn-outline" style="display: none; padding: 0 16px;">
-                                            Remove
-                                        </button>
+                                <!-- Payment Method and Voucher in two boxes -->
+                                <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                                    <!-- Payment Method Box -->
+                                    <div class="form-group" style="flex: 1; background: var(--secondary); padding: 8px; border-radius: 8px; border: 1px solid var(--primary);">
+                                        <label style="font-size: 11px; font-weight: 700; color: var(--primary); margin-bottom: 4px; display: block;">Payment</label>
+                                        <select id="pos-payment-method" class="form-control" style="padding: 6px; cursor: pointer; border-color: var(--primary); font-weight: 600; font-size: 13px;">
+                                            <option value="Cash">Cash</option>
+                                            <option value="Bank Payment">Bank</option>
+                                            <option value="Cash On Delivery">COD</option>
+                                        </select>
                                     </div>
-                                    <div id="voucher-applied-info" style="display: none; margin-top: 8px; padding: 8px; background: #f0fdf4; border-radius: 8px; border: 1px solid #10b981;">
-                                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                                            <span style="font-size: 12px; font-weight: 600; color: #10b981;">Voucher Applied:</span>
-                                            <span id="applied-voucher-discount" style="font-size: 12px; font-weight: 700; color: #10b981;">-0.00</span>
+                                    
+                                    <!-- Voucher Box -->
+                                    <div class="voucher-section" style="flex: 1; background: #fef3c7; padding: 8px; border-radius: 8px; border: 1px solid #f59e0b;">
+                                        <label style="font-size: 11px; font-weight: 700; color: #d97706; margin-bottom: 4px; display: block;">
+                                            <i class='bx bx-ticket' style="margin-right: 2px; font-size: 10px;"></i> Voucher
+                                        </label>
+                                        <div style="display: flex; gap: 4px;">
+                                            <input type="text" id="pos-voucher-code" class="form-control" placeholder="Code" style="flex: 1; border-color: #f59e0b; padding: 6px; font-size: 12px;">
+                                            <button type="button" id="btn-apply-voucher" class="btn btn-primary" style="background: #f59e0b; border: none; padding: 0 8px; font-size: 11px;">
+                                                Apply
+                                            </button>
+                                            <button type="button" id="btn-remove-voucher" class="btn btn-outline" style="display: none; padding: 0 8px; font-size: 11px;">
+                                                Remove
+                                            </button>
+                                        </div>
+                                        <div id="voucher-applied-info" style="display: none; margin-top: 4px; padding: 4px; background: #f0fdf4; border-radius: 4px; border: 1px solid #10b981;">
+                                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                <span style="font-size: 10px; font-weight: 600; color: #10b981;">Applied:</span>
+                                                <span id="applied-voucher-discount" style="font-size: 10px; font-weight: 700; color: #10b981;">-0.00</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

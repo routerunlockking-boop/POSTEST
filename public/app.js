@@ -1753,6 +1753,11 @@ function saveCustomer(customerData) {
     loadCustomers();
     closeCustomerModal();
     showToast(customerId ? 'Customer updated successfully!' : 'Customer added successfully!', 'success');
+    
+    // If we're on POS view, update customer search dropdown
+    if (document.getElementById('pos-customer-search')) {
+        setupCustomerSearch();
+    }
 }
 
 function closeCustomerModal() {
@@ -1962,6 +1967,11 @@ function saveVoucher(voucherData) {
     loadVouchers();
     closeVoucherModal();
     showToast(voucherId ? 'Voucher updated successfully!' : 'Voucher created successfully!', 'success');
+    
+    // If we're on POS view, update voucher functionality
+    if (document.getElementById('pos-voucher-code')) {
+        updateVoucherOptions();
+    }
 }
 
 function closeVoucherModal() {

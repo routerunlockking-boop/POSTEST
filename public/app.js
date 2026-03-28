@@ -1410,6 +1410,7 @@ function updateBillUI() {
         voucherDiscountRow.style.display = 'none';
     }
     
+    // Always update the total amount (with or without voucher)
     document.getElementById('pos-total-amount').textContent = formatCurrency(finalTotal);
     
     // Update voucher applied info

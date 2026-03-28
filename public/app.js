@@ -2032,6 +2032,25 @@ async function loadVouchers() {
             (voucher.description.length > 30 ? voucher.description.substring(0, 30) + '...' : voucher.description) : 
             '<span style="color: var(--text-muted); font-style: italic;">No description</span>';
         
+        // Add action buttons based on user role
+        let voucherActions = '';
+        if (currentRole === 'admin') {
+            voucherActions = `
+                <button class="btn btn-outline btn-icon-only edit-voucher-btn" data-id="${voucher.id}" title="Edit Voucher">
+                    <i class='bx bx-edit'></i>
+                </button>
+                <button class="btn btn-danger btn-icon-only delete-voucher-btn" data-id="${voucher.id}" title="Delete Voucher">
+                    <i class='bx bx-trash'></i>
+                </button>
+            `;
+        } else {
+            voucherActions = `
+                <button class="btn btn-outline btn-icon-only view-voucher-btn" data-id="${voucher.id}" title="View Voucher Details">
+                    <i class='bx bx-show'></i>
+                </button>
+            `;
+        }
+        
         tr.innerHTML = `
             <td>
                 <div style="display: flex; flex-direction: column; gap: 4px;">
@@ -2066,12 +2085,7 @@ async function loadVouchers() {
             </td>
             <td>
                 <div style="display: flex; gap: 4px;">
-                    <button class="btn btn-outline btn-icon-only edit-voucher-btn" data-id="${voucher.id}" title="Edit Voucher">
-                        <i class='bx bx-edit'></i>
-                    </button>
-                    <button class="btn btn-danger btn-icon-only delete-voucher-btn" data-id="${voucher.id}" title="Delete Voucher">
-                        <i class='bx bx-trash'></i>
-                    </button>
+                    ${voucherActions}
                 </div>
             </td>
         `;
@@ -2089,6 +2103,14 @@ async function loadVouchers() {
         });
     });
     
+    document.querySelectorAll('.view-voucher-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const voucherId = e.target.closest('.view-voucher-btn').dataset.id;
+            console.log('View voucher clicked:', voucherId);
+            viewVoucher(voucherId);
+        });
+    });
+    
     document.querySelectorAll('.delete-voucher-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const voucherId = e.target.closest('.delete-voucher-btn').dataset.id;
@@ -2096,6 +2118,27 @@ async function loadVouchers() {
             deleteVoucher(voucherId);
         });
     });
+}
+
+function viewVoucher(voucherId) {
+    const voucher = vouchers.find(v => v.id == voucherId);
+    if (!voucher) return;
+    
+    // Create a simple alert to show voucher details
+    const details = `
+Voucher Details:
+================
+Code: ${voucher.code}
+Discount: ${voucher.discount_type === 'percentage' ? voucher.discount_value + '%' : formatCurrency(voucher.discount_value)}
+Usage: ${voucher.used_count || 0}/${voucher.usage_limit}
+Min Bill: ${voucher.min_bill_amount ? formatCurrency(voucher.min_bill_amount) : 'No minimum'}
+Expiry: ${voucher.expiry_date ? new Date(voucher.expiry_date).toLocaleDateString() : 'No expiry'}
+Status: ${voucher.is_active ? 'Active' : 'Inactive'}
+Description: ${voucher.description || 'No description'}
+================
+    `;
+    
+    alert(details);
 }
 
 async function editVoucher(voucherId) {

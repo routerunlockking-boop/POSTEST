@@ -1636,6 +1636,44 @@ window.testFunction = function() {
     alert('JavaScript is working!');
 };
 
+// Navigation function to switch views
+window.navigateToView = function(viewId) {
+    console.log('Navigating to view:', viewId);
+    
+    // Hide all views
+    views.forEach(view => {
+        view.classList.remove('active');
+    });
+    
+    // Remove active class from all nav links
+    navLinks.forEach(link => {
+        link.classList.remove('active');
+    });
+    
+    // Show target view
+    const targetView = document.getElementById(viewId);
+    if (targetView) {
+        targetView.classList.add('active');
+        
+        // Update page title
+        const viewName = viewId.replace('-view', '').charAt(0).toUpperCase() + viewId.replace('-view', '').slice(1);
+        pageTitle.textContent = viewName;
+        
+        // Set active nav link
+        const targetLink = document.querySelector(`[data-target="${viewId}"]`);
+        if (targetLink) {
+            targetLink.classList.add('active');
+        }
+        
+        // Load data for the view
+        if (viewId === 'customers-view') {
+            loadCustomers();
+        } else if (viewId === 'vouchers-view') {
+            loadVouchers();
+        }
+    }
+};
+
 function showAddCustomerModal() {
     console.log('showAddCustomerModal called');
     const modal = document.getElementById('customer-modal');

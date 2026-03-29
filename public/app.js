@@ -1,157 +1,4 @@
-// Supabase Configuration
-const SUPABASE_URL = 'https://db.egnssbdlfjfgdffhgxpc.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiLmVnbnNiYmRsZmpmZ2RmZmd4cGMiLCJpYXQiOjE3MzI4NjI2MDAsImV4cCI6MjA0ODQzODYwMH0.YOUR_ANON_KEY_HERE';
-
-// Initialize Supabase client
-const { createClient } = supabase;
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// ==== SUPABASE AUTHENTICATION ====
-async function loginWithSupabase(email, password) {
-    try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password
-        });
-        
-        if (error) throw error;
-        
-        // Get user profile from profiles table
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', data.user.id)
-            .single();
-            
-        return {
-            user: data.user,
-            profile: profile,
-            session: data.session
-        };
-    } catch (error) {
-        console.error('Login error:', error);
-        throw error;
-    }
-}
-
-async function registerWithSupabase(email, password, businessName, whatsappNumber) {
-    try {
-        // Sign up user
-        const { data, error } = await supabase.auth.signUp({
-            email,
-            password
-        });
-        
-        if (error) throw error;
-        
-        // Create user profile
-        const { error: profileError } = await supabase
-            .from('profiles')
-            .insert([{
-                id: data.user.id,
-                email,
-                business_name: businessName,
-                whatsapp_number: whatsappNumber,
-                role: 'user',
-                created_at: new Date().toISOString()
-            }]);
-            
-        if (profileError) throw profileError;
-        
-        return {
-            user: data.user,
-            session: data.session
-        };
-    } catch (error) {
-        console.error('Registration error:', error);
-        throw error;
-    }
-}
-
-async function logoutFromSupabase() {
-    try {
-        const { error } = await supabase.auth.signOut();
-        if (error) throw error;
-        return true;
-    } catch (error) {
-        console.error('Logout error:', error);
-        return false;
-    }
-}
-
-// Supabase Products Functions
-async function getSupabaseProducts() {
-    try {
-        const { data, error } = await supabase
-            .from('products')
-            .select('*')
-            .order('created_at', { ascending: false });
-            
-        if (error) throw error;
-        return data || [];
-    } catch (error) {
-        console.error('Error fetching products:', error);
-        return [];
-    }
-}
-
-async function addSupabaseProduct(product) {
-    try {
-        const { data, error } = await supabase
-            .from('products')
-            .insert([{
-                ...product,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-            }])
-            .select()
-            .single();
-            
-        if (error) throw error;
-        return data;
-    } catch (error) {
-        console.error('Error adding product:', error);
-        throw error;
-    }
-}
-
-async function updateSupabaseProduct(id, product) {
-    try {
-        const { data, error } = await supabase
-            .from('products')
-            .update({
-                ...product,
-                updated_at: new Date().toISOString()
-            })
-            .eq('id', id)
-            .select()
-            .single();
-            
-        if (error) throw error;
-        return data;
-    } catch (error) {
-        console.error('Error updating product:', error);
-        throw error;
-    }
-}
-
-async function deleteSupabaseProduct(id) {
-    try {
-        const { error } = await supabase
-            .from('products')
-            .delete()
-            .eq('id', id);
-            
-        if (error) throw error;
-        return true;
-    } catch (error) {
-        console.error('Error deleting product:', error);
-        throw error;
-    }
-}
-
-// Legacy API compatibility
-const API_BASE = '/api'; // Keep for any remaining local API calls
+const API_BASE = '/api';
 
 let authToken = localStorage.getItem('pos_token') || null;
 let currentBusiness = localStorage.getItem('pos_business') || '';
@@ -232,31 +79,22 @@ document.getElementById('switch-to-login-from-reset').addEventListener('click', 
     document.getElementById('auth-subtitle').textContent = "Login to your account";
 });
 
-document.getElementById('btn-login').addEventListener('click', async () => {
+loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
     const email = document.getElementById('login-email').value;
     const password = document.getElementById('login-password').value;
     
     try {
-        console.log('Attempting Supabase login...');
-        const result = await loginWithSupabase(email, password);
+        const res = await fetch(`${API_BASE}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if(!res.ok) throw new Error(data.error || 'Login failed');
         
-        // Store auth data
-        authToken = result.session.access_token;
-        currentBusiness = result.profile.business_name;
-        currentRole = result.profile.role;
-        
-        localStorage.setItem('pos_token', authToken);
-        localStorage.setItem('pos_business', currentBusiness);
-        localStorage.setItem('pos_role', currentRole);
-        localStorage.setItem('pos_user_id', result.user.id);
-        
-        showToast('Login successful!', 'success');
-        checkAuth();
-        
-    } catch (error) {
-        console.error('Login failed:', error);
-        showToast(error.message || 'Login failed. Please check your credentials.', 'error');
-    }
+        loginSuccess(data.token, data.business_name, data.role);
+    } catch(err) { showToast(err.message, 'error'); }
 });
 
 registerForm.addEventListener('submit', async (e) => {
@@ -267,26 +105,17 @@ registerForm.addEventListener('submit', async (e) => {
     const whatsapp_number = document.getElementById('reg-whatsapp').value;
     
     try {
-        console.log('Attempting Supabase registration...');
-        const result = await registerWithSupabase(email, password, business_name, whatsapp_number);
+        const res = await fetch(`${API_BASE}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password, business_name, whatsapp_number })
+        });
+        const data = await res.json();
+        if(!res.ok) throw new Error(data.error || 'Registration failed');
         
-        // Store auth data
-        authToken = result.session.access_token;
-        currentBusiness = business_name;
-        currentRole = 'user';
-        
-        localStorage.setItem('pos_token', authToken);
-        localStorage.setItem('pos_business', currentBusiness);
-        localStorage.setItem('pos_role', currentRole);
-        localStorage.setItem('pos_user_id', result.user.id);
-        
-        showToast('Registration successful!', 'success');
-        checkAuth();
-        
-    } catch (error) {
-        console.error('Registration failed:', error);
-        showToast(error.message || 'Registration failed. Please try again.', 'error');
-    }
+        showToast(data.message, 'success');
+        document.getElementById('switch-to-login').click();
+    } catch(err) { showToast(err.message, 'error'); }
 });
 
 if (forgotPasswordForm) {
@@ -302,40 +131,34 @@ if (forgotPasswordForm) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, business_name, new_password })
             });
+            const data = await res.json();
+            if(!res.ok) throw new Error(data.error || 'Password reset failed');
             
-            showToast('Password reset request sent!', 'success');
-            checkAuth();
-        } catch (err) {
-            showToast('Password reset failed', 'error');
-        }
+            showToast(data.message, 'success');
+            document.getElementById('switch-to-login-from-reset').click();
+            forgotPasswordForm.reset();
+        } catch(err) { showToast(err.message, 'error'); }
     });
 }
 
-// Logout function
-document.getElementById('btn-logout').addEventListener('click', async () => {
-    try {
-        console.log('Attempting Supabase logout...');
-        const success = await logoutFromSupabase();
-        
-        if (success) {
-            // Clear local storage
-            authToken = null;
-            currentBusiness = '';
-            currentRole = 'user';
-            localStorage.removeItem('pos_token');
-            localStorage.removeItem('pos_business');
-            localStorage.removeItem('pos_role');
-            localStorage.removeItem('pos_user_id');
-            
-            showToast('Logged out successfully!', 'success');
-            checkAuth();
-        } else {
-            showToast('Logout failed', 'error');
-        }
-    } catch (error) {
-        console.error('Logout error:', error);
-        showToast('Logout failed', 'error');
-    }
+function loginSuccess(token, businessName, role = 'user') {
+    authToken = token;
+    currentBusiness = businessName;
+    currentRole = role;
+    localStorage.setItem('pos_token', token);
+    localStorage.setItem('pos_business', businessName);
+    localStorage.setItem('pos_role', role);
+    checkAuth();
+}
+
+document.getElementById('btn-logout').addEventListener('click', () => {
+    authToken = null;
+    currentBusiness = '';
+    currentRole = 'user';
+    localStorage.removeItem('pos_token');
+    localStorage.removeItem('pos_business');
+    localStorage.removeItem('pos_role');
+    checkAuth();
 });
 
 function checkAuth() {
@@ -1244,55 +1067,26 @@ document.getElementById('btn-export-inventory').addEventListener('click', () => 
 
 // ==== POS (NEW BILL) ====
 async function loadPOS() {
-    console.log('Loading POS...');
     currentBill = [];
     updateBillUI();
     document.getElementById('pos-search-input').value = '';
     
     try {
-        console.log('Fetching products from Supabase...');
-        products = await getSupabaseProducts();
-        console.log('Products loaded:', products.length);
-        
-        if (products.length > 0) {
-            console.log('First product:', products[0]);
-        }
-        
+        // Fetch 'lite' products (without images) for faster loading
+        const res = await fetchAuth(`${API_BASE}/products?lite=true`);
+        products = await res.json();
         renderPOSProducts(products);
-        console.log('Products rendered');
     } catch (err) {
-        console.error('Error loading POS products:', err);
-        // Fallback: try to load from localStorage
-        const savedProducts = localStorage.getItem('pos_products');
-        if (savedProducts) {
-            products = JSON.parse(savedProducts);
-            console.log('Loaded products from localStorage:', products.length);
-            renderPOSProducts(products);
-        } else {
-            // Show empty state
-            const grid = document.getElementById('pos-products-grid');
-            grid.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">No products available. Please add products in Inventory section.</div>';
-        }
+        console.error(err);
     }
 }
+
+// Image cache to avoid re-fetching the same image
 const imageCache = new Map();
 
 function renderPOSProducts(productArray) {
-    console.log('Rendering POS products:', productArray.length);
     const grid = document.getElementById('pos-products-grid');
-    console.log('Grid element found:', !!grid);
-    
-    if (!grid) {
-        console.error('pos-products-grid element not found!');
-        return;
-    }
-    
     grid.innerHTML = '';
-    
-    if (!productArray || productArray.length === 0) {
-        grid.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">No products available. Please add products in the Inventory section.</div>';
-        return;
-    }
     
     // Intersection Observer for lazy loading images
     const imageObserver = new IntersectionObserver((entries, observer) => {
@@ -1341,10 +1135,8 @@ function renderPOSProducts(productArray) {
         grid.appendChild(div);
         
         // Start observing this card for image lazy loading
-        imageObserver.observe(card);
+        imageObserver.observe(div);
     });
-    
-    console.log('Products rendered successfully');
 }
 
 document.getElementById('pos-search-input').addEventListener('input', (e) => {

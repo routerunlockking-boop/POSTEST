@@ -10,7 +10,7 @@ const connectDB = async () => {
     }
 
     try {
-        const connectionString = process.env.DATABASE_URL;
+        const connectionString = mongodb+srv://Admin:Admin%4012345@cluster0.czllghf.mongodb.net/myDatabase?retryWrites=true&w=majority;
         pool = new Pool({
             connectionString,
             ssl: {

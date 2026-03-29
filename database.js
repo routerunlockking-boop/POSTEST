@@ -10,16 +10,16 @@ const connectDB = async () => {
     }
 
     try {
-        const uri = process.env.MONGO_URI || 'mongodb+srv://Admin:Admin%4012345@cluster0.czllghf.mongodb.net/myDatabase?retryWrites=true&w=majority';
+        const uri = process.env.SUPA_URI || 'postgresql://postgres:[Pamidu12345@#]@db.egnssbdlfjfgdffhgxpc.supabase.co:5432/postgres';
         const db = await mongoose.connect(uri, {
             serverSelectionTimeoutMS: 5000 // Tweak timeout down so Serverless fails faster instead of hanging
         });
 
         cachedDb = db;
-        console.log('Connected to MongoDB database');
+        console.log('Connected to Supabase database');
         return db;
     } catch (err) {
-        console.error('Error connecting to MongoDB:', err.message);
+        console.error('Error connecting to Supabase:', err.message);
         throw err; // don't process.exit(1) in serverless!
     }
 };

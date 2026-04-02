@@ -1917,46 +1917,42 @@ function showEditCustomerModal(customerId) {
     document.getElementById('customer-modal').style.display = 'block';
 }
 
-function deleteCustomer(customerId) {
+async function deleteCustomer(customerId) {
     if (!confirm('Are you sure you want to delete this customer?')) return;
     
-    customers = customers.filter(c => c.id != customerId);
-    saveCustomersToStorage();
-    loadCustomers();
-    showToast('Customer deleted successfully!', 'success');
+    try {
+        await fetchAuth(`${API_BASE}/customers/${customerId}`, { method: 'DELETE' });
+        loadCustomers();
+        showToast('Customer deleted successfully!', 'success');
+    } catch(err) {
+        showToast(err.message, 'error');
+    }
 }
 
-function saveCustomer(customerData) {
+async function saveCustomer(customerData) {
     const customerId = document.getElementById('customer-id').value;
+    const url = customerId ? `${API_BASE}/customers/${customerId}` : `${API_BASE}/customers`;
+    const method = customerId ? 'PUT' : 'POST';
     
-    if (customerId) {
-        // Edit existing customer
-        const customerIndex = customers.findIndex(c => c.id == customerId);
-        if (customerIndex !== -1) {
-            customers[customerIndex] = {
-                ...customers[customerIndex],
-                ...customerData,
-                updated_at: new Date().toISOString()
-            };
+    try {
+        const res = await fetchAuth(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(customerData)
+        });
+        
+        if(!res.ok) throw new Error('Failed to save customer');
+        
+        loadCustomers();
+        closeCustomerModal();
+        showToast(customerId ? 'Customer updated successfully!' : 'Customer added successfully!', 'success');
+        
+        // If we're on POS view, update customer search dropdown
+        if (document.getElementById('pos-customer-search')) {
+            setupCustomerSearch();
         }
-    } else {
-        // Add new customer
-        const newCustomer = {
-            id: 'CUST' + Date.now(),
-            ...customerData,
-            created_at: new Date().toISOString()
-        };
-        customers.push(newCustomer);
-    }
-    
-    saveCustomersToStorage();
-    loadCustomers();
-    closeCustomerModal();
-    showToast(customerId ? 'Customer updated successfully!' : 'Customer added successfully!', 'success');
-    
-    // If we're on POS view, update customer search dropdown
-    if (document.getElementById('pos-customer-search')) {
-        setupCustomerSearch();
+    } catch(err) {
+        showToast(err.message, 'error');
     }
 }
 
@@ -1975,13 +1971,17 @@ function closeCustomerModal() {
 }
 
 function saveCustomersToStorage() {
-    localStorage.setItem('pos_customers', JSON.stringify(customers));
+    // Deprecated: API handles it
 }
 
-function loadCustomers() {
-    const savedCustomers = localStorage.getItem('pos_customers');
-    if (savedCustomers) {
-        customers = JSON.parse(savedCustomers);
+async function loadCustomers() {
+    try {
+        const res = await fetchAuth(`${API_BASE}/customers`);
+        if(!res.ok) throw new Error('Failed to load customers');
+        customers = await res.json();
+    } catch(err) {
+        console.error(err);
+        return;
     }
     
     const tbody = document.getElementById('customers-table-body');
@@ -1991,13 +1991,14 @@ function loadCustomers() {
     
     customers.forEach(customer => {
         const tr = document.createElement('tr');
+        const createdDate = new Date(customer.created_date || new Date()).toLocaleDateString();
         tr.innerHTML = `
             <td>${customer.id}</td>
             <td>${customer.name}</td>
             <td>${customer.phone}</td>
             <td>${customer.email || '-'}</td>
             <td>${customer.address || '-'}</td>
-            <td>${new Date(customer.created_at).toLocaleDateString()}</td>
+            <td>${createdDate}</td>
             <td>
                 <button class="btn btn-outline btn-icon-only edit-customer-btn" data-id="${customer.id}" title="Edit Customer">
                     <i class='bx bx-edit'></i>

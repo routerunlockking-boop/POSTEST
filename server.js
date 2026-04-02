@@ -466,10 +466,6 @@ app.get('/api/invoices/:id', async (req, res) => {
             time: invoice.time,
             total_amount: invoice.total_amount,
             owner_name: invoice.user_id ? invoice.user_id.business_name : 'Unknown',
-            voucher: invoice.voucher_code ? {
-                code: invoice.voucher_code,
-                discount_amount: invoice.voucher_discount
-            } : null,
             items: invoice.items.map(item => ({
                 id: item._id ? item._id.toString() : null,
                 product_name: item.product_name,
@@ -485,7 +481,7 @@ app.get('/api/invoices/:id', async (req, res) => {
 });
 
 app.post('/api/invoices', async (req, res) => {
-    const { items, total_amount, amount_paid, cashier_name, customer_name, customer_phone, payment_method, voucher } = req.body;
+    const { items, total_amount, amount_paid, cashier_name, customer_name, customer_phone, payment_method } = req.body;
     
     const parsedTotal = parseFloat(total_amount) || 0;
     const parsedPaid = parseFloat(amount_paid) || 0;
@@ -503,34 +499,23 @@ app.post('/api/invoices', async (req, res) => {
     try {
         // Fetch current cost prices for products to calculate profit
         let total_profit = 0;
-        let subtotal_amount = 0;
         const formattedItems = [];
         for (const item of items) {
             const product = await Product.findOne({ name: item.name, user_id: req.user._id });
             const item_cost_price = product ? product.cost_price || 0 : 0;
             const quantity = parseFloat(item.quantity) || 0;
             const price = parseFloat(item.price) || 0;
-            const item_subtotal = quantity * price;
             const item_profit = (price - item_cost_price) * quantity;
             total_profit += item_profit;
-            subtotal_amount += item_subtotal;
             
             formattedItems.push({
                 product_name: item.name,
                 quantity: quantity,
                 cost_price: item_cost_price,
                 price: price,
-                subtotal: item_subtotal,
+                subtotal: quantity * price,
                 profit: item_profit
             });
-        }
-
-        // Extract voucher information if present
-        let voucher_code = '';
-        let voucher_discount = 0;
-        if (voucher && voucher.code) {
-            voucher_code = voucher.code;
-            voucher_discount = parseFloat(voucher.discount_amount) || 0;
         }
 
         const invoice = await Invoice.create({
@@ -542,9 +527,6 @@ app.post('/api/invoices', async (req, res) => {
             payment_method: payment_method || 'Cash',
             date,
             time,
-            subtotal_amount,
-            voucher_code,
-            voucher_discount,
             total_amount: parsedTotal,
             amount_paid: parsedPaid,
             total_profit,
@@ -574,12 +556,6 @@ app.post('/api/invoices', async (req, res) => {
                 total_amount: parsedTotal,
                 amount_paid: parsedPaid,
                 owner_name: req.user.business_name,
-                voucher: voucher ? {
-                    code: voucher.code,
-                    discount_type: voucher.discount_type,
-                    discount_value: voucher.discount_value,
-                    discount_amount: voucher.discount_amount
-                } : null,
                 items: formattedItems
             }
         });

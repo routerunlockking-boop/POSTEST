@@ -1243,6 +1243,26 @@ function updateBillUI() {
         `;
         itemsContainer.appendChild(div);
     });
+    let subtotal = total;
+    let discount = 0;
+    
+    // Apply discount
+    if (appliedVoucher) {
+        if (appliedVoucher.discount_type === 'percentage') {
+            discount = subtotal * (appliedVoucher.discount_value / 100);
+        } else {
+            discount = parseFloat(appliedVoucher.discount_value) || 0;
+        }
+        total = Math.max(0, subtotal - discount);
+        
+        document.getElementById('pos-subtotal-row').style.display = 'flex';
+        document.getElementById('pos-discount-row').style.display = 'flex';
+        document.getElementById('pos-subtotal-amount').textContent = formatCurrency(subtotal);
+        document.getElementById('pos-discount-amount').textContent = '-' + formatCurrency(discount);
+    } else {
+        document.getElementById('pos-subtotal-row').style.display = 'none';
+        document.getElementById('pos-discount-row').style.display = 'none';
+    }
     
     document.getElementById('pos-total-amount').textContent = formatCurrency(total);
     

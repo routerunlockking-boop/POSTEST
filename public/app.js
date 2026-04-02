@@ -1529,6 +1529,13 @@ function showInvoicePrintout(invoice) {
     
     document.getElementById('receipt-total-amount').textContent = total.toFixed(2);
     
+    // DEBUG LOGGING
+    console.log('=== INVOICE DEBUG ===');
+    console.log('Items total (subtotal):', total);
+    console.log('invoice.total_amount:', invoice.total_amount);
+    console.log('invoice.amount_paid:', invoice.amount_paid);
+    console.log('invoice.voucher:', invoice.voucher);
+    
     // Display voucher information if available
     if (invoice.voucher) {
         document.getElementById('receipt-voucher-row').style.display = 'block';
@@ -1540,6 +1547,11 @@ function showInvoicePrintout(invoice) {
         const amountPaid = invoice.amount_paid || 0;
         const change = amountPaid > finalAmount ? (amountPaid - finalAmount) : 0;
         
+        console.log('finalAmount:', finalAmount);
+        console.log('amountPaid:', amountPaid);
+        console.log('change:', change);
+        console.log('=====================');
+        
         document.getElementById('receipt-amount-paid').textContent = amountPaid.toFixed(2);
         document.getElementById('receipt-balance-amount').textContent = change.toFixed(2);
     } else {
@@ -1549,6 +1561,11 @@ function showInvoicePrintout(invoice) {
         const amountPaid = invoice.amount_paid || 0;
         const finalAmount = invoice.total_amount || total;
         const change = amountPaid > finalAmount ? (amountPaid - finalAmount) : 0;
+        
+        console.log('finalAmount (no voucher):', finalAmount);
+        console.log('amountPaid:', amountPaid);
+        console.log('change:', change);
+        console.log('=====================');
         
         document.getElementById('receipt-amount-paid').textContent = amountPaid.toFixed(2);
         document.getElementById('receipt-balance-amount').textContent = change.toFixed(2);

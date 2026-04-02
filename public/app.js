@@ -1268,70 +1268,9 @@ function calculateChange() {
     }
 }
 
-// ==== INTERACTIVE BILL SECTIONS ====
-function setupInteractiveBillSections() {
-    // Voucher Section Interactive
-    const voucherSection = document.querySelector('.voucher-section');
-    
-    if (voucherSection) {
-        voucherSection.addEventListener('click', function(e) {
-            if (e.target.closest('.voucher-section') && !e.target.closest('input') && !e.target.closest('button')) {
-                toggleVoucherExpanded();
-            }
-        });
-    }
-    
-    // Add expand indicator for voucher section only
-    addVoucherSectionIndicator();
-}
 
-function toggleVoucherExpanded() {
-    const voucherSection = document.querySelector('.voucher-section');
-    const isExpanded = voucherSection.classList.contains('expanded');
-    
-    if (isExpanded) {
-        voucherSection.classList.remove('expanded');
-        voucherSection.style.maxHeight = '120px';
-    } else {
-        voucherSection.classList.add('expanded');
-        voucherSection.style.maxHeight = '300px';
-        
-        // Show additional voucher options when expanded
-        showExpandedVoucherOptions();
-    }
-}
 
-function addVoucherSectionIndicator() {
-    const voucherSection = document.querySelector('.voucher-section');
-    
-    if (voucherSection && !voucherSection.querySelector('.expand-indicator')) {
-        const indicator = document.createElement('div');
-        indicator.className = 'expand-indicator';
-        indicator.style.cssText = `
-                position: absolute;
-                top: 8px;
-                right: 12px;
-                font-size: 12px;
-                color: var(--text-muted);
-                cursor: pointer;
-                transition: transform 0.2s;
-            `;
-        indicator.innerHTML = '<i class="bx bx-chevron-down"></i>';
-        
-        voucherSection.style.position = 'relative';
-        voucherSection.appendChild(indicator);
-        
-        // Add click handler to indicator
-        indicator.addEventListener('click', function(e) {
-            e.stopPropagation();
-            toggleVoucherExpanded();
-        });
-    }
-}
-
-// Add event listeners for voucher apply/remove buttons
 document.addEventListener('DOMContentLoaded', () => {
-    setupInteractiveBillSections();
     
     // Voucher Apply Button
     const applyVoucherBtn = document.getElementById('btn-apply-voucher');

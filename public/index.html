@@ -14,7 +14,9 @@
 
 <body>
     <!-- Toast Notification Container -->
-    <div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;"></div>
+    <div id="toast-container"
+        style="position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;">
+    </div>
 
     <!-- Authentication Overlay -->
     <div id="auth-overlay" class="auth-overlay active">
@@ -33,7 +35,8 @@
                     <label>Password</label>
                     <input type="password" id="login-password" class="form-control" required placeholder="Password">
                     <div style="text-align: right; margin-top: 8px;">
-                        <a href="#" id="switch-to-forgot" style="color: var(--primary); font-size: 13px; text-decoration: none;">Forgot Password?</a>
+                        <a href="#" id="switch-to-forgot"
+                            style="color: var(--primary); font-size: 13px; text-decoration: none;">Forgot Password?</a>
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary btn-block btn-lg">Login</button>
@@ -45,13 +48,14 @@
             <form id="register-form" class="auth-form">
                 <div class="form-group">
                     <label>Business Name</label>
-                    <input type="text" id="reg-businessName" class="form-control" required
-                        placeholder="SmartZone LK">
+                    <input type="text" id="reg-businessName" class="form-control" required placeholder="SmartZone LK">
                 </div>
                 <div class="form-group">
                     <label>WhatsApp Number</label>
-                    <input type="tel" id="reg-whatsapp" class="form-control" required value="+94786800086" placeholder="e.g. +94786800086">
-                    <small class="form-text text-muted" style="display:block; margin-top:5px; font-size:12px;">( +94 )Include
+                    <input type="tel" id="reg-whatsapp" class="form-control" required value="+94786800086"
+                        placeholder="e.g. +94786800086">
+                    <small class="form-text text-muted" style="display:block; margin-top:5px; font-size:12px;">( +94
+                        )Include
                         country code for marketplace checkout.</small>
                 </div>
                 <div class="form-group">
@@ -76,22 +80,26 @@
                 </div>
                 <div class="form-group">
                     <label>Business Name</label>
-                    <input type="text" id="reset-business" class="form-control" required placeholder="Registered business name">
+                    <input type="text" id="reset-business" class="form-control" required
+                        placeholder="Registered business name">
                 </div>
                 <div class="form-group">
                     <label>New Password</label>
-                    <input type="password" id="reset-password" class="form-control" required placeholder="New preferred password">
+                    <input type="password" id="reset-password" class="form-control" required
+                        placeholder="New preferred password">
                 </div>
                 <button type="submit" class="btn btn-primary btn-block btn-lg">Reset Password</button>
                 <div class="auth-switch">
                     Remembered your password? <span id="switch-to-login-from-reset">Back to Login</span>
                 </div>
             </form>
-            
+
             <!-- WhatsApp Help Section -->
             <div style="text-align: center; margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--border);">
-                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">If you need help, please contact me via WhatsApp.</p>
-                <a href="https://wa.me/94786800086" target="_blank" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; color: #fff; background-color: #25D366; padding: 10px 20px; border-radius: 8px; font-weight: 500; font-size: 14px; transition: all 0.2s;">
+                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">If you need help, please
+                    contact me via WhatsApp.</p>
+                <a href="https://wa.me/94786800086" target="_blank"
+                    style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; color: #fff; background-color: #25D366; padding: 10px 20px; border-radius: 8px; font-weight: 500; font-size: 14px; transition: all 0.2s;">
                     <i class='bx bxl-whatsapp' style="font-size: 20px;"></i>
                     +94786800086
                 </a>
@@ -168,7 +176,8 @@
                     <h1 id="page-title">Dashboard</h1>
                 </div>
                 <div class="header-right">
-                    <button class="btn btn-outline btn-icon-only" id="btn-theme-toggle" style="margin-right:8px; border:none; color:var(--text-main);" title="Toggle Theme">
+                    <button class="btn btn-outline btn-icon-only" id="btn-theme-toggle"
+                        style="margin-right:8px; border:none; color:var(--text-main);" title="Toggle Theme">
                         <i class='bx bx-moon'></i>
                     </button>
                     <button class="btn btn-outline" id="btn-create-marketplace" style="margin-right:12px;"><i
@@ -211,7 +220,8 @@
                             </div>
                         </div>
                         <div class="stat-card" style="background-color: #f0fdf4; border: 1px solid #bbf7d0;">
-                            <div class="stat-icon income" style="color: #16a34a; background: #dcfce7;"><i class='bx bx-trending-up'></i></div>
+                            <div class="stat-icon income" style="color: #16a34a; background: #dcfce7;"><i
+                                    class='bx bx-trending-up'></i></div>
                             <div class="stat-details">
                                 <h3 style="color: #166534;">Daily Profit</h3>
                                 <p class="stat-value" id="dash-profit-today" style="color: #15803d;">0.00</p>
@@ -225,7 +235,8 @@
                             </div>
                         </div>
                         <div class="stat-card" style="background-color: #f0fdf4; border: 1px solid #bbf7d0;">
-                            <div class="stat-icon income" style="color: #16a34a; background: #dcfce7;"><i class='bx bx-line-chart'></i></div>
+                            <div class="stat-icon income" style="color: #16a34a; background: #dcfce7;"><i
+                                    class='bx bx-line-chart'></i></div>
                             <div class="stat-details">
                                 <h3 style="color: #166534;">Monthly Profit</h3>
                                 <p class="stat-value" id="dash-profit-month" style="color: #15803d;">0.00</p>
@@ -278,8 +289,11 @@
                             <h2>Select Product</h2>
                             <div style="display: flex; gap: 10px; margin-bottom: 12px;">
                                 <div style="flex: 1; position: relative;">
-                                    <i class='bx bx-barcode' style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 20px;"></i>
-                                    <input type="text" id="pos-barcode-input" class="form-control" style="padding-left: 44px; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);" placeholder="Scan or type barcode via scanner... (Press Enter)">
+                                    <i class='bx bx-barcode'
+                                        style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 20px;"></i>
+                                    <input type="text" id="pos-barcode-input" class="form-control"
+                                        style="padding-left: 44px; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);"
+                                        placeholder="Scan or type barcode via scanner... (Press Enter)">
                                 </div>
                                 <button id="btn-camera-scan" class="btn btn-primary" title="Scan with Mobile Camera">
                                     <i class='bx bx-camera' style="font-size: 20px;"></i>
@@ -301,37 +315,51 @@
                                 <h2>Current Bill</h2>
                                 <p id="pos-bill-no">Auto Generate</p>
                             </div>
-                            <div class="pos-tabs" style="display: flex; gap: 16px; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
-                                <button class="pos-tab-btn active" id="tab-btn-items" style="display: flex; align-items: center; gap: 6px; background:none; border:none; font-weight:600; color:var(--primary); cursor:pointer; font-size: 13px; position:relative;"><i class='bx bx-receipt' style="font-size: 18px;"></i> Bill Items</button>
-                                <button class="pos-tab-btn" id="tab-btn-cashier" style="display: flex; align-items: center; gap: 6px; background:none; border:none; font-weight:500; color:var(--text-muted); cursor:pointer; font-size: 13px; position:relative;"><i class='bx bx-user-pin' style="font-size: 18px;"></i> Add Cashier</button>
-                                <button class="pos-tab-btn" id="tab-btn-customer" style="display: flex; align-items: center; gap: 6px; background:none; border:none; font-weight:500; color:var(--text-muted); cursor:pointer; font-size: 13px; position:relative;"><i class='bx bx-id-card' style="font-size: 18px;"></i> Customer</button>
+                            <div class="pos-tabs"
+                                style="display: flex; gap: 16px; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+                                <button class="pos-tab-btn active" id="tab-btn-items"
+                                    style="display: flex; align-items: center; gap: 6px; background:none; border:none; font-weight:600; color:var(--primary); cursor:pointer; font-size: 13px; position:relative;"><i
+                                        class='bx bx-receipt' style="font-size: 18px;"></i> Bill Items</button>
+                                <button class="pos-tab-btn" id="tab-btn-cashier"
+                                    style="display: flex; align-items: center; gap: 6px; background:none; border:none; font-weight:500; color:var(--text-muted); cursor:pointer; font-size: 13px; position:relative;"><i
+                                        class='bx bx-user-pin' style="font-size: 18px;"></i> Add Cashier</button>
+                                <button class="pos-tab-btn" id="tab-btn-customer"
+                                    style="display: flex; align-items: center; gap: 6px; background:none; border:none; font-weight:500; color:var(--text-muted); cursor:pointer; font-size: 13px; position:relative;"><i
+                                        class='bx bx-id-card' style="font-size: 18px;"></i> Customer</button>
                             </div>
                             <div class="bill-items" id="pos-bill-items">
                                 <!-- Populated via JS -->
                             </div>
-                            <div class="cashier-details" id="pos-cashier-details" style="display: none; flex: 1; padding: 8px 0;">
+                            <div class="cashier-details" id="pos-cashier-details"
+                                style="display: none; flex: 1; padding: 8px 0;">
                                 <div class="form-group">
                                     <label>Cashier Name</label>
-                                    <input type="text" id="pos-cashier-name" class="form-control" placeholder="Enter cashier name" value="Pamidu">
+                                    <input type="text" id="pos-cashier-name" class="form-control"
+                                        placeholder="Enter cashier name" value="Pamidu">
                                 </div>
                             </div>
-                            <div class="customer-details" id="pos-customer-details" style="display: none; flex: 1; padding: 8px 0;">
+                            <div class="customer-details" id="pos-customer-details"
+                                style="display: none; flex: 1; padding: 8px 0;">
                                 <div class="form-group">
                                     <label>Select Customer</label>
                                     <div style="position: relative;">
-                                        <input type="text" id="pos-customer-search" class="form-control" placeholder="Search customer by name or phone..." autocomplete="off">
-                                        <div id="customer-search-results" style="position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid var(--border); border-radius: 8px; max-height: 200px; overflow-y: auto; z-index: 1000; display: none;">
+                                        <input type="text" id="pos-customer-search" class="form-control"
+                                            placeholder="Search customer by name or phone..." autocomplete="off">
+                                        <div id="customer-search-results"
+                                            style="position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid var(--border); border-radius: 8px; max-height: 200px; overflow-y: auto; z-index: 1000; display: none;">
                                             <!-- Customer search results -->
                                         </div>
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <label>Customer Name</label>
-                                    <input type="text" id="pos-customer-name" class="form-control" placeholder="Enter name" value="Walk-in Customer">
+                                    <input type="text" id="pos-customer-name" class="form-control"
+                                        placeholder="Enter name" value="Walk-in Customer">
                                 </div>
                                 <div class="form-group">
                                     <label>WhatsApp / Phone (Optional)</label>
-                                    <input type="tel" id="pos-customer-phone" class="form-control" placeholder="Enter phone number">
+                                    <input type="tel" id="pos-customer-phone" class="form-control"
+                                        placeholder="Enter phone number">
                                 </div>
                                 <div class="form-group">
                                     <label>Customer Type</label>
@@ -343,58 +371,81 @@
                                 </div>
                             </div>
                             <div class="bill-summary">
-                                <!-- Payment Method Section -->
-                                <div class="payment-section" style="margin-bottom: 16px; background: var(--secondary); padding: 12px; border-radius: 12px; border: 1px solid var(--primary);">
-                                    <div style="display: flex; align-items: center; gap: 8px;">
-                                        <i class='bx bx-credit-card' style="font-size: 16px; color: var(--primary);"></i>
-                                        <label style="font-size: 14px; font-weight: 700; color: var(--primary); margin: 0;">Payment Method</label>
+                                <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                                    <!-- Payment Method Section -->
+                                    <div class="payment-section"
+                                        style="flex: 1; background: var(--bg-body); padding: 10px; border-radius: 8px; border: 1px solid var(--border);">
+                                        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+                                            <i class='bx bx-credit-card'
+                                                style="font-size: 15px; color: var(--primary);"></i>
+                                            <label
+                                                style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin: 0;">Payment Method</label>
+                                        </div>
+                                        <select id="pos-payment-method" class="form-control"
+                                            style="padding: 6px 10px; font-size: 13px; font-weight: 500; cursor: pointer; border-color: var(--border); box-shadow: none;">
+                                            <option value="Cash">Cash</option>
+                                            <option value="Bank Payment">Bank payment</option>
+                                            <option value="Cash On Delivery">COD</option>
+                                        </select>
                                     </div>
-                                    <select id="pos-payment-method" class="form-control" style="padding: 10px; cursor: pointer; border-color: var(--primary); font-weight: 600; background: transparent; border: none; box-shadow: none;">
-                                        <option value="Cash">Cash</option>
-                                        <option value="Bank Payment">Bank payment</option>
-                                        <option value="Cash On Delivery">COD</option>
-                                    </select>
-                                </div>
-                                
-                                <!-- Voucher Section -->
-                                <div class="voucher-section" style="margin-bottom: 16px; background: #f0fdf4; padding: 16px; border-radius: 12px; border: 1px solid #10b981;">
-                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                                        <i class='bx bx-purchase-tag-alt' style="font-size: 16px; color: #10b981;"></i>
-                                        <label style="font-size: 13px; font-weight: 700; color: #10b981; margin: 0;">Voucher Code</label>
-                                    </div>
-                                    <div style="display: flex; gap: 8px;">
-                                        <input type="text" id="pos-voucher-code" class="form-control" placeholder="Enter voucher code..." style="flex: 1; border-color: #10b981; font-weight: 600;">
-                                        <button type="button" id="btn-apply-voucher" class="btn btn-primary" style="padding: 10px 16px; white-space: nowrap;">
-                                            <i class='bx bx-check' style="font-size: 14px;"></i> Apply
-                                        </button>
-                                        <button type="button" id="btn-remove-voucher" class="btn btn-danger" style="padding: 10px 16px; white-space: nowrap; display: none;">
-                                            <i class='bx bx-x' style="font-size: 14px;"></i> Remove
-                                        </button>
-                                    </div>
-                                    <div id="voucher-applied-info" style="display: none; margin-top: 8px; padding: 8px; background: #dcfce7; border-radius: 6px; font-size: 12px;">
-                                        <span style="color: #166534; font-weight: 600;">
-                                            <i class='bx bx-purchase-tag-alt' style="margin-right: 4px;"></i>
-                                            <span id="applied-voucher-code"></span>
-                                        </span>
-                                    </div>
-                                </div>
-                                
-                                <!-- Payment Details Section -->
-                                <div class="payment-details" style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
-                                    <div class="form-group" style="margin-bottom: 8px;">
-                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                            <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Amount to Pay</label>
-                                            <input type="number" id="pos-amount-to-pay" class="form-control" step="0.01" readonly style="font-weight: 700; color: var(--text-main); border: none; background: transparent; padding: 0; text-align: right; width: 120px; height: auto; pointer-events: none;">
+
+                                    <!-- Voucher Section -->
+                                    <div class="voucher-section"
+                                        style="flex: 1; background: #f0fdf4; padding: 10px; border-radius: 8px; border: 1px solid #e1eedd;">
+                                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 8px;">
+                                            <div style="display: flex; align-items: center; gap: 6px;">
+                                                <i class='bx bx-purchase-tag-alt' style="font-size: 15px; color: #10b981;"></i>
+                                                <label
+                                                    style="font-size: 12px; font-weight: 600; color: #10b981; margin: 0;">Voucher</label>
+                                            </div>
+                                            <button type="button" id="btn-apply-voucher" class="btn"
+                                                style="padding: 2px 8px; font-size: 11px; background: #10b981; color: white; border-radius: 4px;">Apply</button>
+                                            <button type="button" id="btn-remove-voucher" class="btn btn-danger"
+                                                style="padding: 2px 8px; font-size: 11px; display: none; border-radius: 4px;">Remove</button>
+                                        </div>
+                                        <div>
+                                            <input type="text" id="pos-voucher-code" class="form-control"
+                                                placeholder="Enter code..."
+                                                style="padding: 6px 10px; font-size: 13px; border-color: #a7f3d0; font-weight: 500;">
+                                        </div>
+                                        <div id="voucher-applied-info"
+                                            style="display: none; margin-top: 6px; padding: 6px; background: #dcfce7; border-radius: 4px; font-size: 11px;">
+                                            <span style="color: #166534; font-weight: 600; display:flex; align-items:center;">
+                                                <i class='bx bx-check-circle' style="margin-right: 4px;"></i>
+                                                <span id="applied-voucher-code"></span>
+                                            </span>
                                         </div>
                                     </div>
-                                    <div class="form-group" style="margin-bottom: 12px; background: #f0fdf4; padding: 12px; border-radius: 12px; border: 1px solid #10b981;">
+                                </div>
+
+                                <!-- Payment Details Section -->
+                                <div class="payment-details"
+                                    style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
+                                    <div class="form-group" style="margin-bottom: 8px;">
+                                        <div
+                                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                            <label
+                                                style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Amount
+                                                to Pay</label>
+                                            <input type="number" id="pos-amount-to-pay" class="form-control" step="0.01"
+                                                readonly
+                                                style="font-weight: 700; color: var(--text-main); border: none; background: transparent; padding: 0; text-align: right; width: 120px; height: auto; pointer-events: none;">
+                                        </div>
+                                    </div>
+                                    <div class="form-group"
+                                        style="margin-bottom: 12px; background: #f0fdf4; padding: 12px; border-radius: 12px; border: 1px solid #10b981;">
                                         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                                             <i class='bx bx-wallet' style="font-size: 16px; color: #10b981;"></i>
-                                            <label style="font-size: 13px; font-weight: 700; color: #10b981; margin: 0;">Amount Paid</label>
+                                            <label
+                                                style="font-size: 13px; font-weight: 700; color: #10b981; margin: 0;">Amount
+                                                Paid</label>
                                         </div>
-                                        <input type="number" id="pos-amount-paid" class="form-control" step="0.01" placeholder="Enter amount paid" style="border-color: #10b981; font-weight: 600;">
+                                        <input type="number" id="pos-amount-paid" class="form-control" step="0.01"
+                                            placeholder="Enter amount paid"
+                                            style="border-color: #10b981; font-weight: 600;">
                                     </div>
-                                    <div class="summary-row" style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; font-weight: 600; color: var(--text-main);">
+                                    <div class="summary-row"
+                                        style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; font-weight: 600; color: var(--text-main);">
                                         <span>CHANGE</span>
                                         <span id="pos-change-amount">0.00</span>
                                     </div>
@@ -402,7 +453,8 @@
                                         <span>TOTAL</span>
                                         <span id="pos-total-amount">0.00</span>
                                     </div>
-                                    <button class="btn btn-success btn-block btn-lg" id="btn-submit-bill" style="background: #10b981; border: none; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); font-weight: 700; padding: 16px;">
+                                    <button class="btn btn-success btn-block btn-lg" id="btn-submit-bill"
+                                        style="background: #10b981; border: none; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); font-weight: 700; padding: 16px;">
                                         <i class='bx bx-printer' style="margin-right: 8px;"></i> Submit Bill & Print
                                     </button>
                                 </div>
@@ -428,10 +480,15 @@
                             <!-- Dedicated Barcode Scanner Input for Inventory -->
                             <div style="flex: 1; min-width: 250px; position: relative; display: flex; gap: 8px;">
                                 <div style="flex: 1; position: relative;">
-                                    <i class='bx bx-barcode' style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 20px;"></i>
-                                    <input type="text" id="inventory-barcode-input" class="form-control" style="padding-left: 44px; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);" placeholder="Scan barcode to add or find product...">
+                                    <i class='bx bx-barcode'
+                                        style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 20px;"></i>
+                                    <input type="text" id="inventory-barcode-input" class="form-control"
+                                        style="padding-left: 44px; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);"
+                                        placeholder="Scan barcode to add or find product...">
                                 </div>
-                                <button type="button" id="btn-camera-scan-inventory" class="btn btn-outline" style="padding: 0 12px; height: 38px; display: flex; align-items: center;" title="Scan with Mobile Camera">
+                                <button type="button" id="btn-camera-scan-inventory" class="btn btn-outline"
+                                    style="padding: 0 12px; height: 38px; display: flex; align-items: center;"
+                                    title="Scan with Mobile Camera">
                                     <i class='bx bx-camera' style="font-size: 20px;"></i>
                                 </button>
                             </div>
@@ -597,10 +654,17 @@
                             </div>
 
                             <!-- Account Settings Container -->
-                            <div id="reports-account-container" style="display:none; padding: 20px; background: #fff; border-radius: 12px; border: 1px solid var(--border);">
-                                <h3 style="margin-top:0; color:var(--danger); display:flex; align-items:center; gap:8px;"><i class='bx bx-error-circle'></i> Danger Zone</h3>
-                                <p style="color:var(--text-muted); font-size:14px; margin-bottom:15px;">If you no longer wish to use SmartZone POS, you can request your account and all associated data to be permanently deleted. This action will be reviewed by an admin.</p>
-                                <button class="btn btn-danger btn-outline" id="btn-request-disconnect-tab" style="color: var(--danger); border-color: var(--danger);"><i class='bx bx-user-x'></i> Request Account Disconnect</button>
+                            <div id="reports-account-container"
+                                style="display:none; padding: 20px; background: #fff; border-radius: 12px; border: 1px solid var(--border);">
+                                <h3
+                                    style="margin-top:0; color:var(--danger); display:flex; align-items:center; gap:8px;">
+                                    <i class='bx bx-error-circle'></i> Danger Zone</h3>
+                                <p style="color:var(--text-muted); font-size:14px; margin-bottom:15px;">If you no longer
+                                    wish to use SmartZone POS, you can request your account and all associated data to
+                                    be permanently deleted. This action will be reviewed by an admin.</p>
+                                <button class="btn btn-danger btn-outline" id="btn-request-disconnect-tab"
+                                    style="color: var(--danger); border-color: var(--danger);"><i
+                                        class='bx bx-user-x'></i> Request Account Disconnect</button>
                             </div>
                         </div>
                     </div>
@@ -659,10 +723,14 @@
                                 <label>Barcode / SKU (Optional)</label>
                                 <div style="display: flex; gap: 8px;">
                                     <div style="flex: 1; position: relative;">
-                                        <i class='bx bx-barcode' style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 18px;"></i>
-                                        <input type="text" id="product-barcode" class="form-control" style="padding-left: 36px;" placeholder="Scan or type...">
+                                        <i class='bx bx-barcode'
+                                            style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 18px;"></i>
+                                        <input type="text" id="product-barcode" class="form-control"
+                                            style="padding-left: 36px;" placeholder="Scan or type...">
                                     </div>
-                                    <button type="button" id="btn-camera-scan-product" class="btn btn-outline" style="padding: 0 12px; height: 38px; display: flex; align-items: center;" title="Scan with Mobile Camera">
+                                    <button type="button" id="btn-camera-scan-product" class="btn btn-outline"
+                                        style="padding: 0 12px; height: 38px; display: flex; align-items: center;"
+                                        title="Scan with Mobile Camera">
                                         <i class='bx bx-camera' style="font-size: 20px;"></i>
                                     </button>
                                 </div>
@@ -714,7 +782,8 @@
                         </div>
                         <div class="form-group" style="display:flex; align-items:center; gap: 10px; margin-top: 10px;">
                             <input type="checkbox" id="admin-is-active" style="width:18px;height:18px;">
-                            <label style="margin:0; font-weight:600; color:var(--text-main);">Account Active & Approved</label>
+                            <label style="margin:0; font-weight:600; color:var(--text-main);">Account Active &
+                                Approved</label>
                         </div>
                         <button type="submit" class="btn btn-primary btn-block" style="margin-top:20px;">Save
                             User</button>
@@ -739,8 +808,10 @@
                             <p>Invoice: <span id="receipt-no"></span></p>
                             <p>Date: <span id="receipt-date"></span></p>
                             <p>Time: <span id="receipt-time"></span></p>
-                            <p id="receipt-customer-row" style="display:none;">Customer: <span id="receipt-customer-name"></span></p>
-                            <p id="receipt-phone-row" style="display:none;">Contact: <span id="receipt-customer-phone"></span></p>
+                            <p id="receipt-customer-row" style="display:none;">Customer: <span
+                                    id="receipt-customer-name"></span></p>
+                            <p id="receipt-phone-row" style="display:none;">Contact: <span
+                                    id="receipt-customer-phone"></span></p>
                             <p>Payment: <span id="receipt-payment-method"></span></p>
                             <p>Cashier: <span id="receipt-cashier-name"></span></p>
                         </div>
@@ -777,7 +848,8 @@
                             <p>Thank You!</p>
                             <p>Visit Again</p>
                             <p>----------------------------</p>
-                            <p style="font-size: 10px; margin-top: 5px; color: #64748b;">Smartzone Technology_Developed by pamidu <br>078 68000 86</p>
+                            <p style="font-size: 10px; margin-top: 5px; color: #64748b;">Smartzone Technology_Developed
+                                by pamidu <br>078 68000 86</p>
                         </div>
                     </div>
                 </div>
@@ -787,22 +859,29 @@
             </div>
 
             <!-- Scanner Modal -->
-            <div class="modal" id="scanner-modal" style="max-width: 500px; overflow: hidden; background: #0f172a; border-radius: 20px;">
+            <div class="modal" id="scanner-modal"
+                style="max-width: 500px; overflow: hidden; background: #0f172a; border-radius: 20px;">
                 <div class="modal-header" style="border-bottom: 1px solid #334155; padding: 16px 24px;">
-                    <h3 style="color: white; font-size: 18px; display: flex; align-items: center; gap: 8px;"><i class='bx bx-barcode-reader'></i> Scan Barcode</h3>
-                    <button class="close-btn" id="btn-close-scanner-modal" style="color: #cbd5e1;"><i class='bx bx-x'></i></button>
+                    <h3 style="color: white; font-size: 18px; display: flex; align-items: center; gap: 8px;"><i
+                            class='bx bx-barcode-reader'></i> Scan Barcode</h3>
+                    <button class="close-btn" id="btn-close-scanner-modal" style="color: #cbd5e1;"><i
+                            class='bx bx-x'></i></button>
                 </div>
                 <div class="modal-body" style="padding: 0; position: relative;">
-                    <div id="reader" style="width: 100%; min-height: 400px; display: flex; align-items: center; justify-content: center; background: #000;">
+                    <div id="reader"
+                        style="width: 100%; min-height: 400px; display: flex; align-items: center; justify-content: center; background: #000;">
                         <span style="color: #64748b;">Initializing Camera...</span>
                     </div>
-                    
+
                     <!-- Scanner Overlay Controls -->
-                    <div style="position: absolute; bottom: 20px; left: 0; width: 100%; display: flex; justify-content: center; gap: 20px; z-index: 10;">
-                        <button class="btn btn-primary" id="btn-toggle-torch" style="border-radius: 50%; width: 56px; height: 56px; padding: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); background: rgba(79, 70, 229, 0.9);">
+                    <div
+                        style="position: absolute; bottom: 20px; left: 0; width: 100%; display: flex; justify-content: center; gap: 20px; z-index: 10;">
+                        <button class="btn btn-primary" id="btn-toggle-torch"
+                            style="border-radius: 50%; width: 56px; height: 56px; padding: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); background: rgba(79, 70, 229, 0.9);">
                             <i class='bx bx-bolt-circle' style="font-size: 28px;"></i>
                         </button>
-                        <button class="btn btn-primary" id="btn-restart-scan" style="border-radius: 50%; width: 56px; height: 56px; padding: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);">
+                        <button class="btn btn-primary" id="btn-restart-scan"
+                            style="border-radius: 50%; width: 56px; height: 56px; padding: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);">
                             <i class='bx bx-refresh' style="font-size: 28px; color: white;"></i>
                         </button>
                     </div>

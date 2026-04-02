@@ -1877,33 +1877,14 @@ window.navigateToView = function(viewId) {
 };
 
 function showAddCustomerModal() {
-    console.log('showAddCustomerModal called');
     const modal = document.getElementById('customer-modal');
-    const modalOverlay = document.getElementById('modal-overlay');
-    console.log('customer-modal element:', modal);
-    console.log('modal-overlay element:', modalOverlay);
-    
-    if (!modal) {
-        console.error('customer-modal not found in DOM');
-        alert('Error: customer-modal not found in DOM');
-        return;
-    }
-    
-    if (!modalOverlay) {
-        console.error('modal-overlay not found in DOM');
-        alert('Error: modal-overlay not found in DOM');
-        return;
-    }
+    if (!modal) return;
     
     document.getElementById('customer-modal-title').textContent = 'Add Customer';
     document.getElementById('customer-form').reset();
     document.getElementById('customer-id').value = '';
     
-    // Show both the overlay and the modal
-    modalOverlay.style.display = 'flex';
-    modal.style.display = 'block';
-    
-    console.log('Customer modal and overlay should now be visible');
+    showModal(modal);
 }
 
 function showEditCustomerModal(customerId) {
@@ -1916,7 +1897,7 @@ function showEditCustomerModal(customerId) {
     document.getElementById('customer-phone').value = customer.phone;
     document.getElementById('customer-email').value = customer.email || '';
     document.getElementById('customer-address').value = customer.address || '';
-    document.getElementById('customer-modal').style.display = 'block';
+    showModal(document.getElementById('customer-modal'));
 }
 
 async function deleteCustomer(customerId) {
@@ -1959,16 +1940,7 @@ async function saveCustomer(customerData) {
 }
 
 function closeCustomerModal() {
-    const modalOverlay = document.getElementById('modal-overlay');
-    const modal = document.getElementById('customer-modal');
-    
-    if (modalOverlay) {
-        modalOverlay.style.display = 'none';
-    }
-    if (modal) {
-        modal.style.display = 'none';
-    }
-    
+    hideModal();
     document.getElementById('customer-form').reset();
 }
 
@@ -2089,40 +2061,14 @@ function selectCustomer(customer) {
 
 // ==== VOUCHER MANAGEMENT FUNCTIONS ====
 function showAddVoucherModal() {
-    console.log('=== VOUCHER MODAL DEBUG ===');
-    console.log('showAddVoucherModal called');
-    
     const modal = document.getElementById('voucher-modal');
-    const modalOverlay = document.getElementById('modal-overlay');
-    console.log('voucher-modal element:', modal);
-    console.log('modal-overlay element:', modalOverlay);
+    if (!modal) return;
     
-    if (!modal) {
-        console.error('voucher-modal not found in DOM');
-        alert('Error: voucher-modal not found in DOM');
-        return;
-    }
-    
-    if (!modalOverlay) {
-        console.error('modal-overlay not found in DOM');
-        alert('Error: modal-overlay not found in DOM');
-        return;
-    }
-    
-    console.log('Resetting voucher form...');
     document.getElementById('voucher-modal-title').textContent = 'Create Voucher';
     document.getElementById('voucher-form').reset();
     document.getElementById('voucher-id').value = '';
     
-    console.log('Showing modal and overlay...');
-    // Show both the overlay and the modal
-    modalOverlay.style.display = 'flex';
-    modal.style.display = 'block';
-    
-    console.log('Modal display styles:');
-    console.log('modalOverlay.style.display:', modalOverlay.style.display);
-    console.log('modal.style.display:', modal.style.display);
-    console.log('=== END VOUCHER MODAL DEBUG ===');
+    showModal(modal);
 }
 
 function showEditVoucherModal(voucherId) {
@@ -2137,7 +2083,7 @@ function showEditVoucherModal(voucherId) {
     document.getElementById('voucher-expiry-date').value = voucher.expiry_date || '';
     document.getElementById('voucher-usage-limit').value = voucher.usage_limit || '';
     document.getElementById('voucher-status').value = voucher.status || 'active';
-    document.getElementById('voucher-modal').style.display = 'block';
+    showModal(document.getElementById('voucher-modal'));
 }
 
 function deleteVoucher(voucherId) {
@@ -2185,16 +2131,7 @@ function saveVoucher(voucherData) {
 }
 
 function closeVoucherModal() {
-    const modalOverlay = document.getElementById('modal-overlay');
-    const modal = document.getElementById('voucher-modal');
-    
-    if (modalOverlay) {
-        modalOverlay.style.display = 'none';
-    }
-    if (modal) {
-        modal.style.display = 'none';
-    }
-    
+    hideModal();
     document.getElementById('voucher-form').reset();
 }
 

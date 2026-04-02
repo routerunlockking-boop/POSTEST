@@ -573,6 +573,8 @@ function setupNavigation() {
             if(target === 'invoices-view') loadInvoices();
             if(target === 'reports-view') loadReports();
             if(target === 'admin-view') loadAdminUsers();
+            if(target === 'customers-view') loadCustomers();
+            if(target === 'vouchers-view') loadVouchers();
         });
     });
     

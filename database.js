@@ -65,7 +65,10 @@ const InvoiceSchema = new mongoose.Schema({
     customer_phone: { type: String, default: '' },
     cashier_name: { type: String, default: 'System' },
     payment_method: { type: String, default: 'Cash' },
-    total_amount: { type: Number, default: 0.0 },
+    subtotal_amount: { type: Number, default: 0.0 }, // Pre-discount total
+    voucher_code: { type: String, default: '' },
+    voucher_discount: { type: Number, default: 0.0 },
+    total_amount: { type: Number, default: 0.0 }, // Post-discount grand total
     amount_paid: { type: Number, default: 0.0 },
     total_profit: { type: Number, default: 0.0 },
     items: [InvoiceItemSchema]

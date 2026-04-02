@@ -1372,18 +1372,22 @@ function removeVoucher() {
     updateBillUI();
     
     // Hide applied voucher info
-    const appliedInfo = document.getElementById('voucher-applied-info');
-    const applyBtn = document.getElementById('btn-apply-voucher');
-    const removeBtn = document.getElementById('btn-remove-voucher');
-    const voucherInput = document.getElementById('pos-voucher-code');
+    document.getElementById('voucher-applied-info').style.display = 'none';
+    document.getElementById('pos-voucher-code').value = '';
+    document.getElementById('btn-apply-voucher').style.display = 'inline-block';
+    document.getElementById('btn-remove-voucher').style.display = 'none';
+}
+
+function calculateVoucherDiscount() {
+    if (!appliedVoucher) return 0;
     
-    appliedInfo.style.display = 'none';
-    applyBtn.style.display = 'inline-block';
-    removeBtn.style.display = 'none';
-    voucherInput.disabled = false;
-    voucherInput.value = '';
+    const subtotal = currentBill.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     
-    showToast('Voucher removed', 'success');
+    if (appliedVoucher.discount_type === 'percentage') {
+        return subtotal * (appliedVoucher.discount_value / 100);
+    } else {
+        return parseFloat(appliedVoucher.discount_value) || 0;
+    }
 }
 
 function updateVoucherOptions() {
@@ -1433,7 +1437,13 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
         cashier_name,
         customer_name,
         customer_phone,
-        payment_method
+        payment_method,
+        voucher: appliedVoucher ? {
+            code: appliedVoucher.code,
+            discount_type: appliedVoucher.discount_type,
+            discount_value: appliedVoucher.discount_value,
+            discount_amount: calculateVoucherDiscount()
+        } : null
     };
     
     try {
@@ -1519,12 +1529,29 @@ function showInvoicePrintout(invoice) {
     
     document.getElementById('receipt-total-amount').textContent = total.toFixed(2);
     
-    // Payment details for receipt
-    const amountPaid = invoice.amount_paid || 0;
-    const change = amountPaid > 0 ? (amountPaid - total) : 0;
-    
-    document.getElementById('receipt-amount-paid').textContent = amountPaid.toFixed(2);
-    document.getElementById('receipt-balance-amount').textContent = Math.max(0, change).toFixed(2);
+    // Display voucher information if available
+    if (invoice.voucher) {
+        document.getElementById('receipt-voucher-row').style.display = 'block';
+        document.getElementById('receipt-voucher-code').textContent = invoice.voucher.code;
+        document.getElementById('receipt-voucher-amount').textContent = '-' + (invoice.voucher.discount_amount || 0).toFixed(2);
+        
+        // Adjust total to show amount after voucher discount
+        const finalTotal = total - (invoice.voucher.discount_amount || 0);
+        const amountPaid = invoice.amount_paid || 0;
+        const change = amountPaid > 0 ? (amountPaid - finalTotal) : 0;
+        
+        document.getElementById('receipt-amount-paid').textContent = amountPaid.toFixed(2);
+        document.getElementById('receipt-balance-amount').textContent = Math.max(0, change).toFixed(2);
+    } else {
+        document.getElementById('receipt-voucher-row').style.display = 'none';
+        
+        // Payment details for receipt
+        const amountPaid = invoice.amount_paid || 0;
+        const change = amountPaid > 0 ? (amountPaid - total) : 0;
+        
+        document.getElementById('receipt-amount-paid').textContent = amountPaid.toFixed(2);
+        document.getElementById('receipt-balance-amount').textContent = Math.max(0, change).toFixed(2);
+    }
     
     // Automatically open modal and print dialog as per rules
     showModal(invoiceModal);

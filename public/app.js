@@ -285,23 +285,25 @@ function setupBarcodeScanner() {
         const isBarcodeField = activeEl.id === 'pos-barcode-input' || activeEl.id === 'product-barcode' || activeEl.id === 'inventory-barcode-input';
         const isOtherInput = (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA') && !isBarcodeField;
 
+        // Scanner detection: fast consecutive keypresses (interval < 100ms)
+        const isScannerInput = interval < 100;
+
         // Collect characters
-        if (e.key.length === 1) {
-            // If it's a fast sequence, it's a scanner. 
+        if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
             barcodeBuffer += e.key;
             
-            // If it's fast and we are in an input that isn't the barcode field, prevent it
-            if (interval < 50 && isOtherInput) {
+            // If it's from scanner and we're in another input, prevent it
+            if (isScannerInput && isOtherInput) {
                 e.preventDefault();
             }
 
             clearTimeout(barcodeTimer);
             barcodeTimer = setTimeout(() => {
                 barcodeBuffer = '';
-            }, 500); // Increased slightly for slower hardware
+            }, 150); // Increased buffer time for slower scanners
         } 
         
-        if (e.key === 'Enter' || e.key === 'Tab') {
+        if (e.key === 'Enter') {
             // Priority: buffer (from scanner) > input value (if manually typed)
             let finalBarcode = barcodeBuffer.trim();
             if (!finalBarcode && isBarcodeField) {
@@ -312,7 +314,6 @@ function setupBarcodeScanner() {
                 e.preventDefault();
                 
                 // We clear buffer immediately to prevent double-processing 
-                // but keep the value in finalBarcode
                 barcodeBuffer = '';
                 clearTimeout(barcodeTimer);
 
@@ -328,15 +329,18 @@ function setupBarcodeScanner() {
                     }
                 } else if (isPosView || isInventoryView) {
                     const product = products.find(p => p.barcode === finalBarcode);
+                    console.log('Scanned barcode:', finalBarcode, 'Found product:', product);
                     if (product) {
                         if (isPosView) {
                             addToBill(product);
+                            showToast(`Added: ${product.name}`, 'success');
                             if (activeEl.id === 'pos-barcode-input') activeEl.value = '';
                         } else {
                             editProduct(product.id);
                             if (activeEl.id === 'inventory-barcode-input') activeEl.value = '';
                         }
                     } else {
+                        showToast(`Product not found: ${finalBarcode}`, 'error');
                         openAddProductModal(finalBarcode);
                         if (activeEl.id === 'pos-barcode-input' || activeEl.id === 'inventory-barcode-input') activeEl.value = '';
                     }
@@ -461,15 +465,40 @@ function startScanner() {
     
     if (html5QrCode.getState() === 2) return; // already scanning
 
+    // Mobile-friendly configuration
+    const config = {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+        aspectRatio: 1.0,
+        // Mobile specific settings
+        videoConstraints: {
+            facingMode: "environment",
+            width: { min: 640, ideal: 1280 },
+            height: { min: 480, ideal: 720 }
+        }
+    };
+
     html5QrCode.start(
         { facingMode: "environment" }, 
-        { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 },
+        config,
         (decodedText, decodedResult) => {
+            console.log('Barcode scanned:', decodedText);
+            
+            // Vibrate on mobile if supported
+            if (navigator.vibrate) {
+                navigator.vibrate(200);
+            }
+            
             // Success handler
             if (currentScanMode === 'addProduct') {
                 document.getElementById('reader').style.boxShadow = "inset 0 0 0 10px #10b981";
                 setTimeout(() => { document.getElementById('reader').style.boxShadow = "none"; }, 500);
                 document.getElementById('product-barcode').value = decodedText;
+                document.getElementById('product-barcode-text').textContent = decodedText;
+                const previewSvg = document.getElementById('product-barcode-preview');
+                if (previewSvg) {
+                    renderBarcodeToSVG(previewSvg, decodedText);
+                }
                 hideModal();
                 return;
             }
@@ -495,6 +524,7 @@ function startScanner() {
                 setTimeout(() => { document.getElementById('reader').style.boxShadow = "none"; }, 500);
                 
                 addToBill(product);
+                showToast(`Added: ${product.name}`, 'success');
                 
                 // Close the modal after successful scan
                 hideModal();
@@ -508,11 +538,27 @@ function startScanner() {
             }
         },
         (errorMessage) => {
-            // Ignore parse errors as it scans frames without barcodes
+            // Only log errors, don't spam console
+            if (errorMessage && !errorMessage.includes('No MultiFormat Readers')) {
+                console.log('Scanner error:', errorMessage);
+            }
         }
     ).catch(err => {
         console.error("Camera access failed", err);
-        alert("Unable to access camera. Please ensure permissions are granted.");
+        
+        // More helpful error messages for mobile
+        let errorMessage = "Unable to access camera. ";
+        if (err.name === 'NotAllowedError') {
+            errorMessage += "Please grant camera permissions in your browser settings.";
+        } else if (err.name === 'NotFoundError') {
+            errorMessage += "No camera found on this device.";
+        } else if (err.name === 'NotSupportedError') {
+            errorMessage += "Camera not supported by this browser.";
+        } else {
+            errorMessage += "Please ensure camera permissions are granted and try again.";
+        }
+        
+        alert(errorMessage);
     });
 }
 
@@ -575,6 +621,7 @@ function setupNavigation() {
             if(target === 'admin-view') loadAdminUsers();
             if(target === 'customers-view') loadCustomers();
             if(target === 'vouchers-view') loadVouchers();
+            if(target === 'barcodes-view') loadBarcodesView();
         });
     });
     
@@ -623,6 +670,11 @@ function setupNavigation() {
     }
 }
 
+function generateBarcode() {
+    // Generate 4-6 digit barcode (1000-999999) for better scanner compatibility
+    return Math.floor(1000 + Math.random() * 998000).toString();
+}
+
 function openAddProductModal(barcode = '') {
     const form = document.getElementById('product-form');
     form.reset();
@@ -630,12 +682,31 @@ function openAddProductModal(barcode = '') {
     currentProductImageBase64 = null;
     document.getElementById('product-image-preview').innerHTML = '<span style="color:var(--text-muted);font-size:12px;">+ Add Image</span>';
     document.getElementById('product-modal-title').textContent = 'Add Product';
+
+    // Set barcode after reset - auto-generate if not provided
+    const finalBarcode = barcode || generateBarcode();
+    document.getElementById('product-barcode').value = finalBarcode;
+    document.getElementById('product-barcode-text').textContent = finalBarcode;
     
-    // Set barcode after reset
-    if (barcode) {
-        document.getElementById('product-barcode').value = barcode;
-    }
+    // Render barcode preview
+    setTimeout(() => {
+        const previewSvg = document.getElementById('product-barcode-preview');
+        if (previewSvg) {
+            renderBarcodeToSVG(previewSvg, finalBarcode);
+        }
+    }, 100);
     
+    // Update preview when barcode is manually changed
+    const barcodeInput = document.getElementById('product-barcode');
+    barcodeInput.addEventListener('input', (e) => {
+        const value = e.target.value;
+        document.getElementById('product-barcode-text').textContent = value;
+        const previewSvg = document.getElementById('product-barcode-preview');
+        if (previewSvg) {
+            renderBarcodeToSVG(previewSvg, value);
+        }
+    });
+
     showModal(productModal);
     
     // Focus and highlight
@@ -661,6 +732,25 @@ function setupModals() {
     document.getElementById('btn-close-modal').addEventListener('click', hideModal);
     document.getElementById('btn-close-invoice-modal').addEventListener('click', hideModal);
     document.getElementById('btn-close-admin-modal').addEventListener('click', hideModal);
+    
+    // Scanner modal close button
+    const closeScannerBtn = document.getElementById('btn-close-scanner-modal');
+    if (closeScannerBtn) {
+        closeScannerBtn.addEventListener('click', () => {
+            stopScanner();
+            hideModal();
+        });
+    }
+    
+    // Close modal when clicking on overlay background
+    if (modalOverlay) {
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                stopScanner();
+                hideModal();
+            }
+        });
+    }
     
     // Check if close buttons exist
     const closeCustomerBtn = document.getElementById('btn-close-customer-modal');
@@ -780,6 +870,9 @@ function setupModals() {
             });
             hideModal();
             loadInventory();
+            // Also reload products for POS to get updated barcodes
+            const res = await fetchAuth(`${API_BASE}/products?lite=true`);
+            products = await res.json();
         } catch (err) {
             console.error(err);
             alert('Error saving product');
@@ -814,6 +907,48 @@ function setupModals() {
             alert('Error updating user');
         }
     });
+
+    // Barcode Management Buttons
+    const btnPrintSelectedBarcodes = document.getElementById('btn-print-selected-barcodes');
+    const btnSelectAllBarcodes = document.getElementById('btn-select-all-barcodes');
+    const btnCloseBarcodePrint = document.getElementById('btn-close-barcode-print-modal');
+    const btnCancelBarcodePrint = document.getElementById('btn-cancel-barcode-print');
+    const btnConfirmPrintBarcodes = document.getElementById('btn-confirm-print-barcodes');
+    
+    if (btnPrintSelectedBarcodes) {
+        btnPrintSelectedBarcodes.addEventListener('click', showBarcodePrintModal);
+    }
+    
+    if (btnSelectAllBarcodes) {
+        btnSelectAllBarcodes.addEventListener('click', () => {
+            const allCards = document.querySelectorAll('.barcode-card');
+            const allSelected = selectedBarcodes.size === allCards.length;
+            
+            if (allSelected) {
+                selectedBarcodes.clear();
+                allCards.forEach(card => card.classList.remove('selected'));
+            } else {
+                allCards.forEach(card => {
+                    const id = card.dataset.id;
+                    selectedBarcodes.add(id);
+                    card.classList.add('selected');
+                });
+            }
+            updatePrintButtonState();
+        });
+    }
+    
+    if (btnCloseBarcodePrint) {
+        btnCloseBarcodePrint.addEventListener('click', hideModal);
+    }
+    
+    if (btnCancelBarcodePrint) {
+        btnCancelBarcodePrint.addEventListener('click', hideModal);
+    }
+    
+    if (btnConfirmPrintBarcodes) {
+        btnConfirmPrintBarcodes.addEventListener('click', printBarcodes);
+    }
 }
 
 function showModal(modal) {
@@ -826,15 +961,15 @@ function hideModal() {
     modalOverlay.classList.remove('active');
     document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
     
-    // Stop the custom barcode camera stream
+    // Stop the barcode scanner camera
+    stopScanner();
+}
+
+function stopScanner() {
     if (html5QrCode && html5QrCode.getState() === 2) {
         html5QrCode.stop().then(() => {
-            isScanTorchOn = false;
-            try {
-                document.querySelector('#btn-toggle-torch i').classList.replace('bxs-bolt-circle', 'bx-bolt-circle');
-                document.querySelector('#btn-toggle-torch i').style.color = '';
-            } catch(e){}
-        }).catch(err => console.error(err));
+            console.log('Scanner stopped');
+        }).catch(err => console.error('Error stopping scanner:', err));
     }
 }
 
@@ -1071,6 +1206,8 @@ document.getElementById('btn-export-inventory').addEventListener('click', () => 
 async function loadPOS() {
     currentBill = [];
     updateBillUI();
+    document.getElementById('pos-amount-paid').value = '';
+    calculateChange();
     document.getElementById('pos-search-input').value = '';
     
     try {
@@ -1276,15 +1413,17 @@ function updateBillUI() {
 function calculateChange() {
     const amountToPay = parseFloat(document.getElementById('pos-amount-to-pay').value) || 0;
     const amountPaid = parseFloat(document.getElementById('pos-amount-paid').value) || 0;
-    const change = amountPaid - amountToPay;
+    const balance = amountToPay - amountPaid;
     
-    const changeEl = document.getElementById('pos-change-amount');
-    changeEl.textContent = formatCurrency(Math.max(0, change));
-    
-    if (change < 0 && amountPaid > 0) {
-        changeEl.style.color = '#ef4444'; // Red for insufficient payment
-    } else {
-        changeEl.style.color = 'var(--text-main)';
+    const balanceEl = document.getElementById('pos-change-amount');
+    if (balanceEl) {
+        balanceEl.textContent = formatCurrency(Math.max(0, balance));
+        
+        if (balance > 0 && amountPaid > 0) {
+            balanceEl.style.color = '#ef4444'; // Red for remaining balance
+        } else {
+            balanceEl.style.color = 'var(--text-main)';
+        }
     }
 }
 
@@ -1312,6 +1451,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 applyVoucher();
             }
         });
+    }
+    
+    // Amount Paid Input - calculate balance in real-time
+    const amountPaidInput = document.getElementById('pos-amount-paid');
+    if (amountPaidInput) {
+        amountPaidInput.addEventListener('input', calculateChange);
+        amountPaidInput.addEventListener('keyup', calculateChange);
+        amountPaidInput.addEventListener('change', calculateChange);
     }
 });
 
@@ -2145,4 +2292,259 @@ function loadVouchers() {
             deleteVoucher(voucherId);
         });
     });
+}
+
+// ==== BARCODES MANAGEMENT ====
+let selectedBarcodes = new Set();
+let allBarcodeProducts = [];
+
+function loadBarcodesView() {
+    const grid = document.getElementById('barcodes-grid');
+    const emptyState = document.getElementById('barcodes-empty');
+    const searchInput = document.getElementById('barcodes-search');
+    const categoryFilter = document.getElementById('barcodes-category-filter');
+    
+    if (!grid) return;
+    
+    // Get all products for barcode management
+    allBarcodeProducts = [...products];
+    
+    renderBarcodeCards();
+    
+    // Setup search and filter
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce(() => {
+            renderBarcodeCards();
+        }, 300));
+    }
+    
+    if (categoryFilter) {
+        categoryFilter.addEventListener('change', () => {
+            renderBarcodeCards();
+        });
+    }
+}
+
+function renderBarcodeCards() {
+    const grid = document.getElementById('barcodes-grid');
+    const emptyState = document.getElementById('barcodes-empty');
+    const searchInput = document.getElementById('barcodes-search');
+    const categoryFilter = document.getElementById('barcodes-category-filter');
+    const printBtn = document.getElementById('btn-print-selected-barcodes');
+    
+    if (!grid) return;
+    
+    const searchTerm = searchInput?.value?.toLowerCase() || '';
+    const filterValue = categoryFilter?.value || '';
+    
+    let filteredProducts = allBarcodeProducts.filter(p => {
+        const matchesSearch = p.name.toLowerCase().includes(searchTerm) || 
+                             (p.barcode && p.barcode.toLowerCase().includes(searchTerm));
+        
+        if (filterValue === 'with-barcode') {
+            return matchesSearch && p.barcode;
+        } else if (filterValue === 'without-barcode') {
+            return matchesSearch && !p.barcode;
+        }
+        return matchesSearch;
+    });
+    
+    grid.innerHTML = '';
+    
+    if (filteredProducts.length === 0) {
+        emptyState.style.display = 'block';
+        grid.style.display = 'none';
+    } else {
+        emptyState.style.display = 'none';
+        grid.style.display = 'grid';
+        
+        filteredProducts.forEach(product => {
+            const card = createBarcodeCard(product);
+            grid.appendChild(card);
+        });
+    }
+    
+    updatePrintButtonState();
+}
+
+function createBarcodeCard(product) {
+    const card = document.createElement('div');
+    card.className = `barcode-card ${selectedBarcodes.has(product.id) ? 'selected' : ''}`;
+    card.dataset.id = product.id;
+    
+    const hasBarcode = !!product.barcode;
+    const barcodeValue = hasBarcode ? product.barcode : generateBarcode();
+    
+    card.innerHTML = `
+        <div class="checkbox">
+            <i class='bx bx-check'></i>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 12px;">
+            <div style="width: 50px; height: 50px; border-radius: 8px; background: var(--secondary); display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                ${product.image ? `<img src="${product.image}" style="width: 100%; height: 100%; object-fit: cover;">` : `<i class='bx bx-box' style="font-size: 24px; color: var(--text-muted);"></i>`}
+            </div>
+            <div style="flex: 1; min-width: 0;">
+                <div style="font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${product.name}</div>
+                <div style="font-size: 12px; color: var(--text-muted);">${formatCurrency(product.price)}</div>
+            </div>
+        </div>
+        ${hasBarcode ? `
+            <svg class="barcode-svg" data-barcode="${barcodeValue}" data-name="${product.name}" data-price="${product.price}"></svg>
+            <div style="text-align: center; font-family: monospace; font-size: 11px; color: var(--text-muted);">${barcodeValue}</div>
+        ` : `
+            <div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 12px;">
+                <i class='bx bx-plus-circle' style="font-size: 24px; margin-bottom: 8px; display: block;"></i>
+                Click to add barcode
+            </div>
+        `}
+    `;
+    
+    // Toggle selection on click
+    card.addEventListener('click', (e) => {
+        // Don't toggle if clicking the generate button
+        if (e.target.closest('.btn-generate-barcode')) return;
+        
+        if (selectedBarcodes.has(product.id)) {
+            selectedBarcodes.delete(product.id);
+            card.classList.remove('selected');
+        } else {
+            selectedBarcodes.add(product.id);
+            card.classList.add('selected');
+        }
+        updatePrintButtonState();
+    });
+    
+    // Generate barcode button if no barcode
+    if (!hasBarcode) {
+        const generateBtn = document.createElement('button');
+        generateBtn.className = 'btn btn-outline btn-sm btn-generate-barcode';
+        generateBtn.style.cssText = 'width: 100%; margin-top: 10px; font-size: 12px;';
+        generateBtn.innerHTML = `<i class='bx bx-barcode'></i> Generate Barcode`;
+        generateBtn.addEventListener('click', async () => {
+            const newBarcode = generateBarcode();
+            try {
+                await fetchAuth(`${API_BASE}/products/${product.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: product.name,
+                        barcode: newBarcode,
+                        quantity: product.quantity,
+                        cost_price: product.cost_price,
+                        price: product.price,
+                        image: product.image
+                    })
+                });
+                product.barcode = newBarcode;
+                renderBarcodeCards();
+                showToast('Barcode generated successfully');
+            } catch (err) {
+                console.error(err);
+                showToast('Error generating barcode', 'error');
+            }
+        });
+        card.querySelector('.barcode-card > div:last-child').appendChild(generateBtn);
+    } else {
+        // Render barcode SVG
+        setTimeout(() => {
+            renderBarcodeToSVG(card.querySelector('.barcode-svg'), barcodeValue);
+        }, 0);
+    }
+    
+    return card;
+}
+
+function renderBarcodeToSVG(svgElement, value) {
+    if (!svgElement || !value) return;
+    
+    try {
+        // Use JsBarcode library for real scannable barcodes
+        JsBarcode(svgElement, value, {
+            format: "CODE128",
+            width: 3,
+            height: 60,
+            displayValue: true,
+            fontSize: 14,
+            font: "monospace",
+            margin: 10,
+            background: "#ffffff"
+        });
+    } catch (err) {
+        console.error("Barcode generation error:", err);
+        svgElement.innerHTML = `<text x="50%" y="30" text-anchor="middle" font-size="12" fill="red">Error</text>`;
+    }
+}
+
+function updatePrintButtonState() {
+    const printBtn = document.getElementById('btn-print-selected-barcodes');
+    if (printBtn) {
+        printBtn.disabled = selectedBarcodes.size === 0;
+        printBtn.innerHTML = `<i class='bx bx-printer'></i> Print Selected (${selectedBarcodes.size})`;
+    }
+}
+
+function showBarcodePrintModal() {
+    const modal = document.getElementById('barcode-print-modal');
+    const preview = document.getElementById('barcode-print-preview');
+    
+    // Get selected products
+    const selectedProducts = allBarcodeProducts.filter(p => selectedBarcodes.has(p.id) && p.barcode);
+    
+    updateBarcodePreview(selectedProducts);
+    
+    // Setup label size change handler
+    document.getElementById('barcode-label-size').addEventListener('change', () => {
+        updateBarcodePreview(selectedProducts);
+    });
+    
+    // Setup copies change handler
+    document.getElementById('barcode-copies').addEventListener('change', () => {
+        updateBarcodePreview(selectedProducts);
+    });
+    
+    showModal(modal);
+}
+
+function updateBarcodePreview(products) {
+    const preview = document.getElementById('barcode-print-preview');
+    const labelSize = document.getElementById('barcode-label-size').value;
+    const copies = parseInt(document.getElementById('barcode-copies').value) || 1;
+    
+    preview.innerHTML = '';
+    
+    products.forEach(product => {
+        for (let i = 0; i < copies; i++) {
+            const label = document.createElement('div');
+            label.className = `barcode-label ${labelSize}`;
+            label.innerHTML = `
+                <div class="product-name">${product.name}</div>
+                <svg class="barcode-svg" style="height: ${labelSize === 'small' ? '25px' : labelSize === 'medium' ? '35px' : '50px'}; width: 100%;"></svg>
+                <div style="font-family: monospace; font-size: ${labelSize === 'small' ? '7px' : labelSize === 'medium' ? '9px' : '11px'};">${product.barcode}</div>
+                <div class="product-price">${formatCurrency(product.price)}</div>
+            `;
+            preview.appendChild(label);
+            
+            // Render barcode
+            setTimeout(() => {
+                renderBarcodeToSVG(label.querySelector('.barcode-svg'), product.barcode);
+            }, 0);
+        }
+    });
+}
+
+function printBarcodes() {
+    window.print();
+}
+
+// Debounce helper
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
 }

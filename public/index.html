@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartZone - Retail POS</title>
+    <title>MaxSatTec - Retail POS</title>
     <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Boxicons for modern icons -->
@@ -22,7 +22,7 @@
     <div id="auth-overlay" class="auth-overlay active">
         <div class="auth-box">
             <div class="auth-header">
-                <h2>Welcome To SmartZone POS</h2>
+                <h2>Welcome To MaxSat POS</h2>
                 <p id="auth-subtitle">Login to your account OR register a new business</p>
             </div>
 
@@ -113,7 +113,7 @@
         <aside class="sidebar" id="sidebar">
             <div class="logo-container">
                 <i class='bx bx-store-alt icon'></i>
-                <span class="logo-name">SmartZone POS</span>
+                <span class="logo-name">MaxSat POS</span>
             </div>
             <ul class="nav-list">
                 <li>
@@ -132,6 +132,12 @@
                     <a href="#" class="nav-link" data-target="inventory-view">
                         <i class='bx bx-box icon'></i>
                         <span class="link-name">Inventory</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link" data-target="barcodes-view">
+                        <i class='bx bx-barcode icon'></i>
+                        <span class="link-name">Barcodes</span>
                     </a>
                 </li>
                 <li>
@@ -454,7 +460,7 @@
                                     </div>
                                     <div class="summary-row"
                                         style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; font-weight: 600; color: var(--text-main);">
-                                        <span>CHANGE</span>
+                                        <span>BALANCE</span>
                                         <span id="pos-change-amount">0.00</span>
                                     </div>
                                     <div class="summary-row total">
@@ -525,6 +531,48 @@
                                     <!-- Populated via JS -->
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Barcodes View -->
+                <section id="barcodes-view" class="view">
+                    <div class="view-header" style="flex-wrap: wrap; gap: 15px;">
+                        <div style="display:flex; align-items:center; gap:15px;">
+                            <h2>Barcode Management</h2>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-outline" id="btn-print-selected-barcodes" disabled>
+                                <i class='bx bx-printer'></i> Print Selected
+                            </button>
+                            <button class="btn btn-outline" id="btn-select-all-barcodes">
+                                <i class='bx bx-select-multiple'></i> Select All
+                            </button>
+                        </div>
+                    </div>
+                    <div class="view-content">
+                        <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                            <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+                                <div style="flex: 1; min-width: 250px; position: relative;">
+                                    <i class='bx bx-search'
+                                        style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 18px;"></i>
+                                    <input type="text" id="barcodes-search" class="form-control"
+                                        style="padding-left: 44px;"
+                                        placeholder="Search products by name or barcode...">
+                                </div>
+                                <select id="barcodes-category-filter" class="form-control" style="min-width: 150px;">
+                                    <option value="">All Products</option>
+                                    <option value="with-barcode">With Barcode</option>
+                                    <option value="without-barcode">Without Barcode</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="barcodes-grid" class="barcodes-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
+                            <!-- Barcode cards populated via JS -->
+                        </div>
+                        <div id="barcodes-empty" style="display: none; text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                            <i class='bx bx-barcode' style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
+                            <p>No products found</p>
                         </div>
                     </div>
                 </section>
@@ -668,7 +716,7 @@
                                     style="margin-top:0; color:var(--danger); display:flex; align-items:center; gap:8px;">
                                     <i class='bx bx-error-circle'></i> Danger Zone</h3>
                                 <p style="color:var(--text-muted); font-size:14px; margin-bottom:15px;">If you no longer
-                                    wish to use SmartZone POS, you can request your account and all associated data to
+                                    wish to use MaxSat POS, you can request your account and all associated data to
                                     be permanently deleted. This action will be reviewed by an admin.</p>
                                 <button class="btn btn-danger btn-outline" id="btn-request-disconnect-tab"
                                     style="color: var(--danger); border-color: var(--danger);"><i
@@ -742,6 +790,11 @@
                                         <i class='bx bx-camera' style="font-size: 20px;"></i>
                                     </button>
                                 </div>
+                                <!-- Barcode Preview -->
+                                <div style="margin-top: 8px; padding: 10px; background: white; border: 1px solid var(--border); border-radius: 8px; text-align: center;">
+                                    <svg id="product-barcode-preview" style="width: 100%; height: 50px;"></svg>
+                                    <div id="product-barcode-text" style="font-family: monospace; font-size: 11px; color: var(--text-muted); margin-top: 4px;"></div>
+                                </div>
                             </div>
                         </div>
                         <div class="form-group" style="display:flex; gap:10px;">
@@ -808,7 +861,7 @@
                 <div class="modal-body print-area" id="print-area">
                     <div class="receipt">
                         <div class="receipt-header">
-                            <h2 id="receipt-business-name">SmartZone</h2>
+                            <h2 id="receipt-business-name">MaxSat</h2>
                             <p>Retail Shop POS</p>
                             <p>----------------------------</p>
                         </div>
@@ -976,10 +1029,153 @@
                     <button type="submit" form="voucher-form" class="btn btn-primary">Save Voucher</button>
                 </div>
             </div>
+
+            <!-- Barcode Print Modal -->
+            <div class="modal" id="barcode-print-modal" style="max-width: 900px;">
+                <div class="modal-header">
+                    <h3><i class='bx bx-barcode'></i> Print Barcodes</h3>
+                    <button class="close-btn" id="btn-close-barcode-print-modal"><i class='bx bx-x'></i></button>
+                </div>
+                <div class="modal-body">
+                    <div style="margin-bottom: 15px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                        <label style="font-weight: 600;">Copies per product:</label>
+                        <input type="number" id="barcode-copies" class="form-control" value="1" min="1" max="50" style="width: 80px;">
+                        <label style="font-weight: 600;">Label Size:</label>
+                        <select id="barcode-label-size" class="form-control" style="width: 150px;">
+                            <option value="small">Small (30x20mm)</option>
+                            <option value="medium" selected>Medium (50x30mm)</option>
+                            <option value="large">Large (80x50mm)</option>
+                        </select>
+                    </div>
+                    <div id="barcode-print-preview" class="barcode-print-area" style="background: white; border: 1px solid var(--border); padding: 20px; min-height: 300px; max-height: 500px; overflow-y: auto;">
+                        <!-- Barcode preview populated via JS -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btn-cancel-barcode-print">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="btn-confirm-print-barcodes">
+                        <i class='bx bx-printer'></i> Print Now
+                    </button>
+                </div>
+            </div>
         </div>
     </div> <!-- End of app-wrapper -->
 
+    <!-- Print Styles for Barcodes -->
+    <style>
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .barcode-print-area, .barcode-print-area * {
+                visibility: visible;
+            }
+            .barcode-print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white;
+                padding: 0;
+                margin: 0;
+            }
+            .barcode-label {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+        }
+
+        .barcode-card {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 15px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        .barcode-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+        }
+        .barcode-card.selected {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, 0.05);
+        }
+        .barcode-card .checkbox {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            transition: all 0.2s ease;
+        }
+        .barcode-card.selected .checkbox {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        .barcode-card .checkbox i {
+            display: none;
+            font-size: 16px;
+        }
+        .barcode-card.selected .checkbox i {
+            display: block;
+        }
+        .barcode-svg {
+            width: 100%;
+            height: 60px;
+            margin: 10px 0;
+        }
+        .barcode-label {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #333;
+            background: white;
+            padding: 8px;
+            margin: 5px;
+            text-align: center;
+        }
+        .barcode-label.small {
+            width: 30mm;
+            height: 20mm;
+            font-size: 8px;
+        }
+        .barcode-label.medium {
+            width: 50mm;
+            height: 30mm;
+            font-size: 10px;
+        }
+        .barcode-label.large {
+            width: 80mm;
+            height: 50mm;
+            font-size: 12px;
+        }
+        .barcode-label .product-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+        .barcode-label .product-price {
+            color: var(--primary);
+            font-weight: 700;
+            margin-top: 2px;
+        }
+    </style>
+
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <script src="/app.js"></script>
 </body>
 

@@ -2638,34 +2638,27 @@ function printBarcodes() {
         document.body.classList.remove('print-landscape');
     }
     
-    // Create a style element that will be at the END of head (highest priority)
-    let pageStyle = document.getElementById('barcode-print-page-style');
-    if (!pageStyle) {
-        pageStyle = document.createElement('style');
-        pageStyle.id = 'barcode-print-page-style';
-        document.head.appendChild(pageStyle);
-    }
-    
-    // Set the content to override ALL other @page rules
-    // Using !important and very specific targeting
-    pageStyle.textContent = `
-        @media print { 
-            @page { 
-                margin: 0 !important; 
-                size: A4 ${orientation} !important; 
-            } 
+    // Inject @page rule for landscape orientation if needed
+    if (orientation === 'landscape') {
+        let pageStyle = document.getElementById('barcode-print-page-style');
+        if (!pageStyle) {
+            pageStyle = document.createElement('style');
+            pageStyle.id = 'barcode-print-page-style';
+            document.head.appendChild(pageStyle);
         }
-    `;
-    
-    // Force browser to recognize the style change
-    document.body.offsetHeight;
+        pageStyle.textContent = `@media print { @page { size: A4 landscape; } }`;
+    } else {
+        let pageStyle = document.getElementById('barcode-print-page-style');
+        if (pageStyle) pageStyle.remove();
+    }
     
     // Print
     window.print();
     
-    // Cleanup after print dialog closes
+    // Cleanup
     setTimeout(() => {
         document.body.classList.remove('print-landscape');
+        let pageStyle = document.getElementById('barcode-print-page-style');
         if (pageStyle) pageStyle.remove();
     }, 500);
 }

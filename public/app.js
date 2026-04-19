@@ -2482,19 +2482,19 @@ function createBarcodeCard(product) {
     return card;
 }
 
-function renderBarcodeToSVG(svgElement, value) {
+function renderBarcodeToSVG(svgElement, value, options = {}) {
     if (!svgElement || !value) return;
     
     try {
         // Use JsBarcode library for real scannable barcodes
         JsBarcode(svgElement, value, {
             format: "CODE128",
-            width: 3,
-            height: 60,
-            displayValue: true,
-            fontSize: 14,
+            width: options.width || 3,
+            height: options.height || 60,
+            displayValue: options.displayValue !== undefined ? options.displayValue : true,
+            fontSize: options.fontSize || 14,
             font: "monospace",
-            margin: 10,
+            margin: options.margin !== undefined ? options.margin : 10,
             background: "#ffffff"
         });
     } catch (err) {
@@ -2560,8 +2560,8 @@ function updateBarcodePreview(products) {
     preview.style.width = `${fullPaperWidth}mm`;
     preview.style.minHeight = `${fullPaperHeight}mm`;
     
-    const labelWidths = { small: 30, medium: 50, large: 80 };
-    const labelHeights = { small: 20, medium: 30, large: 50 };
+    const labelWidths = { small: 38, medium: 50, large: 80 };
+    const labelHeights = { small: 25, medium: 30, large: 50 };
     const labelWidth = labelWidths[labelSize];
     const labelHeight = labelHeights[labelSize];
     const gap = 2; // mm
@@ -2635,9 +2635,16 @@ function createBarcodeLabel(product, labelSize) {
         <div class="product-price">${formatCurrency(product.price)}</div>
     `;
     
-    // Render barcode
+    // Barcode rendering options per label size — small uses larger bars for scannability
+    const barcodeOptions = {
+        small:  { width: 2, height: 40, fontSize: 10, margin: 2, displayValue: false },
+        medium: { width: 2, height: 50, fontSize: 12, margin: 5, displayValue: false },
+        large:  { width: 3, height: 60, fontSize: 14, margin: 10, displayValue: true }
+    };
+    
+    // Render barcode with size-appropriate options
     setTimeout(() => {
-        renderBarcodeToSVG(label.querySelector('.barcode-svg'), product.barcode);
+        renderBarcodeToSVG(label.querySelector('.barcode-svg'), product.barcode, barcodeOptions[labelSize] || {});
     }, 0);
     
     return label;

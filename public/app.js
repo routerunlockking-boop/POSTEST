@@ -2502,6 +2502,11 @@ function showBarcodePrintModal() {
         updateBarcodePreview(selectedProducts);
     });
     
+    // Setup orientation change handler
+    document.getElementById('page-orientation').addEventListener('change', () => {
+        updateBarcodePreview(selectedProducts);
+    });
+    
     showModal(modal);
 }
 
@@ -2509,12 +2514,17 @@ function updateBarcodePreview(products) {
     const preview = document.getElementById('barcode-print-preview');
     const labelSize = document.getElementById('barcode-label-size').value;
     const copies = parseInt(document.getElementById('barcode-copies').value) || 1;
+    const orientation = document.getElementById('page-orientation').value;
     
     preview.innerHTML = '';
     
     // Calculate optimal grid layout based on label size and A4 paper
-    // A4 width: 210mm, with 10mm margins = 190mm usable width
-    const usableWidth = 190; // mm
+    // A4 Portrait: 210mm x 297mm, with 10mm margins = 190mm x 277mm usable
+    // A4 Landscape: 297mm x 210mm, with 10mm margins = 277mm x 190mm usable
+    const isPortrait = orientation === 'portrait';
+    const usableWidth = isPortrait ? 190 : 277; // mm
+    const usableHeight = isPortrait ? 270 : 187; // mm (reduced for safety margin)
+    
     const labelWidths = {
         small: 30,
         medium: 50,
@@ -2527,15 +2537,13 @@ function updateBarcodePreview(products) {
     const maxColumns = Math.floor((usableWidth + gap) / (labelWidth + gap));
     const columns = Math.max(1, maxColumns);
     
-    // Calculate max rows per page (A4 height: 297mm, with 10mm margins = 277mm usable)
-    // Add extra safety margin to prevent cutting off
+    // Calculate max rows per page
     const labelHeights = {
         small: 20,
         medium: 30,
         large: 50
     };
     const labelHeight = labelHeights[labelSize];
-    const usableHeight = 270; // mm (reduced from 277 for safety margin)
     const maxRowsPerPage = Math.floor((usableHeight + gap) / (labelHeight + gap));
     
     // Create all labels
@@ -2563,6 +2571,7 @@ function updateBarcodePreview(products) {
         grid.className = 'barcode-grid';
         grid.style.gridTemplateColumns = `repeat(${columns}, ${labelWidth}mm)`;
         grid.style.alignContent = 'start'; // Start from top instead of center
+        grid.style.maxWidth = `${usableWidth}mm`;
         preview.appendChild(grid);
         
         // Get labels for this page
@@ -2591,7 +2600,22 @@ function updateBarcodePreview(products) {
 }
 
 function printBarcodes() {
+    const orientation = document.getElementById('page-orientation').value;
+    
+    // Apply orientation class to body
+    if (orientation === 'landscape') {
+        document.body.classList.add('print-landscape');
+    } else {
+        document.body.classList.remove('print-landscape');
+    }
+    
+    // Print
     window.print();
+    
+    // Remove orientation class after printing
+    setTimeout(() => {
+        document.body.classList.remove('print-landscape');
+    }, 100);
 }
 
 // Debounce helper

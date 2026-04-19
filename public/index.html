@@ -1046,6 +1046,11 @@
                             <option value="medium" selected>Medium (50x30mm)</option>
                             <option value="large">Large (80x50mm)</option>
                         </select>
+                        <label style="font-weight: 600;">Page Orientation:</label>
+                        <select id="page-orientation" class="form-control" style="width: 150px;">
+                            <option value="portrait" selected>Portrait</option>
+                            <option value="landscape">Landscape</option>
+                        </select>
                     </div>
                     <div id="barcode-print-preview" class="barcode-print-area" style="background: white; border: 1px solid var(--border); padding: 20px; min-height: 300px; max-height: 500px; overflow-y: auto;">
                         <!-- Barcode preview populated via JS -->
@@ -1067,6 +1072,14 @@
             @page {
                 margin: 10mm;
                 size: A4 portrait;
+            }
+            @page landscape {
+                size: A4 landscape;
+            }
+            body.print-landscape {
+                @page {
+                    size: A4 landscape;
+                }
             }
             body * {
                 visibility: hidden;
@@ -1096,6 +1109,9 @@
                 width: 100%;
                 max-width: 190mm;
                 margin: 0;
+            }
+            body.print-landscape .barcode-grid {
+                max-width: 277mm;
             }
             .barcode-label {
                 page-break-inside: avoid;

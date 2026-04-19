@@ -2604,11 +2604,11 @@ function updateBarcodePreview(products) {
             column-gap: ${gap}mm;
             row-gap: ${gap}mm;
             justify-content: center;
-            align-content: space-between;
-            width: ${fullPaperWidth}mm;
-            height: ${fullPaperHeight}mm;
-            min-height: ${fullPaperHeight}mm;
-            max-height: ${fullPaperHeight}mm;
+            align-content: start;
+            width: 100%;
+            height: 100%;
+            min-height: 100%;
+            max-height: 100%;
             box-sizing: border-box;
             padding: ${marginTop}mm ${marginSide}mm ${marginBottom}mm ${marginSide}mm;
             overflow: hidden;
@@ -2667,7 +2667,7 @@ function printBarcodes() {
         pageStyle.id = 'barcode-print-page-style';
         document.head.appendChild(pageStyle);
     }
-    pageStyle.textContent = `@media print { @page { margin: 0; size: A4 ${orientation}; } }`;
+    pageStyle.textContent = `@media print { @page { margin: 0; size: auto ${orientation}; } }`;
     
     // Print
     window.print();

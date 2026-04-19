@@ -2523,7 +2523,7 @@ function updateBarcodePreview(products) {
     // A4 Landscape: 297mm x 210mm, with 10mm margins = 277mm x 190mm usable
     const isPortrait = orientation === 'portrait';
     const usableWidth = isPortrait ? 190 : 277; // mm
-    const usableHeight = isPortrait ? 270 : 187; // mm (reduced for safety margin)
+    const usableHeight = isPortrait ? 277 : 190; // mm (full usable height)
     
     const labelWidths = {
         small: 30,
@@ -2570,7 +2570,7 @@ function updateBarcodePreview(products) {
         const grid = document.createElement('div');
         grid.className = 'barcode-grid';
         grid.style.gridTemplateColumns = `repeat(${columns}, ${labelWidth}mm)`;
-        grid.style.alignContent = 'start'; // Start from top instead of center
+        grid.style.alignContent = 'start'; // Start from top
         grid.style.maxWidth = `${usableWidth}mm`;
         preview.appendChild(grid);
         

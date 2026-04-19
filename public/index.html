@@ -1052,7 +1052,7 @@
                             <option value="landscape">Landscape</option>
                         </select>
                     </div>
-                    <div id="barcode-print-preview" class="barcode-print-area" style="background: white; border: 1px solid var(--border); padding: 20px; min-height: 300px; max-height: 500px; overflow-y: auto;">
+                    <div id="barcode-print-preview" class="barcode-print-area" style="background: white; border: 1px solid var(--border); padding: 0; min-height: 300px; max-height: 500px; overflow-y: auto;">
                         <!-- Barcode preview populated via JS -->
                     </div>
                 </div>
@@ -1096,10 +1096,6 @@
                 background: white;
                 padding: 0;
                 margin: 0;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: flex-start;
             }
             .barcode-grid {
                 display: grid;
@@ -1218,6 +1214,7 @@
             display: grid;
             gap: 10px;
             justify-content: center;
+            align-content: start;
         }
     </style>
 

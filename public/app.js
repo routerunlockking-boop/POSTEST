@@ -2546,47 +2546,30 @@ function updateBarcodePreview(products) {
     
     preview.innerHTML = '';
     
-    // Calculate optimal grid layout based on label size and A4 paper
-    // A4 Portrait: 210mm x 297mm
-    // A4 Landscape: 297mm x 210mm
-    // Account for printer margins (typically 5mm on each side for tight fit)
-    const printerMargin = 5; // mm (reduced margin to fit more labels)
+    // A4 Portrait: 210mm x 297mm, Landscape: 297mm x 210mm
+    // Use very small margins so barcodes fill from top to bottom
+    const marginTop = 3; // mm
+    const marginBottom = 3; // mm
+    const marginSide = 5; // mm
     const isPortrait = orientation === 'portrait';
-    const usableWidth = isPortrait ? 210 - (printerMargin * 2) : 297 - (printerMargin * 2);
-    const usableHeight = isPortrait ? 297 - (printerMargin * 2) : 210 - (printerMargin * 2);
+    const usableWidth = (isPortrait ? 210 : 297) - (marginSide * 2);
+    const usableHeight = (isPortrait ? 297 : 210) - marginTop - marginBottom;
     
-    // Set preview dimensions to match full A4 paper size
     const fullPaperWidth = isPortrait ? 210 : 297;
     const fullPaperHeight = isPortrait ? 297 : 210;
     preview.style.width = `${fullPaperWidth}mm`;
     preview.style.minHeight = `${fullPaperHeight}mm`;
     
-    const labelWidths = {
-        small: 30,
-        medium: 50,
-        large: 80
-    };
+    const labelWidths = { small: 30, medium: 50, large: 80 };
+    const labelHeights = { small: 20, medium: 30, large: 50 };
     const labelWidth = labelWidths[labelSize];
-    const gap = 2; // mm gap between labels (tighter to fit more)
-
-    // Calculate max columns that fit
-    const maxColumns = Math.floor((usableWidth + gap) / (labelWidth + gap));
-    const columns = Math.max(1, maxColumns);
-
-    // Calculate max rows per page
-    const labelHeights = {
-        small: 20,
-        medium: 30,
-        large: 50
-    };
     const labelHeight = labelHeights[labelSize];
-    const maxRowsPerPage = Math.floor((usableHeight + gap) / (labelHeight + gap));
-    
-    // Split rows into top half and bottom half
-    const topRows = Math.ceil(maxRowsPerPage / 2);
-    const bottomRows = maxRowsPerPage - topRows;
-    const topLabelsCount = topRows * columns;
-    const bottomLabelsCount = bottomRows * columns;
+    const gap = 2; // mm
+
+    // Calculate grid dimensions
+    const columns = Math.max(1, Math.floor((usableWidth + gap) / (labelWidth + gap)));
+    const maxRows = Math.floor((usableHeight + gap) / (labelHeight + gap));
+    const labelsPerPage = columns * maxRows;
     
     // Create all labels
     const allLabels = [];
@@ -2596,31 +2579,27 @@ function updateBarcodePreview(products) {
         }
     });
     
-    // Total labels per page (top + bottom)
-    const labelsPerPage = topLabelsCount + bottomLabelsCount;
     const totalPages = Math.ceil(allLabels.length / labelsPerPage);
     
     for (let page = 0; page < totalPages; page++) {
-        // Add page break for subsequent pages
+        // Page break for subsequent pages
         if (page > 0) {
             const pageBreak = document.createElement('div');
             pageBreak.className = 'barcode-page-break';
             preview.appendChild(pageBreak);
         }
         
-        // Create a page container that pushes top and bottom grids apart
+        // Page container — exact A4 size
         const pageContainer = document.createElement('div');
         pageContainer.className = 'barcode-page-container';
         pageContainer.style.cssText = `
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
             width: ${fullPaperWidth}mm;
             height: ${fullPaperHeight}mm;
             min-height: ${fullPaperHeight}mm;
             max-height: ${fullPaperHeight}mm;
             box-sizing: border-box;
             overflow: hidden;
+            padding: ${marginTop}mm ${marginSide}mm ${marginBottom}mm ${marginSide}mm;
         `;
         preview.appendChild(pageContainer);
         
@@ -2629,43 +2608,38 @@ function updateBarcodePreview(products) {
         const endIndex = Math.min(startIndex + labelsPerPage, allLabels.length);
         const pageLabels = allLabels.slice(startIndex, endIndex);
         
-        // Split page labels into top and bottom groups
-        const topLabels = pageLabels.slice(0, topLabelsCount);
-        const bottomLabels = pageLabels.slice(topLabelsCount);
+        // Calculate actual rows used on this page
+        const actualRows = Math.ceil(pageLabels.length / columns);
         
-        // --- TOP GRID ---
-        const topGrid = document.createElement('div');
-        topGrid.className = 'barcode-grid';
-        topGrid.style.gridTemplateColumns = `repeat(${columns}, ${labelWidth}mm)`;
-        topGrid.style.alignContent = 'start';
-        topGrid.style.maxWidth = `${usableWidth}mm`;
-        topGrid.style.gap = `${gap}mm`;
-        topGrid.style.padding = `${printerMargin}mm`;
-        topGrid.style.paddingBottom = '0';
-        pageContainer.appendChild(topGrid);
+        // Calculate vertical gap to distribute rows evenly from top to bottom
+        // Total label height = actualRows * labelHeight
+        // Remaining space = usableHeight - (actualRows * labelHeight in mm)
+        // Distribute remaining space as gaps between rows
+        const totalLabelHeightMm = actualRows * labelHeight;
+        const remainingVerticalSpace = usableHeight - totalLabelHeightMm;
+        const verticalGap = actualRows > 1 ? Math.max(gap, remainingVerticalSpace / (actualRows - 1)) : gap;
         
-        topLabels.forEach((product) => {
+        // Single grid that fills entire page from top to bottom
+        const grid = document.createElement('div');
+        grid.className = 'barcode-grid';
+        grid.style.cssText = `
+            display: grid;
+            grid-template-columns: repeat(${columns}, ${labelWidth}mm);
+            grid-template-rows: repeat(${actualRows}, ${labelHeight}mm);
+            column-gap: ${gap}mm;
+            row-gap: ${verticalGap}mm;
+            justify-content: center;
+            align-content: start;
+            width: 100%;
+            height: 100%;
+        `;
+        pageContainer.appendChild(grid);
+        
+        // Add labels
+        pageLabels.forEach((product) => {
             const label = createBarcodeLabel(product, labelSize);
-            topGrid.appendChild(label);
+            grid.appendChild(label);
         });
-        
-        // --- BOTTOM GRID ---
-        if (bottomLabels.length > 0) {
-            const bottomGrid = document.createElement('div');
-            bottomGrid.className = 'barcode-grid';
-            bottomGrid.style.gridTemplateColumns = `repeat(${columns}, ${labelWidth}mm)`;
-            bottomGrid.style.alignContent = 'end';
-            bottomGrid.style.maxWidth = `${usableWidth}mm`;
-            bottomGrid.style.gap = `${gap}mm`;
-            bottomGrid.style.padding = `${printerMargin}mm`;
-            bottomGrid.style.paddingTop = '0';
-            pageContainer.appendChild(bottomGrid);
-            
-            bottomLabels.forEach((product) => {
-                const label = createBarcodeLabel(product, labelSize);
-                bottomGrid.appendChild(label);
-            });
-        }
     }
 }
 

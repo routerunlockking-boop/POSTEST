@@ -2557,6 +2557,11 @@ function updateBarcodePreview(products) {
     preview.style.width = `${usableWidth}mm`;
     preview.style.minHeight = `${usableHeight}mm`;
     
+    // Fixed layout: 4 columns × 8 rows = 32 barcodes per page
+    const columns = 4;
+    const rowsPerPage = 8;
+    const labelsPerPage = columns * rowsPerPage; // 32
+    
     const labelWidths = {
         small: 30,
         medium: 50,
@@ -2565,18 +2570,13 @@ function updateBarcodePreview(products) {
     const labelWidth = labelWidths[labelSize];
     const gap = 3; // mm gap between labels
     
-    // Calculate max columns that fit
-    const maxColumns = Math.floor((usableWidth + gap) / (labelWidth + gap));
-    const columns = Math.max(1, maxColumns);
-    
-    // Calculate max rows per page
+    // Calculate label height based on available space
     const labelHeights = {
         small: 20,
         medium: 30,
         large: 50
     };
     const labelHeight = labelHeights[labelSize];
-    const maxRowsPerPage = Math.floor((usableHeight + gap) / (labelHeight + gap));
     
     // Create all labels
     const allLabels = [];
@@ -2587,7 +2587,6 @@ function updateBarcodePreview(products) {
     });
     
     // Split into pages
-    const labelsPerPage = columns * maxRowsPerPage;
     const totalPages = Math.ceil(allLabels.length / labelsPerPage);
     
     for (let page = 0; page < totalPages; page++) {

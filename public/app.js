@@ -2534,6 +2534,14 @@ function showBarcodePrintModal() {
     document.getElementById('page-orientation').addEventListener('change', () => {
         updateBarcodePreview(selectedProducts);
     });
+
+    // Setup paper type change handler
+    const paperTypeEl = document.getElementById('barcode-paper-type');
+    if (paperTypeEl) {
+        paperTypeEl.addEventListener('change', () => {
+            updateBarcodePreview(selectedProducts);
+        });
+    }
     
     showModal(modal);
 }
@@ -2545,20 +2553,12 @@ function updateBarcodePreview(products) {
     const orientation = document.getElementById('page-orientation').value;
     
     preview.innerHTML = '';
+    const paperType = document.getElementById('barcode-paper-type')?.value || 'a4';
     
-    // A4 Portrait: 210mm x 297mm, Landscape: 297mm x 210mm
-    // Use very small margins so barcodes fill from top to bottom
+    // Define standard margins
     const marginTop = 3; // mm
     const marginBottom = 3; // mm
     const marginSide = 3; // mm
-    const isPortrait = orientation === 'portrait';
-    const usableWidth = (isPortrait ? 210 : 297) - (marginSide * 2);
-    const usableHeight = (isPortrait ? 297 : 210) - marginTop - marginBottom;
-    
-    const fullPaperWidth = isPortrait ? 210 : 297;
-    const fullPaperHeight = isPortrait ? 297 : 210;
-    preview.style.width = `${fullPaperWidth}mm`;
-    preview.style.minHeight = `${fullPaperHeight}mm`;
     
     const labelWidths = { small: 38, medium: 50, large: 80 };
     const labelHeights = { small: 25, medium: 30, large: 50 };
@@ -2566,10 +2566,36 @@ function updateBarcodePreview(products) {
     const labelHeight = labelHeights[labelSize];
     const gap = 2; // mm
 
-    // Calculate grid dimensions
-    const columns = Math.max(1, Math.floor((usableWidth + gap) / (labelWidth + gap)));
-    const maxRows = Math.floor((usableHeight + gap) / (labelHeight + gap));
-    const labelsPerPage = columns * maxRows;
+    let fullPaperWidth, fullPaperHeight;
+    let columns, maxRows, labelsPerPage;
+    
+    if (paperType === 'thermal') {
+        // For thermal printer, one label per page exactly matching label size plus small margins
+        fullPaperWidth = labelWidth + (marginSide * 2);
+        fullPaperHeight = labelHeight + marginTop + marginBottom;
+        columns = 1;
+        maxRows = 1;
+        labelsPerPage = 1;
+    } else {
+        // A4 Paper Logic
+        const isPortrait = orientation === 'portrait';
+        fullPaperWidth = isPortrait ? 210 : 297;
+        fullPaperHeight = isPortrait ? 297 : 210;
+        
+        const usableWidth = fullPaperWidth - (marginSide * 2);
+        const usableHeight = fullPaperHeight - marginTop - marginBottom;
+        
+        columns = Math.max(1, Math.floor((usableWidth + gap) / (labelWidth + gap)));
+        maxRows = Math.floor((usableHeight + gap) / (labelHeight + gap));
+        labelsPerPage = columns * maxRows;
+    }
+    
+    // Store exact dimensions for printing
+    preview.dataset.paperWidth = fullPaperWidth;
+    preview.dataset.paperHeight = fullPaperHeight;
+    
+    preview.style.width = `${fullPaperWidth}mm`;
+    preview.style.minHeight = `${fullPaperHeight}mm`;
     
     // Create all labels
     const allLabels = [];
@@ -2605,14 +2631,16 @@ function updateBarcodePreview(products) {
             row-gap: ${gap}mm;
             justify-content: center;
             align-content: start;
-            width: 100%;
-            height: 100%;
-            min-height: 100%;
-            max-height: 100%;
+            width: ${fullPaperWidth}mm;
+            height: ${fullPaperHeight}mm;
+            min-height: ${fullPaperHeight}mm;
+            max-height: ${fullPaperHeight}mm;
             box-sizing: border-box;
             padding: ${marginTop}mm ${marginSide}mm ${marginBottom}mm ${marginSide}mm;
             overflow: hidden;
             background: white;
+            page-break-after: always;
+            break-after: page;
         `;
         preview.appendChild(grid);
         
@@ -2667,7 +2695,19 @@ function printBarcodes() {
         pageStyle.id = 'barcode-print-page-style';
         document.head.appendChild(pageStyle);
     }
-    pageStyle.textContent = `@media print { @page { margin: 0; size: auto ${orientation}; } }`;
+    
+    const paperType = document.getElementById('barcode-paper-type')?.value || 'a4';
+    const preview = document.getElementById('barcode-print-preview');
+    let cssSize = `auto ${orientation}`;
+    
+    if (paperType === 'thermal' && preview.dataset.paperWidth && preview.dataset.paperHeight) {
+        // For thermal, tell the browser the exact physical size of the label
+        cssSize = `${preview.dataset.paperWidth}mm ${preview.dataset.paperHeight}mm`;
+    } else if (paperType === 'a4') {
+        cssSize = `A4 ${orientation}`;
+    }
+    
+    pageStyle.textContent = `@media print { @page { margin: 0; size: ${cssSize}; } }`;
     
     // Print
     window.print();

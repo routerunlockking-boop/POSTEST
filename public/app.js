@@ -2531,7 +2531,7 @@ function updateBarcodePreview(products) {
         large: 80
     };
     const labelWidth = labelWidths[labelSize];
-    const gap = 5; // mm gap between labels
+    const gap = 3; // mm gap between labels (reduced from 5mm to fit more)
     
     // Calculate max columns that fit
     const maxColumns = Math.floor((usableWidth + gap) / (labelWidth + gap));
@@ -2572,6 +2572,7 @@ function updateBarcodePreview(products) {
         grid.style.gridTemplateColumns = `repeat(${columns}, ${labelWidth}mm)`;
         grid.style.alignContent = 'start'; // Start from top
         grid.style.maxWidth = `${usableWidth}mm`;
+        grid.style.gap = `${gap}mm`;
         preview.appendChild(grid);
         
         // Get labels for this page

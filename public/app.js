@@ -2589,51 +2589,32 @@ function updateBarcodePreview(products) {
             preview.appendChild(pageBreak);
         }
         
-        // Page container — exact A4 size
-        const pageContainer = document.createElement('div');
-        pageContainer.className = 'barcode-page-container';
-        pageContainer.style.cssText = `
-            width: ${fullPaperWidth}mm;
-            height: ${fullPaperHeight}mm;
-            min-height: ${fullPaperHeight}mm;
-            max-height: ${fullPaperHeight}mm;
-            box-sizing: border-box;
-            overflow: hidden;
-            padding: ${marginTop}mm ${marginSide}mm ${marginBottom}mm ${marginSide}mm;
-        `;
-        preview.appendChild(pageContainer);
-        
         // Get labels for this page
         const startIndex = page * labelsPerPage;
         const endIndex = Math.min(startIndex + labelsPerPage, allLabels.length);
         const pageLabels = allLabels.slice(startIndex, endIndex);
         
-        // Calculate actual rows used on this page
-        const actualRows = Math.ceil(pageLabels.length / columns);
-        
-        // Calculate vertical gap to distribute rows evenly from top to bottom
-        // Total label height = actualRows * labelHeight
-        // Remaining space = usableHeight - (actualRows * labelHeight in mm)
-        // Distribute remaining space as gaps between rows
-        const totalLabelHeightMm = actualRows * labelHeight;
-        const remainingVerticalSpace = usableHeight - totalLabelHeightMm;
-        const verticalGap = actualRows > 1 ? Math.max(gap, remainingVerticalSpace / (actualRows - 1)) : gap;
-        
-        // Single grid that fills entire page from top to bottom
+        // Grid fills the full A4 page, with align-content: space-between
+        // so first row is at the top and last row is at the bottom
         const grid = document.createElement('div');
-        grid.className = 'barcode-grid';
+        grid.className = 'barcode-grid barcode-page-container';
         grid.style.cssText = `
             display: grid;
             grid-template-columns: repeat(${columns}, ${labelWidth}mm);
-            grid-template-rows: repeat(${actualRows}, ${labelHeight}mm);
             column-gap: ${gap}mm;
-            row-gap: ${verticalGap}mm;
+            row-gap: ${gap}mm;
             justify-content: center;
-            align-content: start;
-            width: 100%;
-            height: 100%;
+            align-content: space-between;
+            width: ${fullPaperWidth}mm;
+            height: ${fullPaperHeight}mm;
+            min-height: ${fullPaperHeight}mm;
+            max-height: ${fullPaperHeight}mm;
+            box-sizing: border-box;
+            padding: ${marginTop}mm ${marginSide}mm ${marginBottom}mm ${marginSide}mm;
+            overflow: hidden;
+            background: white;
         `;
-        pageContainer.appendChild(grid);
+        preview.appendChild(grid);
         
         // Add labels
         pageLabels.forEach((product) => {

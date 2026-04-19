@@ -2642,19 +2642,14 @@ function printBarcodes() {
         document.body.classList.remove('print-landscape');
     }
     
-    // Inject @page rule for landscape orientation if needed
-    if (orientation === 'landscape') {
-        let pageStyle = document.getElementById('barcode-print-page-style');
-        if (!pageStyle) {
-            pageStyle = document.createElement('style');
-            pageStyle.id = 'barcode-print-page-style';
-            document.head.appendChild(pageStyle);
-        }
-        pageStyle.textContent = `@media print { @page { size: A4 landscape; } }`;
-    } else {
-        let pageStyle = document.getElementById('barcode-print-page-style');
-        if (pageStyle) pageStyle.remove();
+    // Inject @page rule for the selected orientation
+    let pageStyle = document.getElementById('barcode-print-page-style');
+    if (!pageStyle) {
+        pageStyle = document.createElement('style');
+        pageStyle.id = 'barcode-print-page-style';
+        document.head.appendChild(pageStyle);
     }
+    pageStyle.textContent = `@media print { @page { margin: 0; size: A4 ${orientation}; } }`;
     
     // Print
     window.print();

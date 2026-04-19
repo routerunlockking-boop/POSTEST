@@ -1052,7 +1052,7 @@
                             <option value="landscape">Landscape</option>
                         </select>
                     </div>
-                    <div id="barcode-print-preview" class="barcode-print-area" style="background: white; border: 1px solid var(--border); padding: 0; width: 210mm; min-height: 297mm; overflow-y: auto;">
+                    <div id="barcode-print-preview" class="barcode-print-area" style="background: white; border: 1px solid var(--border); padding: 0; width: 210mm; min-height: 297mm;">
                         <!-- Barcode preview populated via JS -->
                     </div>
                 </div>
@@ -1069,13 +1069,10 @@
     <!-- Print Styles for Barcodes -->
     <style>
         @media print {
-            @page {
-                margin: 0 !important;
-                size: A4 portrait !important;
-            }
             html, body {
                 margin: 0;
                 padding: 0;
+                position: relative;
             }
             body * {
                 visibility: hidden;
@@ -1091,13 +1088,14 @@
             .barcode-grid {
                 display: grid;
                 gap: 3mm;
-                width: 100%;
-                max-width: 210mm;
+                justify-content: start;
+                align-content: start;
+                width: 210mm;
                 margin: 0;
                 padding: 0;
             }
             body.print-landscape .barcode-grid {
-                max-width: 297mm;
+                width: 297mm;
             }
             .barcode-label {
                 page-break-inside: avoid;

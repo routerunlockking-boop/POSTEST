@@ -2610,12 +2610,21 @@ function printBarcodes() {
         document.body.classList.remove('print-landscape');
     }
     
+    // Inject @page override style for barcode printing
+    // This overrides the receipt @page rule in style.css
+    const pageStyle = document.createElement('style');
+    pageStyle.id = 'barcode-print-page-style';
+    pageStyle.textContent = `@media print { @page { margin: 0; size: A4 ${orientation}; } }`;
+    document.head.appendChild(pageStyle);
+    
     // Print
     window.print();
     
-    // Remove orientation class after printing
+    // Remove injected style after printing
     setTimeout(() => {
         document.body.classList.remove('print-landscape');
+        const injectedStyle = document.getElementById('barcode-print-page-style');
+        if (injectedStyle) injectedStyle.remove();
     }, 100);
 }
 

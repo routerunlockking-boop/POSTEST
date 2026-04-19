@@ -2553,6 +2553,10 @@ function updateBarcodePreview(products) {
     const usableWidth = isPortrait ? 210 : 297; // mm (full paper width)
     const usableHeight = isPortrait ? 297 : 210; // mm (full paper height)
     
+    // Set preview dimensions to match A4 paper size
+    preview.style.width = `${usableWidth}mm`;
+    preview.style.minHeight = `${usableHeight}mm`;
+    
     const labelWidths = {
         small: 30,
         medium: 50,

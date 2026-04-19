@@ -2518,12 +2518,12 @@ function updateBarcodePreview(products) {
     
     preview.innerHTML = '';
     
-    // Calculate optimal grid layout based on label size and A4 paper
-    // A4 Portrait: 210mm x 297mm, with 10mm margins = 190mm x 277mm usable
-    // A4 Landscape: 297mm x 210mm, with 10mm margins = 277mm x 190mm usable
+    // Calculate optimal grid layout based on label size and A4 paper (no margins)
+    // A4 Portrait: 210mm x 297mm
+    // A4 Landscape: 297mm x 210mm
     const isPortrait = orientation === 'portrait';
-    const usableWidth = isPortrait ? 190 : 277; // mm
-    const usableHeight = isPortrait ? 277 : 190; // mm (full usable height)
+    const usableWidth = isPortrait ? 210 : 297; // mm (full paper width)
+    const usableHeight = isPortrait ? 297 : 210; // mm (full paper height)
     
     const labelWidths = {
         small: 30,
@@ -2531,7 +2531,7 @@ function updateBarcodePreview(products) {
         large: 80
     };
     const labelWidth = labelWidths[labelSize];
-    const gap = 3; // mm gap between labels (reduced from 5mm to fit more)
+    const gap = 3; // mm gap between labels
     
     // Calculate max columns that fit
     const maxColumns = Math.floor((usableWidth + gap) / (labelWidth + gap));
@@ -2570,7 +2570,7 @@ function updateBarcodePreview(products) {
         const grid = document.createElement('div');
         grid.className = 'barcode-grid';
         grid.style.gridTemplateColumns = `repeat(${columns}, ${labelWidth}mm)`;
-        grid.style.alignContent = 'start'; // Start from top
+        grid.style.alignContent = 'start';
         grid.style.maxWidth = `${usableWidth}mm`;
         grid.style.gap = `${gap}mm`;
         preview.appendChild(grid);

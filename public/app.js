@@ -2550,7 +2550,7 @@ function updateBarcodePreview(products) {
     // Use very small margins so barcodes fill from top to bottom
     const marginTop = 3; // mm
     const marginBottom = 3; // mm
-    const marginSide = 5; // mm
+    const marginSide = 3; // mm
     const isPortrait = orientation === 'portrait';
     const usableWidth = (isPortrait ? 210 : 297) - (marginSide * 2);
     const usableHeight = (isPortrait ? 297 : 210) - marginTop - marginBottom;

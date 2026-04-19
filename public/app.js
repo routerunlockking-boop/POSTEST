@@ -881,7 +881,21 @@ function setupModals() {
 
     // Print Receipt logic
     document.getElementById('btn-print-receipt').addEventListener('click', () => {
+        // Inject 80mm receipt page size
+        let receiptStyle = document.getElementById('receipt-print-page-style');
+        if (!receiptStyle) {
+            receiptStyle = document.createElement('style');
+            receiptStyle.id = 'receipt-print-page-style';
+            document.head.appendChild(receiptStyle);
+        }
+        receiptStyle.textContent = `@media print { @page { margin: 0; size: 80mm auto; } }`;
+        
         window.print();
+        
+        // Cleanup
+        setTimeout(() => {
+            if (receiptStyle) receiptStyle.remove();
+        }, 500);
     });
     
     // Admin User Edit Form
@@ -1676,7 +1690,21 @@ function showInvoicePrintout(invoice) {
     // Automatically open modal and print dialog as per rules
     showModal(invoiceModal);
     setTimeout(() => {
+        // Inject 80mm receipt page size
+        let receiptStyle = document.getElementById('receipt-print-page-style');
+        if (!receiptStyle) {
+            receiptStyle = document.createElement('style');
+            receiptStyle.id = 'receipt-print-page-style';
+            document.head.appendChild(receiptStyle);
+        }
+        receiptStyle.textContent = `@media print { @page { margin: 0; size: 80mm auto; } }`;
+        
         window.print();
+        
+        // Cleanup
+        setTimeout(() => {
+            if (receiptStyle) receiptStyle.remove();
+        }, 500);
     }, 500);
 }
 
@@ -2610,22 +2638,36 @@ function printBarcodes() {
         document.body.classList.remove('print-landscape');
     }
     
-    // Inject @page override style for barcode printing
-    // This overrides the receipt @page rule in style.css
-    const pageStyle = document.createElement('style');
-    pageStyle.id = 'barcode-print-page-style';
-    pageStyle.textContent = `@media print { @page { margin: 0; size: A4 ${orientation}; } }`;
-    document.head.appendChild(pageStyle);
+    // Create a style element that will be at the END of head (highest priority)
+    let pageStyle = document.getElementById('barcode-print-page-style');
+    if (!pageStyle) {
+        pageStyle = document.createElement('style');
+        pageStyle.id = 'barcode-print-page-style';
+        document.head.appendChild(pageStyle);
+    }
+    
+    // Set the content to override ALL other @page rules
+    // Using !important and very specific targeting
+    pageStyle.textContent = `
+        @media print { 
+            @page { 
+                margin: 0 !important; 
+                size: A4 ${orientation} !important; 
+            } 
+        }
+    `;
+    
+    // Force browser to recognize the style change
+    document.body.offsetHeight;
     
     // Print
     window.print();
     
-    // Remove injected style after printing
+    // Cleanup after print dialog closes
     setTimeout(() => {
         document.body.classList.remove('print-landscape');
-        const injectedStyle = document.getElementById('barcode-print-page-style');
-        if (injectedStyle) injectedStyle.remove();
-    }, 100);
+        if (pageStyle) pageStyle.remove();
+    }, 500);
 }
 
 // Debounce helper

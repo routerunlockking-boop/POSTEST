@@ -1069,6 +1069,10 @@
     <!-- Print Styles for Barcodes -->
     <style>
         @media print {
+            @page {
+                margin: 0;
+                size: A4 portrait;
+            }
             body * {
                 visibility: hidden;
             }

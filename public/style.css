@@ -656,10 +656,6 @@ body.dark-mode .shimmer-placeholder {
 
 /* Print Styles */
 @media print {
-    @page {
-        margin: 0;
-        size: 80mm auto; /* Continuously adapts to receipt length */
-    }
     body * { visibility: hidden; }
     #print-area, #print-area * { visibility: visible; font-weight: bold; }
     #print-area { position: relative; width: 80mm; height: auto; padding: 10px; font-family: monospace; font-size: 15px; color: #000; }

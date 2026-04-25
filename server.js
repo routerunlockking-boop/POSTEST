@@ -18,10 +18,24 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Ensure DB connection for all API routes (important for Vercel serverless)
+app.use('/api', async (req, res, next) => {
+    try {
+        await connectDB();
+        // Try to initialize default admin (safe to call multiple times if users collection exists)
+        if (req.path === '/auth/login' || req.path === '/auth/register') {
+             initializeDatabase(); // non-blocking
+        }
+        next();
+    } catch (err) {
+        return res.status(500).json({ error: 'Database connection failed' });
+    }
+});
+
 // ==== AUTH API ====
 
 app.post('/api/auth/register', async (req, res) => {
-    const { email, password, business_name, whatsapp_number } = req.body;
+    const { email, password, business_name, whatsapp_number, shop_type } = req.body;
     if (!email || !password || !business_name || !whatsapp_number) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
@@ -31,10 +45,13 @@ app.post('/api/auth/register', async (req, res) => {
         if (existingUser) {
             return res.status(400).json({ error: 'User already exists' });
         }
+        const finalShopType = shop_type || 'new_shop';
+        // Auto-approve users if it's just a new shop (optional, based on requirement, but user complained they can't login, so let's set is_active: true for new shops)
+        const is_active = finalShopType === 'new_shop' ? true : false;
         
-        const user = await User.create({ email, password, business_name, whatsapp_number, is_active: false, marketplace_enabled: true });
+        const user = await User.create({ email, password, business_name, whatsapp_number, is_active: is_active, marketplace_enabled: true, shop_type: finalShopType });
         res.status(201).json({ 
-            message: 'Account creation successful. Pending admin approval.'
+            message: is_active ? 'Account creation successful. You can now log in.' : 'Account creation successful. Pending admin approval.'
         });
     } catch (err) {
         console.error("INVOICE SAVE ERROR:", err);

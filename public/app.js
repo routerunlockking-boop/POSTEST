@@ -104,11 +104,21 @@ registerForm.addEventListener('submit', async (e) => {
     const business_name = document.getElementById('reg-businessName').value;
     const whatsapp_number = document.getElementById('reg-whatsapp').value;
     
+    // Get shop type from radio buttons
+    let shop_type = 'new_shop';
+    const shopTypeRadios = document.querySelectorAll('input[name="shop_type"]');
+    for (const radio of shopTypeRadios) {
+        if (radio.checked) {
+            shop_type = radio.value;
+            break;
+        }
+    }
+    
     try {
         const res = await fetch(`${API_BASE}/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password, business_name, whatsapp_number })
+            body: JSON.stringify({ email, password, business_name, whatsapp_number, shop_type })
         });
         const data = await res.json();
         if(!res.ok) throw new Error(data.error || 'Registration failed');
@@ -181,16 +191,25 @@ document.getElementById('google-auth-form').addEventListener('submit', async (e)
         const business_name = document.getElementById('google-business').value || email.split('@')[0];
         const whatsapp_number = document.getElementById('google-whatsapp').value || '+94000000000';
         
+        let shop_type = 'new_shop';
+        const googleShopTypeRadios = document.querySelectorAll('input[name="google_shop_type"]');
+        for (const radio of googleShopTypeRadios) {
+            if (radio.checked) {
+                shop_type = radio.value;
+                break;
+            }
+        }
+        
         try {
             const res = await fetch(`${API_BASE}/auth/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password, business_name, whatsapp_number })
+                body: JSON.stringify({ email, password, business_name, whatsapp_number, shop_type })
             });
             const data = await res.json();
             if(!res.ok) throw new Error(data.error || 'Google Registration failed');
             
-            showToast('Google registration successful! Pending admin approval.', 'success');
+            showToast(data.message, 'success');
             cancelGoogleAuth();
         } catch(err) { showToast(err.message, 'error'); }
     } else {
@@ -2318,7 +2337,7 @@ function deleteVoucher(voucherId) {
     showToast('Voucher deleted successfully!', 'success');
 }
 
-function saveVoucher(voucherData) {
+async function saveVoucher(voucherData) {
     const voucherId = document.getElementById('voucher-id').value;
     
     try {

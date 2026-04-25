@@ -34,7 +34,8 @@ const UserSchema = new mongoose.Schema({
     marketplace_enabled: { type: Boolean, default: false },
     role: { type: String, default: 'user' },
     is_active: { type: Boolean, default: false },
-    delete_request: { type: Boolean, default: false }
+    delete_request: { type: Boolean, default: false },
+    shop_type: { type: String, default: 'new_shop' }
 });
 
 const ProductSchema = new mongoose.Schema({

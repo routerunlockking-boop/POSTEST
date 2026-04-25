@@ -34,8 +34,7 @@ const UserSchema = new mongoose.Schema({
     marketplace_enabled: { type: Boolean, default: false },
     role: { type: String, default: 'user' },
     is_active: { type: Boolean, default: false },
-    delete_request: { type: Boolean, default: false },
-    shop_type: { type: String, default: 'new_shop' }
+    delete_request: { type: Boolean, default: false }
 });
 
 const ProductSchema = new mongoose.Schema({
@@ -84,23 +83,11 @@ const CustomerSchema = new mongoose.Schema({
     created_date: { type: String, default: () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Colombo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()) }
 });
 
-const VoucherSchema = new mongoose.Schema({
-    user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    code: { type: String, required: true },
-    discount_type: { type: String, required: true }, // 'percentage' or 'fixed'
-    discount_value: { type: Number, required: true },
-    usage_limit: { type: Number, default: null },
-    used_count: { type: Number, default: 0 },
-    expiry_date: { type: String, required: true }, // YYYY-MM-DD
-    status: { type: String, default: 'active' } // 'active' or 'inactive'
-});
-
 // -- MODELS --
 const User = mongoose.model('User', UserSchema);
 const Product = mongoose.model('Product', ProductSchema);
 const Invoice = mongoose.model('Invoice', InvoiceSchema);
 const Customer = mongoose.model('Customer', CustomerSchema);
-const Voucher = mongoose.model('Voucher', VoucherSchema);
 
 // Create default admin user
 const initializeDatabase = async () => {
@@ -141,6 +128,5 @@ module.exports = {
     User,
     Product,
     Invoice,
-    Customer,
-    Voucher
+    Customer
 };

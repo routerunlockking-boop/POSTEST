@@ -141,6 +141,73 @@ if (forgotPasswordForm) {
     });
 }
 
+function showGoogleAuth(type) {
+    document.getElementById('login-form').classList.remove('active');
+    document.getElementById('register-form').classList.remove('active');
+    if (document.getElementById('forgot-password-form')) document.getElementById('forgot-password-form').classList.remove('active');
+    
+    document.getElementById('google-auth-form').classList.add('active');
+    document.getElementById('google-auth-form').style.display = 'block';
+    if (type === 'register') {
+        document.getElementById('google-auth-title').textContent = 'Register with Google';
+        document.getElementById('google-register-fields').style.display = 'block';
+        document.getElementById('google-auth-btn').textContent = 'Register';
+    } else {
+        document.getElementById('google-auth-title').textContent = 'Sign in with Google';
+        document.getElementById('google-register-fields').style.display = 'none';
+        document.getElementById('google-auth-btn').textContent = 'Login';
+    }
+}
+
+function cancelGoogleAuth() {
+    document.getElementById('google-auth-form').classList.remove('active');
+    document.getElementById('google-auth-form').style.display = 'none';
+    if (document.getElementById('google-auth-title').textContent.includes('Register')) {
+        document.getElementById('switch-to-register').click();
+    } else {
+        document.getElementById('switch-to-login').click();
+    }
+}
+
+document.getElementById('google-auth-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('google-email').value;
+    const title = document.getElementById('google-auth-title').textContent;
+    
+    // Using a default password for google auth since we are mocking OAuth
+    const password = 'google_oauth_default_password'; 
+    
+    if (title.includes('Register')) {
+        const business_name = document.getElementById('google-business').value || email.split('@')[0];
+        const whatsapp_number = document.getElementById('google-whatsapp').value || '+94000000000';
+        
+        try {
+            const res = await fetch(`${API_BASE}/auth/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password, business_name, whatsapp_number })
+            });
+            const data = await res.json();
+            if(!res.ok) throw new Error(data.error || 'Google Registration failed');
+            
+            showToast('Google registration successful! Pending admin approval.', 'success');
+            cancelGoogleAuth();
+        } catch(err) { showToast(err.message, 'error'); }
+    } else {
+        try {
+            const res = await fetch(`${API_BASE}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await res.json();
+            if(!res.ok) throw new Error(data.error || 'Google Login failed');
+            
+            loginSuccess(data.token, data.business_name, data.role);
+        } catch(err) { showToast(err.message, 'error'); }
+    }
+});
+
 function loginSuccess(token, businessName, role = 'user') {
     authToken = token;
     currentBusiness = businessName;
@@ -1477,7 +1544,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==== VOUCHER FUNCTIONS ====
-function applyVoucher() {
+async function applyVoucher() {
     const voucherCode = document.getElementById('pos-voucher-code').value.trim().toUpperCase();
     
     if (!voucherCode) {
@@ -1485,47 +1552,40 @@ function applyVoucher() {
         return;
     }
     
-    // Find voucher in local storage
-    const voucher = vouchers.find(v => v.code === voucherCode && v.status === 'active');
-    
-    if (!voucher) {
-        showToast('Invalid voucher code', 'error');
-        return;
-    }
-    
-    // Check expiry date
-    if (voucher.expiry_date) {
-        const expiryDate = new Date(voucher.expiry_date);
-        const today = new Date();
-        if (expiryDate < today) {
-            showToast('Voucher has expired', 'error');
-            return;
+    try {
+        const res = await fetchAuth(`${API_BASE}/vouchers/validate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: voucherCode })
+        });
+        
+        if (!res.ok) {
+            const data = await res.json();
+            throw new Error(data.error || 'Invalid voucher');
         }
+        
+        const voucher = await res.json();
+        
+        // Apply voucher
+        appliedVoucher = voucher;
+        updateBillUI();
+        
+        // Show applied voucher info
+        const appliedInfo = document.getElementById('voucher-applied-info');
+        const applyBtn = document.getElementById('btn-apply-voucher');
+        const removeBtn = document.getElementById('btn-remove-voucher');
+        const voucherInput = document.getElementById('pos-voucher-code');
+        
+        appliedInfo.style.display = 'block';
+        appliedInfo.querySelector('#applied-voucher-code').textContent = voucher.code;
+        applyBtn.style.display = 'none';
+        removeBtn.style.display = 'inline-block';
+        voucherInput.disabled = true;
+        
+        showToast(`Voucher ${voucher.code} applied successfully!`, 'success');
+    } catch(err) {
+        showToast(err.message, 'error');
     }
-    
-    // Check usage limit
-    if (voucher.usage_limit && voucher.used_count >= voucher.usage_limit) {
-        showToast('Voucher usage limit reached', 'error');
-        return;
-    }
-    
-    // Apply voucher
-    appliedVoucher = voucher;
-    updateBillUI();
-    
-    // Show applied voucher info
-    const appliedInfo = document.getElementById('voucher-applied-info');
-    const applyBtn = document.getElementById('btn-apply-voucher');
-    const removeBtn = document.getElementById('btn-remove-voucher');
-    const voucherInput = document.getElementById('pos-voucher-code');
-    
-    appliedInfo.style.display = 'block';
-    appliedInfo.querySelector('#applied-voucher-code').textContent = voucher.code;
-    applyBtn.style.display = 'none';
-    removeBtn.style.display = 'inline-block';
-    voucherInput.disabled = true;
-    
-    showToast(`Voucher ${voucher.code} applied successfully!`, 'success');
 }
 
 function removeVoucher() {
@@ -1582,6 +1642,24 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
         amountPaid = total;
     }
     
+    let subtotal = total;
+    let voucher_discount = 0;
+    let voucher_code = '';
+
+    if (appliedVoucher) {
+        voucher_code = appliedVoucher.code;
+        if (appliedVoucher.discount_type === 'percentage') {
+            voucher_discount = subtotal * (appliedVoucher.discount_value / 100);
+        } else {
+            voucher_discount = parseFloat(appliedVoucher.discount_value) || 0;
+        }
+        total = Math.max(0, subtotal - voucher_discount);
+    }
+    
+    // Total variable is now the subtotal because it was derived from pos-amount-to-pay which already has the discount applied.
+    // Wait, let's fix how we get subtotal.
+    subtotal = currentBill.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    
     const cashier_name = document.getElementById('pos-cashier-name').value || 'System';
     const customer_name = document.getElementById('pos-customer-name').value;
     const customer_phone = document.getElementById('pos-customer-phone').value;
@@ -1589,7 +1667,10 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
     
     const payload = {
         items: currentBill,
-        total_amount: total,
+        subtotal_amount: subtotal,
+        voucher_code: voucher_code,
+        voucher_discount: voucher_discount,
+        total_amount: Math.max(0, subtotal - voucher_discount),
         amount_paid: amountPaid,
         cashier_name,
         customer_name,
@@ -1616,6 +1697,7 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
         
         // Clear bill
         currentBill = [];
+        appliedVoucher = null;
         document.getElementById('pos-cashier-name').value = 'Pamidu';
         document.getElementById('pos-customer-name').value = 'Walk-in Customer';
         document.getElementById('pos-customer-phone').value = '';
@@ -1625,6 +1707,13 @@ document.getElementById('btn-submit-bill').addEventListener('click', async () =>
         
         // Reset tabs to items
         document.getElementById('tab-btn-items').click();
+        
+        // Hide applied voucher info and clear input
+        document.getElementById('voucher-applied-info').style.display = 'none';
+        document.getElementById('btn-apply-voucher').style.display = 'inline-block';
+        document.getElementById('btn-remove-voucher').style.display = 'none';
+        document.getElementById('pos-voucher-code').disabled = false;
+        document.getElementById('pos-voucher-code').value = '';
         
         // Reload products cache (lite)
         fetchAuth(`${API_BASE}/products?lite=true`).then(r => r.json()).then(p => products = p);
@@ -2232,31 +2321,28 @@ function deleteVoucher(voucherId) {
 function saveVoucher(voucherData) {
     const voucherId = document.getElementById('voucher-id').value;
     
-    if (voucherId) {
-        // Edit existing voucher
-        const voucherIndex = vouchers.findIndex(v => v.id == voucherId);
-        if (voucherIndex !== -1) {
-            vouchers[voucherIndex] = {
-                ...vouchers[voucherIndex],
-                ...voucherData,
-                updated_at: new Date().toISOString()
-            };
+    try {
+        const payload = { ...voucherData };
+        const method = voucherId ? 'PUT' : 'POST';
+        const url = voucherId ? `${API_BASE}/vouchers/${voucherId}` : `${API_BASE}/vouchers`;
+        
+        const res = await fetchAuth(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        
+        if (!res.ok) {
+            const data = await res.json();
+            throw new Error(data.error || 'Failed to save voucher');
         }
-    } else {
-        // Add new voucher
-        const newVoucher = {
-            id: 'VOUCH' + Date.now(),
-            ...voucherData,
-            used_count: 0,
-            created_at: new Date().toISOString()
-        };
-        vouchers.push(newVoucher);
+        
+        await loadVouchers();
+        closeVoucherModal();
+        showToast(voucherId ? 'Voucher updated successfully!' : 'Voucher created successfully!', 'success');
+    } catch (err) {
+        showToast(err.message, 'error');
     }
-    
-    saveVouchersToStorage();
-    loadVouchers();
-    closeVoucherModal();
-    showToast(voucherId ? 'Voucher updated successfully!' : 'Voucher created successfully!', 'success');
     
     // If we're on POS view, update voucher functionality
     if (document.getElementById('pos-voucher-code')) {
@@ -2270,13 +2356,28 @@ function closeVoucherModal() {
 }
 
 function saveVouchersToStorage() {
-    localStorage.setItem('pos_vouchers', JSON.stringify(vouchers));
+    // Deprecated
 }
 
-function loadVouchers() {
-    const savedVouchers = localStorage.getItem('pos_vouchers');
-    if (savedVouchers) {
-        vouchers = JSON.parse(savedVouchers);
+async function deleteVoucher(id) {
+    if (!confirm('Are you sure you want to delete this voucher?')) return;
+    try {
+        const res = await fetchAuth(`${API_BASE}/vouchers/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Failed to delete voucher');
+        showToast('Voucher deleted successfully', 'success');
+        await loadVouchers();
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
+}
+
+async function loadVouchers() {
+    try {
+        const res = await fetchAuth(`${API_BASE}/vouchers`);
+        if (!res.ok) throw new Error('Failed to load vouchers');
+        vouchers = await res.json();
+    } catch(err) {
+        console.error('Error loading vouchers:', err);
     }
     
     const tbody = document.getElementById('vouchers-table-body');

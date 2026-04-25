@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { connectDB, initializeDatabase, User, Product, Invoice, Customer } = require('./database');
+const { connectDB, initializeDatabase, User, Product, Invoice, Customer, Voucher } = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -413,6 +413,104 @@ app.delete('/api/customers/:id', async (req, res) => {
     }
 });
 
+// ==== VOUCHERS API ====
+
+app.get('/api/vouchers', async (req, res) => {
+    try {
+        const queryFilter = req.user.role === 'admin' ? {} : { user_id: req.user._id };
+        const vouchers = await Voucher.find(queryFilter).sort({ expiry_date: -1 });
+        const mappedVouchers = vouchers.map(v => ({
+            id: v._id.toString(),
+            code: v.code,
+            discount_type: v.discount_type,
+            discount_value: v.discount_value,
+            usage_limit: v.usage_limit,
+            used_count: v.used_count,
+            expiry_date: v.expiry_date,
+            status: v.status
+        }));
+        res.json(mappedVouchers);
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/vouchers', async (req, res) => {
+    const { code, discount_type, discount_value, usage_limit, expiry_date, status } = req.body;
+    if (!code || !discount_type || discount_value === undefined || !expiry_date) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    try {
+        const existing = await Voucher.findOne({ code: code.toUpperCase(), user_id: req.user._id });
+        if (existing) return res.status(400).json({ error: 'Voucher code already exists' });
+
+        const voucher = await Voucher.create({
+            user_id: req.user._id,
+            code: code.toUpperCase(),
+            discount_type,
+            discount_value,
+            usage_limit: usage_limit || null,
+            expiry_date,
+            status: status || 'active'
+        });
+        res.status(201).json({ message: 'Voucher created successfully', id: voucher._id.toString() });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/api/vouchers/:id', async (req, res) => {
+    const { code, discount_type, discount_value, usage_limit, expiry_date, status } = req.body;
+    try {
+        const queryFilter = req.user.role === 'admin' ? { _id: req.params.id } : { _id: req.params.id, user_id: req.user._id };
+        const voucher = await Voucher.findOneAndUpdate(
+            queryFilter,
+            { code: code ? code.toUpperCase() : undefined, discount_type, discount_value, usage_limit: usage_limit || null, expiry_date, status },
+            { new: true }
+        );
+        if (!voucher) return res.status(404).json({ error: 'Voucher not found' });
+        res.json({ message: 'Voucher updated successfully' });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/vouchers/:id', async (req, res) => {
+    try {
+        const queryFilter = req.user.role === 'admin' ? { _id: req.params.id } : { _id: req.params.id, user_id: req.user._id };
+        const voucher = await Voucher.findOneAndDelete(queryFilter);
+        if (!voucher) return res.status(404).json({ error: 'Voucher not found' });
+        res.json({ message: 'Voucher deleted successfully' });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/vouchers/validate', async (req, res) => {
+    const { code } = req.body;
+    if (!code) return res.status(400).json({ error: 'Voucher code required' });
+    
+    try {
+        const voucher = await Voucher.findOne({ code: code.toUpperCase(), user_id: req.user._id });
+        if (!voucher) return res.status(404).json({ error: 'Invalid voucher code' });
+        if (voucher.status !== 'active') return res.status(400).json({ error: 'Voucher is inactive' });
+        
+        const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Colombo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+        if (voucher.expiry_date < today) return res.status(400).json({ error: 'Voucher has expired' });
+        if (voucher.usage_limit !== null && voucher.used_count >= voucher.usage_limit) return res.status(400).json({ error: 'Voucher usage limit reached' });
+        
+        res.json({
+            id: voucher._id.toString(),
+            code: voucher.code,
+            discount_type: voucher.discount_type,
+            discount_value: voucher.discount_value
+        });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
 // ==== INVOICES API ====
 
 app.get('/api/invoices', async (req, res) => {
@@ -481,7 +579,7 @@ app.get('/api/invoices/:id', async (req, res) => {
 });
 
 app.post('/api/invoices', async (req, res) => {
-    const { items, total_amount, amount_paid, cashier_name, customer_name, customer_phone, payment_method } = req.body;
+    const { items, total_amount, amount_paid, cashier_name, customer_name, customer_phone, payment_method, voucher_code, voucher_discount, subtotal_amount } = req.body;
     
     const parsedTotal = parseFloat(total_amount) || 0;
     const parsedPaid = parseFloat(amount_paid) || 0;
@@ -527,11 +625,21 @@ app.post('/api/invoices', async (req, res) => {
             payment_method: payment_method || 'Cash',
             date,
             time,
+            subtotal_amount: subtotal_amount || parsedTotal,
+            voucher_code: voucher_code || '',
+            voucher_discount: voucher_discount || 0,
             total_amount: parsedTotal,
             amount_paid: parsedPaid,
             total_profit,
             items: formattedItems
         });
+        
+        if (voucher_code) {
+            await Voucher.findOneAndUpdate(
+                { code: voucher_code.toUpperCase(), user_id: req.user._id },
+                { $inc: { used_count: 1 } }
+            );
+        }
         
         // Update product stock manually in series or parallel
         for (const item of items) {
